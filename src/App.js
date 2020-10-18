@@ -1,26 +1,27 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import styled from 'styled-components';
 
-function App() {
+import { Hosts, UserList, Chat } from './components';
+
+const LayoutGrid = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 100%;
+`;
+
+const RoleContext = React.createContext(null);
+
+const App = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <RoleContext.Provider>
+      <LayoutGrid>
+        <UserList>Geiler tet ashdjkashdjkashd jks</UserList>
+        <Hosts />
+        <Chat>Hier auchasd asd asd as</Chat>
+      </LayoutGrid>
+    </RoleContext.Provider>
   );
-}
+};
 
 export default App;
