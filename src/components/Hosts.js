@@ -1,5 +1,9 @@
 import React from 'react';
-import styled from 'styled-components';
+import styled from 'styled-components/macro';
+import PropTypes from 'prop-types';
+
+const borderRadius = 'border-radius: 20px;';
+const border = 'border: 2px solid green;';
 
 const HostsContainer = styled.div`
   display: flex;
@@ -9,33 +13,52 @@ const HostsContainer = styled.div`
 
 const Host = styled.div`
   background: grey;
-  border-radius: 20px;
-  margin: 0 10px;
+  margin: 0 5px;
+  text-align: center;
+  ${borderRadius}
+  ${border}
 `;
 
 const MainHost = styled(Host)`
   background: blue;
+  height: 300px;
 `;
 
 const CoHostsContainer = styled.div`
   display: flex;
-  justify-content: space-between;
   margin-top: 20px;
 `;
 
 const CoHost = styled(Host)`
-  flex-grow: 1;
+  height: 200px;
+  width: 200px;
+  position: relative;
+
+  & > div {
+    ${borderRadius}
+
+    > video {
+      position: relative !important;
+    }
+  }
 `;
 
-export const Hosts = () => (
+export const Hosts = ({ streams }) => (
   <HostsContainer>
-    <MainHost>Main</MainHost>
+    <MainHost>Host</MainHost>
     <CoHostsContainer>
-      <CoHost>Co-Host</CoHost>
-      <CoHost>Co-Host</CoHost>
-      <CoHost>Co-Host</CoHost>
-      <CoHost>Co-Host</CoHost>
-      <CoHost>Co-Host</CoHost>
+      {streams.map((stream) => {
+        const streamId = stream.getId();
+        return <CoHost key={streamId} id={`video-${streamId}`} />;
+      })}
     </CoHostsContainer>
   </HostsContainer>
 );
+
+Hosts.defaultProps = {
+  streams: [],
+};
+
+Hosts.propTypes = {
+  streams: PropTypes.arrayOf(PropTypes.object),
+};
