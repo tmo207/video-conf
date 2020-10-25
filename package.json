@@ -6,7 +6,9 @@
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
+    "agora-access-token": "^2.0.4",
     "agora-rtc-sdk": "^3.2.1",
+    "agora-rtm-sdk": "^1.4.0",
     "babel-plugin-macros": "^2.8.0",
     "prop-types": "^15.7.2",
     "react": "^16.14.0",
@@ -36,6 +38,7 @@
     ]
   },
   "devDependencies": {
+    "babel-eslint": "^10.1.0",
     "eslint": "^6.6.0",
     "eslint-config-airbnb": "18.2.0",
     "eslint-config-prettier": "^6.13.0",

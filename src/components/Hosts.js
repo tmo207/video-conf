@@ -2,8 +2,7 @@ import React from 'react';
 import styled from 'styled-components/macro';
 import PropTypes from 'prop-types';
 
-const borderRadius = 'border-radius: 20px;';
-const border = 'border: 2px solid green;';
+import { WithBorder, borderRadius } from './helpers/sharedStyles';
 
 const HostsContainer = styled.div`
   display: flex;
@@ -11,12 +10,10 @@ const HostsContainer = styled.div`
   flex-grow: 2;
 `;
 
-const Host = styled.div`
+const Host = styled(WithBorder)`
   background: grey;
   margin: 0 5px;
   text-align: center;
-  ${borderRadius}
-  ${border}
 `;
 
 const MainHost = styled(Host)`
@@ -45,7 +42,7 @@ const CoHost = styled(Host)`
 
 export const Hosts = ({ streams }) => (
   <HostsContainer>
-    <MainHost>Host</MainHost>
+    <MainHost id="host">Host</MainHost>
     <CoHostsContainer>
       {streams.map((stream) => {
         const streamId = stream.getId();

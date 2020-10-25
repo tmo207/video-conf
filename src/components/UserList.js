@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
+import React, { useState } from 'react';
+
 import styled from 'styled-components/macro';
 
 import { GridItemSmall } from './helpers/sharedStyles';
@@ -33,36 +33,35 @@ const UserActionContainer = styled.div`
   width: 20%;
 `;
 
-export const UserList = ({ users }) => {
+export const UserList = ({ users, sendMessageToPeer }) => {
   // State types = viewer | host;
   const [showUsersWithRole, setShowUsersWithRole] = useState('viewer');
   const [searchValue, setSearchValue] = useState('');
   const [usersInList, setUsersInList] = useState(users);
-
-  useEffect(() => {
-    if (searchValue) {
-      setUsersInList(() => users.filter((user) => user.name.toLowerCase().includes(searchValue)));
-    } else {
-      setUsersInList(users);
-    }
-  }, [searchValue]);
 
   const onChange = (e) => {
     setSearchValue(e.target.value.toLowerCase());
   };
 
   const promoteUserToHost = (userId) => {
-    // sendRequestToUser
+    sendMessageToPeer('hey', userId);
   };
 
   return (
     <UserListContainer>
       <ListTypeContainer>
-        <ListType onClick={() => setShowUsersWithRole('viewer')}>Zuschauer</ListType>
+        <ListType
+          onClick={() => {
+            console.log({ users });
+            setShowUsersWithRole('viewer');
+          }}
+        >
+          Zuschauer
+        </ListType>
         <ListType onClick={() => setShowUsersWithRole('host')}>Teilnehmer</ListType>
       </ListTypeContainer>
       <input type="text" onChange={onChange} />
-      {usersInList.map(
+      {/* {usersInList.map(
         (user, index) =>
           user.role === showUsersWithRole && (
             <UserContainer index={index} key={user.id}>
@@ -82,7 +81,17 @@ export const UserList = ({ users }) => {
               </UserActionContainer>
             </UserContainer>
           )
-      )}
+      )} */}
+      {users.map((user, index) => (
+        <UserContainer index={index} key={user}>
+          <UserName>{user}</UserName>
+          <UserActionContainer>
+            <button type="button" onClick={() => promoteUserToHost(user)}>
+              +
+            </button>
+          </UserActionContainer>
+        </UserContainer>
+      ))}
     </UserListContainer>
   );
 };
@@ -92,11 +101,11 @@ UserList.defaultProps = {
 };
 
 UserList.propTypes = {
-  users: PropTypes.arrayOf(
-    PropTypes.shape({
-      name: PropTypes.string.isRequired,
-      role: PropTypes.string.isRequired,
-      id: PropTypes.number.isRequired,
-    })
-  ),
+  // users: PropTypes.arrayOf(
+  //   PropTypes.shape({
+  //     name: PropTypes.string.isRequired,
+  //     role: PropTypes.string.isRequired,
+  //     id: PropTypes.number.isRequired,
+  //   })
+  // ),
 };

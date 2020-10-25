@@ -2,7 +2,10 @@ import React, { useEffect, useState } from 'react';
 import styled from 'styled-components/macro';
 import AgoraRTC from 'agora-rtc-sdk';
 
-import { ControlMenu, Hosts, UserList, Chat } from './components';
+import Rtm from './rtm';
+import { Chat, Hosts, UserList, ControlMenu } from './components';
+
+import { appId, channelName, tempToken } from './constants';
 
 const dbUsers = [
   { name: 'Max Muster', role: 'viewer', id: 0 },
@@ -29,18 +32,14 @@ const LayoutGrid = styled.div`
   background-color: darkgrey;
 `;
 
-const VideoWindow = styled.div`
-  height: 400px;
-  width: 400px;
-`;
-
 const App = () => {
   const [streams, setStreams] = useState([]);
-  const [userId, setUserId] = useState();
-  // const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [userId, setUserId] = useState(Math.floor(Math.random() * 10000).toString());
   const [client, setClient] = useState(AgoraRTC.createClient({ mode: 'live', codec: 'vp8' }));
+  const [localstream, setLocalstream] = useState();
 
-  let localstream;
+  const rtm = new Rtm({ appId, channelName, uid: userId, userCallback: setUsers });
 
   const handleFail = (error) => console.log('Error:', error);
 
@@ -56,9 +55,10 @@ const App = () => {
     });
     const updatedStreams = streams.filter((currentStream) => currentStream.getId() !== uid);
     setStreams(updatedStreams);
+    console.log({ localstream, streams });
   };
 
-  const streamEndHandler = (event) => {
+  const removeStreamHandler = (event) => {
     const { stream } = event;
     const streamId = String(stream.getId());
     removeStream(streamId);
@@ -81,68 +81,92 @@ const App = () => {
       const streamId = stream.getId(); // Same value as uid. Turning into string because ID of DOM elements can only be strings.
       addVideoStream(stream);
       stream.play(`video-${streamId}`);
-      console.log({ streams });
     });
 
-    client.on('stream-removed', streamEndHandler);
+    client.on('stream-removed', removeStreamHandler);
 
-    client.on('peer-leave', streamEndHandler);
+    client.on('peer-leave', removeStreamHandler);
+
+    client.on('client-role-changed', (event) => {
+      console.log('client role has changed', event);
+    });
+
+    client.on('mute-video', () => {
+      console.log('successfully muted');
+    });
   };
 
-  const initStream = (uid, role) => {
-    const isAttendee = role === ('attendee' || 'host' || 'superhost');
+  const initStream = (uid, attendeeMode) => {
     const defaultConfig = {
       streamID: uid,
-      audio: /* isAttendee */ false,
-      video: isAttendee,
+      audio: false,
+      video: false,
       screen: false,
     };
 
-    localstream = AgoraRTC.createStream(defaultConfig);
+    switch (attendeeMode) {
+      case 'host':
+      case 'superhost':
+        defaultConfig.video = true;
+        defaultConfig.audio = true;
+        break;
+      default:
+      case 'attendee':
+        break;
+    }
 
-    localstream.init(() => {
-      addVideoStream(localstream);
-      localstream.play(`video-${localstream.streamId}`);
-      client.publish(localstream, handleFail);
+    const stream = AgoraRTC.createStream(defaultConfig);
+
+    stream.init(() => {
+      addVideoStream(stream);
+      stream.play(`video-${stream.streamId}`);
+      client.publish(stream, handleFail);
+      setLocalstream(stream);
     }, handleFail);
   };
 
   useEffect(() => {
-    const getUserToken = () => Math.floor(Math.random() * 10000);
-
     client.init(
-      '6f5b7ccc9a3a448abf1ce396b3deb846', // appId: Should be token for user authentication (https://docs.agora.io/en/Agora%20Platform/term_appid)
+      appId, // appId: Should be token for user authentication (https://docs.agora.io/en/Agora%20Platform/term_appid)
       () => {
         console.log('successfully initialized');
         subscribeToStreamEvents();
         client.join(
-          '0066f5b7ccc9a3a448abf1ce396b3deb846IACl0y2n8Zy2qKHRH7gmEjulCvrB1OWAXBRQUlbUXNAwJxcKBPEAAAAAEAAKvMYLIB2UXwEAAQAfHZRf', // tokenOrKey: Token or Channel Key
-          'react-test',
-          getUserToken(), // User specific ID. Type: Number or string, must be the same type for all users
+          tempToken, // tokenOrKey: Token or Channel Key
+          channelName, // channelId
+          userId, // User specific ID. Type: Number or string, must be the same type for all users
           (uid) => {
+            rtm.init();
             console.log(`userWith id ${uid} joined the channel`);
-            setUserId(uid);
-            initStream(uid);
+            initStream(uid, 'attendee');
           },
           handleFail
         );
       },
       () => console.log('failed to initialize')
     );
+
+    return () => rtm.leaveChannel();
   }, []);
+
+  const sendMessageToPeer = (message, uid) => {
+    // rtm.client.queryPeersOnlineStatus([uid]);
+    rtm.sendMessageToPeer(message, uid);
+  };
 
   return (
     <>
-      <ControlMenu />
-      <VideoWindow id="me" />
-      <button type="button" onClick={() => initStream(userId, 'attendee')}>
+      {localstream && (
+        <ControlMenu removeStream={removeStream} localstream={localstream} userId={userId} />
+      )}
+      <button type="button" onClick={() => initStream(userId, 'host')}>
         BECOME PARTICIPANT
       </button>
       <button type="button" onClick={() => removeStream(userId)}>
         STOP STREAMING
       </button>
       <LayoutGrid>
-        <UserList users={dbUsers} />
+        <UserList users={users} sendMessageToPeer={sendMessageToPeer} />
         <Hosts streams={streams} />
         <Chat />
       </LayoutGrid>
