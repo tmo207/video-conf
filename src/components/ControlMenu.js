@@ -41,7 +41,7 @@ const ControlItem = styled.button`
   }
 `;
 
-export const ControlMenu = ({ removeStream, localstream, userId }) => {
+export const ControlMenu = ({ removeStream, localstream, setIsPlaying, userId }) => {
   const [hasVideo, setHasVideo] = useState(localstream.hasVideo());
   const [hasAudio, setHasAudio] = useState(localstream.hasAudio());
 
@@ -68,7 +68,13 @@ export const ControlMenu = ({ removeStream, localstream, userId }) => {
 
   return (
     <ControlMenuContainer>
-      <ControlItem onClick={() => removeStream(userId)} red>
+      <ControlItem
+        onClick={() => {
+          removeStream(userId);
+          setIsPlaying(false);
+        }}
+        red
+      >
         <svg
           width="29"
           height="26"

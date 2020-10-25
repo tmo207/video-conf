@@ -5,7 +5,7 @@ import AgoraRTC from 'agora-rtc-sdk';
 import Rtm from './rtm';
 import { Chat, Hosts, UserList, ControlMenu } from './components';
 
-import { appId, channelName, tempToken } from './constants';
+import { appId, channelName, roles } from './constants';
 
 const dbUsers = [
   { name: 'Max Muster', role: 'viewer', id: 0 },
@@ -32,12 +32,16 @@ const LayoutGrid = styled.div`
   background-color: darkgrey;
 `;
 
+const { audience, host, moderator, superhost } = roles;
+
 const App = () => {
   const [streams, setStreams] = useState([]);
   const [users, setUsers] = useState([]);
   const [userId, setUserId] = useState(Math.floor(Math.random() * 10000).toString());
   const [client, setClient] = useState(AgoraRTC.createClient({ mode: 'live', codec: 'vp8' }));
   const [localstream, setLocalstream] = useState();
+  const [role, setRole] = useState(audience);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const rtm = new Rtm({ appId, channelName, uid: userId, userCallback: setUsers });
 
@@ -48,20 +52,14 @@ const App = () => {
   };
 
   const removeStream = (uid) => {
-    streams.map((stream) => {
-      if (stream.getId() === uid) {
-        stream.close();
+    streams.map((item, index) => {
+      if (item.getId() === uid) {
+        item.close();
+        const tempList = [...streams];
+        tempList.splice(index, 1);
+        setStreams(tempList);
       }
     });
-    const updatedStreams = streams.filter((currentStream) => currentStream.getId() !== uid);
-    setStreams(updatedStreams);
-    console.log({ localstream, streams });
-  };
-
-  const removeStreamHandler = (event) => {
-    const { stream } = event;
-    const streamId = String(stream.getId());
-    removeStream(streamId);
   };
 
   const subscribeToStreamEvents = () => {
@@ -70,8 +68,10 @@ const App = () => {
     });
 
     client.on('stream-added', (event) => {
-      console.log('ADDED', event.stream);
-      client.subscribe(event.stream, handleFail);
+      const { stream } = event;
+      console.log('ADDED', stream);
+      addVideoStream(stream);
+      client.subscribe(stream, handleFail);
     });
 
     // Here we are receiving the remote stream
@@ -79,13 +79,12 @@ const App = () => {
       const { stream } = event;
       console.log('SUBSCRIBED', { stream });
       const streamId = stream.getId(); // Same value as uid. Turning into string because ID of DOM elements can only be strings.
-      addVideoStream(stream);
       stream.play(`video-${streamId}`);
     });
 
-    client.on('stream-removed', removeStreamHandler);
+    client.on('stream-removed', (event) => removeStream(event.stream.getId()));
 
-    client.on('peer-leave', removeStreamHandler);
+    client.on('peer-leave', (event) => removeStream(event.stream.getId()));
 
     client.on('client-role-changed', (event) => {
       console.log('client role has changed', event);
@@ -105,40 +104,42 @@ const App = () => {
     };
 
     switch (attendeeMode) {
-      case 'host':
-      case 'superhost':
+      case host:
+      case superhost:
         defaultConfig.video = true;
         defaultConfig.audio = true;
         break;
       default:
-      case 'attendee':
+      case audience:
         break;
     }
 
     const stream = AgoraRTC.createStream(defaultConfig);
 
     stream.init(() => {
+      const videoWindowId = `video-${stream.streamId}`;
       addVideoStream(stream);
-      stream.play(`video-${stream.streamId}`);
+      stream.play(videoWindowId);
       client.publish(stream, handleFail);
       setLocalstream(stream);
+      setIsPlaying(true);
     }, handleFail);
   };
 
   useEffect(() => {
     client.init(
-      appId, // appId: Should be token for user authentication (https://docs.agora.io/en/Agora%20Platform/term_appid)
+      appId,
       () => {
         console.log('successfully initialized');
         subscribeToStreamEvents();
         client.join(
-          tempToken, // tokenOrKey: Token or Channel Key
+          null, // tokenOrKey: Token or Channel Key
           channelName, // channelId
           userId, // User specific ID. Type: Number or string, must be the same type for all users
           (uid) => {
             rtm.init();
             console.log(`userWith id ${uid} joined the channel`);
-            initStream(uid, 'attendee');
+            initStream(uid);
           },
           handleFail
         );
@@ -156,18 +157,53 @@ const App = () => {
 
   return (
     <>
-      {localstream && (
-        <ControlMenu removeStream={removeStream} localstream={localstream} userId={userId} />
+      {isPlaying && (
+        <ControlMenu
+          localstream={localstream}
+          removeStream={removeStream}
+          setIsPlaying={setIsPlaying}
+          userId={userId}
+        />
       )}
-      <button type="button" onClick={() => initStream(userId, 'host')}>
-        BECOME PARTICIPANT
-      </button>
-      <button type="button" onClick={() => removeStream(userId)}>
-        STOP STREAMING
-      </button>
+      <span
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          width: 200,
+          backgroundColor: 'grey',
+          position: 'fixed',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => {
+            setRole(superhost);
+            initStream(userId, superhost);
+          }}
+        >
+          BECOME SUPERHOST
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setRole(host);
+            initStream(userId, host);
+          }}
+        >
+          BECOME HOST
+        </button>
+        <button type="button" onClick={() => setRole(moderator)}>
+          BECOME MODERATOR
+        </button>
+        <button type="button" onClick={() => setRole(audience)}>
+          BECOME AUDIENCE
+        </button>
+      </span>
       <LayoutGrid>
-        <UserList users={users} sendMessageToPeer={sendMessageToPeer} />
-        <Hosts streams={streams} />
+        {(role === superhost || role === moderator) && (
+          <UserList users={users} sendMessageToPeer={sendMessageToPeer} />
+        )}
+        <Hosts streams={streams} role={role} />
         <Chat />
       </LayoutGrid>
     </>
