@@ -33,65 +33,89 @@ const UserActionContainer = styled.div`
   width: 20%;
 `;
 
-export const UserList = ({ users, sendMessageToPeer }) => {
+export const UserList = ({ rtm, sendMessageToPeer }) => {
   // State types = viewer | host;
   const [showUsersWithRole, setShowUsersWithRole] = useState('viewer');
   const [searchValue, setSearchValue] = useState('');
-  const [usersInList, setUsersInList] = useState(users);
+  const [usersInList, setUsersInList] = useState([]);
+  // const [users, setUsers] = useState([]);
+  const [show, setShow] = useState(false);
+
+  const getMembers = () => {
+    rtm.getMembers().then((members) => {
+      setUsersInList(members);
+    });
+  };
+
+  const toggleList = () => {
+    rtm.subscribeChannelEvents(getMembers);
+    rtm.getMembers().then((members) => {
+      setUsersInList(members);
+      setShow((prevShow) => !prevShow);
+    });
+  };
 
   const onChange = (e) => {
     setSearchValue(e.target.value.toLowerCase());
   };
 
-  const promoteUserToHost = (userId) => {
-    sendMessageToPeer('hey', userId);
+  const promoteUserToHost = (peerId) => {
+    console.log({ peerId });
+    sendMessageToPeer({ message: 'hey', peerId: peerId.toString() });
   };
 
   return (
     <UserListContainer>
-      <ListTypeContainer>
-        <ListType
-          onClick={() => {
-            console.log({ users });
-            setShowUsersWithRole('viewer');
-          }}
-        >
-          Zuschauer
-        </ListType>
-        <ListType onClick={() => setShowUsersWithRole('host')}>Teilnehmer</ListType>
-      </ListTypeContainer>
-      <input type="text" onChange={onChange} />
-      {/* {usersInList.map(
-        (user, index) =>
-          user.role === showUsersWithRole && (
-            <UserContainer index={index} key={user.id}>
-              <UserName>{user.name}</UserName>
-              <UserActionContainer>
-                {showUsersWithRole === 'viewer' && (
-                  <button type="button" onClick={() => promoteUserToHost(user.id)}>
+      <button type="button" onClick={toggleList}>
+        Toggle list
+      </button>
+      {show && (
+        <>
+          <ListTypeContainer>
+            <ListType
+              onClick={() => {
+                setShowUsersWithRole('viewer');
+              }}
+            >
+              Zuschauer
+            </ListType>
+            <ListType onClick={() => setShowUsersWithRole('host')}>Teilnehmer</ListType>
+          </ListTypeContainer>
+          <input type="text" onChange={onChange} />
+          {/* usersInList.map(
+            (user, index) =>
+              user.role === showUsersWithRole && (
+                <UserContainer index={index} key={user.id}>
+                  <UserName>{user.name}</UserName>
+                  <UserActionContainer>
+                    {showUsersWithRole === 'viewer' && (
+                      <button type="button" onClick={() => promoteUserToHost(user.id)}>
+                        +
+                      </button>
+                    )}
+                    {showUsersWithRole === 'host' && (
+                      <>
+                        <button type="button">A</button>
+                        <button type="button">-</button>
+                      </>
+                    )}
+                  </UserActionContainer>
+                </UserContainer>
+              )
+          ) */}
+          {usersInList.length &&
+            usersInList.map((user, index) => (
+              <UserContainer index={index} key={user}>
+                <UserName>{user}</UserName>
+                <UserActionContainer>
+                  <button type="button" onClick={() => promoteUserToHost(user)}>
                     +
                   </button>
-                )}
-                {showUsersWithRole === 'host' && (
-                  <>
-                    <button type="button">A</button>
-                    <button type="button">-</button>
-                  </>
-                )}
-              </UserActionContainer>
-            </UserContainer>
-          )
-      )} */}
-      {users.map((user, index) => (
-        <UserContainer index={index} key={user}>
-          <UserName>{user}</UserName>
-          <UserActionContainer>
-            <button type="button" onClick={() => promoteUserToHost(user)}>
-              +
-            </button>
-          </UserActionContainer>
-        </UserContainer>
-      ))}
+                </UserActionContainer>
+              </UserContainer>
+            ))}
+        </>
+      )}
     </UserListContainer>
   );
 };

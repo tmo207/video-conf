@@ -1,86 +1,154 @@
 import AgoraRTM from 'agora-rtm-sdk';
+import EventEmitter from 'events';
 
-export default class Rtm {
-  constructor({ appId, channelName, uid, userCallback }) {
-    this.channelName = channelName;
-    this.channel = {};
-    this.appId = appId;
-    this.client = AgoraRTM.createInstance(appId);
-    this.uid = uid;
-    this.userCallback = userCallback;
-    this.users = [];
+import { channelName } from './constants';
+
+export default class Rtm extends EventEmitter {
+  constructor() {
+    super();
+    this.channels = {};
+    this.loggedIn = false;
   }
 
-  sendMessageToPeer = (message, uid) => {
-    console.log({ message, uid });
-    this.client
-      .sendMessageToPeer(
-        { text: message }, // An RtmMessage object.
-        uid // The user ID of the remote user.
-      )
-      .then((sendResult) => {
-        if (sendResult.hasPeerReceived) {
-          /* Your code for handling the event that the remote user receives the message. */
-          console.log('peer received message');
-        } else {
-          /* Your code for handling the event that the message is received by the server but the remote user cannot be reached. */
-          console.log('only server received message');
-        }
-      })
-      .catch((error) => {
-        console.error('error', error);
+  setLoggedIn(isLoggedIn) {
+    this.loggedIn = isLoggedIn;
+  }
+
+  init(appId) {
+    this.client = AgoraRTM.createInstance(appId);
+  }
+
+  async renewToken(token) {
+    return this.client.renewToken(token);
+  }
+
+  subscribeClientEvents(/* { modalHandler, remoteSenderIdHandler } */) {
+    const clientEvents = ['ConnectionStateChanged'];
+    clientEvents.forEach((eventName) => {
+      this.client.on(eventName, (...args) => {
+        console.log('emit ', eventName, ...args);
+        this.emit(eventName, ...args);
       });
-  };
-
-  subscribeToEvents = () => {
-    this.channel.on('MemberJoined', () => {
-      console.log('member joined');
-      this.getMembers();
-    });
-
-    this.channel.on('MemberLeft', () => {
-      console.log('member left');
-      this.getMembers();
     });
 
     this.client.on('MessageFromPeer', () => {
       console.log('message from peer');
+      // modalHandler(true);
+      // remoteSenderIdHandler();
     });
-  };
 
-  joinChannel = async () => {
-    console.log('join channel', this.channel);
-    return this.channel.join();
-  };
+    // this.client.on('MessageFromPeer', () => {
+    //   console.log('message from peer');
+    // });
+  }
 
-  leaveChannel = async () => {
-    return this.channel.leave();
-  };
-
-  init = async () => {
-    this.channel = this.client.createChannel(this.channelName);
-    this.subscribeToEvents();
-    this.client
-      .login({
-        token: undefined,
-        uid: this.uid.toString(),
-      })
-      .then(() => {
-        console.log({ channel: this.channel });
-        console.log('AgoraRTM client login success');
-        this.joinChannel().then(() => this.getMembers());
-      })
-      .catch((err) => {
-        console.log('AgoraRTM client login failure', err);
+  subscribeChannelEvents(handler) {
+    const channelEvents = ['ChannelMessage', 'MemberJoined', 'MemberLeft'];
+    channelEvents.forEach((eventName) => {
+      this.channels[channelName].channel.on(eventName, (...args) => {
+        this.getMembers();
+        handler();
+        console.log('emit ', eventName, args);
+        this.emit(eventName, { channelName, args });
       });
-  };
+    });
 
-  getMembers = () => {
-    this.channel.getMembers().then((userList) => {
+    // this.channels[channelName].channel.on('MemberJoined', () => {
+    //   console.log('member joined');
+    //   membersChanged();
+    // });
+
+    // this.channels[channelName].channel.on('MemberLeft', () => {
+    //   console.log('member left');
+    //   membersChanged();
+    // });
+
+    // this.channels[channelName].channel.on('ChannelMessage', () => {
+    //   console.log('message in channel');
+    // });
+  }
+
+  async login(accountName, token) {
+    this.accountName = accountName.toString();
+    return this.client.login({ uid: this.accountName, token });
+  }
+
+  async logout() {
+    return this.client.logout();
+  }
+
+  async joinChannel(name) {
+    console.log('joinChannel', name);
+    const channel = this.client.createChannel(name);
+    this.channels[name] = {
+      channel,
+      joined: false, // channel state
+    };
+    return channel.join();
+  }
+
+  async leaveChannel(name) {
+    console.log('leaveChannel', name);
+    if (!this.channels[name] || (this.channels[name] && !this.channels[name].joined)) return;
+    return this.channels[name].channel.leave();
+  }
+
+  async sendChannelMessage(text, channelName) {
+    if (!this.channels[channelName] || !this.channels[channelName].joined) return;
+    return this.channels[channelName].channel.sendMessage({ text });
+  }
+
+  async sendPeerMessage(text, peerId) {
+    console.log('sendPeerMessage', text, peerId);
+    return this.client.sendMessageToPeer({ text }, peerId.toString());
+  }
+
+  async inviteAudienceToBecomeHost({ text, peerId, ownId }) {
+    console.log('invite audience to become host', text, peerId, ownId);
+    return this.client.sendMessageToPeer(
+      { text: this.generateHostInvitation(ownId) },
+      peerId.toString()
+    );
+  }
+
+  async queryPeersOnlineStatus(memberId) {
+    console.log('queryPeersOnlineStatus', memberId);
+    return this.client.queryPeersOnlineStatus([memberId]);
+  }
+
+  async getMembers() {
+    return this.channels[channelName].channel.getMembers().then((userList) => {
       if (userList !== this.users) {
-        this.userCallback(userList);
+        console.log({ userList });
         return userList;
       }
     });
+  }
+
+  generateHostInvitation = (issuerId) => {
+    return JSON.stringify({
+      subject: 'host-invitation',
+      issuer: issuerId,
+      token:
+        '00609055eb4141f4ab4809ff8a2302254e9IAD8tvnQu5r8hAlgFGLlmZ8Cre6tU1VvEdKs/WvGmuFU4uAbzEcAAAAAEADOpjO6dw9yXwEAAQB2D3Jf',
+    });
   };
+
+  declineHostInvitation(uid) {
+    this.client
+      .sendMessageToPeer(
+        { text: 'invitation declined' }, // An RtmMessage object.
+        uid // The user ID of the remote user.
+      )
+      .then((sendResult) => {
+        if (sendResult.hasPeerReceived) {
+          console.log('peer received answer');
+        } else {
+          console.log('peer did not receive answer');
+        }
+      })
+      .catch((error) => {
+        console.log('could not send message', error);
+      });
+  }
 }
