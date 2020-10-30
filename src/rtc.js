@@ -1,65 +1,66 @@
 import AgoraRTC from 'agora-rtc-sdk';
 import { appId, channelName, roles } from './constants';
 
-const { host, superhost, audience } = roles;
+const { host, superhost, audience, moderator } = roles;
 
 const handleFail = (error) => console.log('Error:', error);
 
 export default class Rtc {
-  //   constructor({ removeStream, addVideoStream }) {
-  //     this.removeStream = removeStream;
-  //     this.addVideoStream = addVideoStream;
-  //   }
+  constructor() {
+    this.streams = [];
+  }
 
   createClient() {
     this.client = AgoraRTC.createClient({ mode: 'live', codec: 'vp8' });
     return this.client;
   }
 
-  initClient() {
-    fetch('https://agora.service-sample.de/api/test/init/test').then((response) =>
-      response.json().then((data) => {
-        // setUserId(data.id);
-        this.client.init(
-          appId,
-          () => {
-            console.log('successfully initialized');
-            this.subscribeToStreamEvents();
-            this.client.join(
-              null, // tokenOrKey: Token or Channel Key
-              channelName, // channelId
-              data.id, // User specific ID. Type: Number or string, must be the same type for all users
-              (uid) => {
-                console.log(`userWith id ${uid} joined the channel`);
-                const stream = this.initStream(uid);
+  initClient(uid, role, handlers) {
+    this.handlers = handlers;
+    this.client.init(
+      appId,
+      () => {
+        this.subscribeToStreamEvents();
+        this.client.join(
+          null, // tokenOrKey: Token or Channel Key
+          channelName, // channelId
+          uid, // User specific ID. Type: Number or string, must be the same type for all users
+          (id) => {
+            const isHost = role === host;
+            const isSuperHost = role === superhost;
 
-                stream.init(() => {
-                  //   this.addVideoStream(stream);
-                  this.client.publish(stream, handleFail);
-                  // const videoWindowId = `video-${localstream.streamId}`;
-                  // localstream.play(videoWindowId);
-                  // setIsPlaying(true);
-                }, handleFail);
-              },
-              handleFail
-            );
+            if (isHost || isSuperHost) {
+              this.publishAndStartStream(id, role);
+            }
           },
-          () => console.log('failed to initialize')
+          handleFail
         );
-      })
+      },
+      () => console.log('failed to initialize')
     );
   }
 
-  acceptHostInvitation(/* setIsOpen */) {
-    console.log({ client: this.client, stream: this.localstream });
-    // setIsOpen(false);
-    // this.client.setClientRole('host', (error) => {
-    //   if (!error) {
-    //     console.log('accepted');
-    //   } else {
-    //     console.log('error setting role');
-    //   }
-    // });
+  removeStream(uid) {
+    this.streams.map((stream, index) => {
+      if (stream.streamId === uid) {
+        stream.close();
+        const tempList = [...this.streams];
+        tempList.splice(index, 1);
+        this.handlers.setStreams(tempList);
+      }
+    });
+  }
+
+  publishAndStartStream(uid, role) {
+    const stream = this.initStream(uid, role);
+
+    stream.init(() => {
+      this.client.publish(stream, handleFail);
+      this.streams = [...this.streams, stream];
+      this.handlers.setStreams(this.streams);
+      stream.play(`video-${stream.streamId}`);
+      this.handlers.setIsPlaying(true);
+    }, handleFail);
   }
 
   initStream(uid, attendeeMode) {
@@ -81,7 +82,6 @@ export default class Rtc {
         break;
     }
     this.localstream = AgoraRTC.createStream(defaultConfig);
-    console.log({ client: this.client });
     return this.localstream;
   }
 
@@ -92,26 +92,31 @@ export default class Rtc {
 
     this.client.on('stream-added', (event) => {
       const { stream } = event;
-      console.log('ADDED', stream);
       this.client.subscribe(stream, handleFail);
     });
 
     // Here we are receiving the remote stream
     this.client.on('stream-subscribed', (event) => {
-      const { stream } = event;
-      console.log('SUBSCRIBED', { stream });
-      //   this.addVideoStream(stream);
-      // const streamId = stream.getId(); // Same value as uid. Turning into string because ID of DOM elements can only be strings.
-      // stream.play(`video-${streamId}`);
+      fetch('https://agora.service-sample.de/api/test/init/test').then((response) =>
+        response.json().then((data) => {
+          const mainScreenId = data[0].currentMainScreen.toString();
+          this.handlers.setMainScreenId(mainScreenId);
+          const { stream } = event;
+          this.streams = [...this.streams, stream];
+          this.handlers.setStreams(this.streams);
+          const streamId = stream.getId(); // Same value as uid. Turning into string because ID of DOM elements can only be strings.
+          stream.play(`video-${streamId}`);
+        })
+      );
     });
 
-    this.client.on('stream-removed', () => {
-      console.log('stream removed');
-    }); /* , (event) => this.removeStream(event.stream.getId()) */
+    this.client.on('stream-removed', ({ stream }) => {
+      this.removeStream(stream.streamId);
+    });
 
     this.client.on('peer-leave', () => {
       console.log('peer left');
-    }); /* , (event) => this.removeStream(event.uid) */
+    });
 
     this.client.on('client-role-changed', (event) => {
       console.log('client role has changed', event);

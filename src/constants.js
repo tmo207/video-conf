@@ -1,3 +1,7 @@
+import { createContext } from 'react';
+
+export const UserContext = createContext({ uid: '', role: '', setRole: () => {} });
+
 export const appCertificate = '7ec8340b6e3e4d36807ff15eb2d307ed';
 // export const appId = '6f5b7ccc9a3a448abf1ce396b3deb846';
 export const appId = 'faf886e398cb4bfdbd38868cfdf11f29';

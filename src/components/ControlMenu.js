@@ -41,7 +41,7 @@ const ControlItem = styled.button`
   }
 `;
 
-export const ControlMenu = ({ removeStream, localstream, setIsPlaying, userId }) => {
+export const ControlMenu = ({ rtc, localstream, setIsPlaying, userId }) => {
   const [hasVideo, setHasVideo] = useState(localstream.hasVideo());
   const [hasAudio, setHasAudio] = useState(localstream.hasAudio());
 
@@ -70,7 +70,7 @@ export const ControlMenu = ({ removeStream, localstream, setIsPlaying, userId })
     <ControlMenuContainer>
       <ControlItem
         onClick={() => {
-          removeStream(userId);
+          rtc.removeStream(userId);
           setIsPlaying(false);
         }}
         red
