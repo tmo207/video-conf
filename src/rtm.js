@@ -1,9 +1,7 @@
 import AgoraRTM from 'agora-rtm-sdk';
 import EventEmitter from 'events';
 
-import { appId, channelName, roles } from './constants';
-
-const { host } = roles;
+import { appId, channelName } from './constants';
 
 export default class Rtm extends EventEmitter {
   constructor() {
@@ -29,13 +27,11 @@ export default class Rtm extends EventEmitter {
     const clientEvents = ['ConnectionStateChanged'];
     clientEvents.forEach((eventName) => {
       this.client.on(eventName, (...args) => {
-        console.log('emit ', eventName, ...args);
         this.emit(eventName, ...args);
       });
     });
 
     this.client.on('MessageFromPeer', (message) => {
-      console.log('message from peer', message);
       this.handlers.onMessage(message.text);
     });
   }
@@ -46,25 +42,12 @@ export default class Rtm extends EventEmitter {
       this.channels[channelName].channel.on(eventName, (...args) => {
         this.getMembers();
         handler();
-        console.log('emit ', eventName, args);
         this.emit(eventName, { channelName, args });
       });
     });
 
-    // this.channels[channelName].channel.on('MemberJoined', () => {
-    //   console.log('member joined');
-    //   membersChanged();
-    // });
-
-    // this.channels[channelName].channel.on('MemberLeft', () => {
-    //   console.log('member left');
-    //   membersChanged();
-    // });
-
     this.channels[channelName].channel.on('ChannelMessage', (...args) => {
       const message = args.filter((arg) => arg.text)[0];
-      console.log({ args, message });
-      console.log('message in channel');
       this.handlers.onMessage(message.text);
     });
   }
@@ -79,7 +62,6 @@ export default class Rtm extends EventEmitter {
   }
 
   async joinChannel(name) {
-    console.log('joinChannel', name);
     const channel = this.client.createChannel(name);
     this.channels[name] = {
       channel,
@@ -155,21 +137,10 @@ export default class Rtm extends EventEmitter {
   }
 
   acceptHostInvitation(uid, remoteUid) {
-    this.client
-      .sendMessageToPeer(
-        { text: this.generateHostInvitationAccept(uid) }, // An RtmMessage object.
-        remoteUid // The user ID of the remote user.
-      )
-      .then((sendResult) => {
-        if (sendResult.hasPeerReceived) {
-          console.log('peer received answer');
-        } else {
-          console.log('peer did not receive answer', { sendResult });
-        }
-      })
-      .catch((error) => {
-        console.log('could not send message', error);
-      });
+    this.client.sendMessageToPeer(
+      { text: this.generateHostInvitationAccept(uid) }, // An RtmMessage object.
+      remoteUid // The user ID of the remote user.
+    );
   }
 
   generateHostInvitationDecline = (issuerId) => {
@@ -180,20 +151,9 @@ export default class Rtm extends EventEmitter {
   };
 
   declineHostInvitation(uid, remoteUid) {
-    this.client
-      .sendMessageToPeer(
-        { text: this.generateHostInvitationDecline(uid) }, // An RtmMessage object.
-        remoteUid // The user ID of the remote user.
-      )
-      .then((sendResult) => {
-        if (sendResult.hasPeerReceived) {
-          console.log('peer received answer');
-        } else {
-          console.log('peer did not receive answer', { sendResult });
-        }
-      })
-      .catch((error) => {
-        console.log('could not send message', error);
-      });
+    this.client.sendMessageToPeer(
+      { text: this.generateHostInvitationDecline(uid) }, // An RtmMessage object.
+      remoteUid // The user ID of the remote user.
+    );
   }
 }

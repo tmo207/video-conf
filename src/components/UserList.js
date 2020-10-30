@@ -34,7 +34,7 @@ const UserActionContainer = styled.div`
   width: 20%;
 `;
 
-export const UserList = ({ rtm, rtc, uid, streams, currentMainId }) => {
+export const UserList = ({ rtm, uid, streams }) => {
   // State types = audience | host;
   const [showUsersWithRole, setShowUsersWithRole] = useState(audience);
   const [searchValue, setSearchValue] = useState('');
@@ -49,25 +49,11 @@ export const UserList = ({ rtm, rtc, uid, streams, currentMainId }) => {
   }, [streams]);
 
   const promoteUserToHost = (peerId) => {
-    rtm
-      .inviteAudienceToBecomeHost({ peerId, ownId: uid })
-      .then(() => {
-        console.log('heyy', 'successfully sent to', peerId);
-      })
-      .catch((err) => {
-        console.error(`Send message to peer ${peerId}`, err);
-      });
+    rtm.inviteAudienceToBecomeHost({ peerId, ownId: uid });
   };
 
   const promoteHostOnStage = (peerId) => {
-    rtm
-      .inviteAudienceToBecomeHost({ peerId, ownId: uid })
-      .then(() => {
-        console.log('promote', 'successfully sent to', peerId);
-      })
-      .catch((err) => {
-        console.error(`Send message to peer ${peerId}`, err);
-      });
+    rtm.inviteAudienceToBecomeHost({ peerId, ownId: uid });
   };
 
   const getMembers = () => {

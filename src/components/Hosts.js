@@ -33,7 +33,7 @@ const HostsContainer = styled.div`
 
 const { audience, host, moderator, superhost } = roles;
 
-export const Hosts = ({ streams, role, currentMainId }) => {
+export const Hosts = ({ streams, currentMainId }) => {
   React.useEffect(() => {
     streams.map((stream) => {
       if (stream.streamId !== currentMainId) {

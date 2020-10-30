@@ -23,7 +23,6 @@ const App = ({ rtc, rtm }) => {
   const [modalIsOpen, setIsOpen] = useState(false);
   const [superhostId, setSuperhostId] = useState();
   const [currentMainId, setMainScreenId] = useState();
-  const [previousMainScreenId, setPreviousMainScreenId] = useState();
   const [streams, setStreams] = useState([]);
   const [userRole, setRole] = useState();
 
@@ -52,8 +51,6 @@ const App = ({ rtc, rtm }) => {
         });
         break;
       case 'stage-invitation-accepted':
-        console.log('stage invite accepted', { msg });
-        setPreviousMainScreenId(msg.previousMain);
         setMainScreenId(msg.issuer);
         break;
       default:
@@ -73,23 +70,16 @@ const App = ({ rtc, rtm }) => {
   };
 
   const acceptStageInvitation = () => {
-    console.log('CURRENT  MAIN ID SET TO PREVIOUS', { currentMainId });
-    setPreviousMainScreenId(currentMainId);
     rtm.acceptStageInvitation(userId, currentMainId);
     setMainScreenId(userId);
   };
 
   useEffect(() => {
-    const previousMainVideo = document.getElementById(`video-${previousMainScreenId}`);
     const video = document.getElementById(`video-${currentMainId}`);
-    console.log({ video, previousMainVideo, previousMainScreenId });
     if (video) {
       video.style.maxWidth = '100%';
       video.style.width = '100%';
       video.style.order = 1;
-      // previousMainVideo.style.maxWidth = '20%';
-      // previousMainVideo.style.width = '200px';
-      // previousMainVideo.style.order = 2;
     }
   }, [currentMainId]);
 
@@ -113,13 +103,12 @@ const App = ({ rtc, rtm }) => {
       };
       rtm.init(rtmHandlers);
       rtm.login(uid, null).then(() => {
-        console.log('rtm logged in with ID', uid);
         rtm.setLoggedIn(true);
         rtm.joinChannel(channelName);
       });
       rtm.subscribeClientEvents();
     } catch (err) {
-      console.log('login failed', err);
+      console.log('rtm login failed', err);
     }
   };
 
@@ -128,7 +117,6 @@ const App = ({ rtc, rtm }) => {
       setMainScreenId,
       setIsPlaying,
       setStreams,
-      setPreviousMainScreenId,
     };
     rtc.createClient();
     rtc.initClient(uid, role, rtcHandlers);
@@ -183,7 +171,6 @@ const App = ({ rtc, rtm }) => {
               onClick={() => {
                 acceptHostInvitation();
                 setIsOpen(false);
-                console.log({ previousMainScreenId, currentMainId });
               }}
             >
               Accept Host
@@ -217,18 +204,10 @@ const App = ({ rtc, rtm }) => {
             </button>
           </Modal>
           <LayoutGrid>
-            {/* eslint-disable-next-line react/jsx-curly-brace-presence */}
-            {
-              /* (role === superhost || role === moderator) && */ <UserList
-                rtm={rtm}
-                rtc={rtc}
-                uid={userId}
-                streams={streams}
-                currentMainId={currentMainId}
-              />
-            }
-            <Hosts streams={streams} role={userRole} currentMainId={currentMainId} />
-            <Chat />
+            {(userRole === superhost || userRole === moderator) && (
+              <UserList rtm={rtm} uid={userId} streams={streams} />
+            )}
+            <Hosts streams={streams} currentMainId={currentMainId} />
           </LayoutGrid>
         </>
       )}
