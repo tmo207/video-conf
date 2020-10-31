@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components/macro';
 
-import { roles } from '../constants';
 import { border } from './helpers/sharedStyles';
 
 const ControlMenuContainer = styled.div`
@@ -43,14 +42,12 @@ const ControlItem = styled.button`
   }
 `;
 
-const { superhost } = roles;
-
-export const ControlMenu = ({ rtc, localstream, setIsPlaying, userId, role }) => {
+export const ControlMenu = ({ rtc, localstream, setIsPlaying, userId, role, mainScreenId }) => {
   const [hasVideo, setHasVideo] = useState(localstream.hasVideo());
   const [hasAudio, setHasAudio] = useState(localstream.hasAudio());
   const [hasScreen, setHasScreen] = useState(false);
 
-  const isSuperhost = role === superhost;
+  const isMainScreen = userId === mainScreenId;
 
   const videoHandler = () => {
     if (hasVideo) {
@@ -140,7 +137,7 @@ export const ControlMenu = ({ rtc, localstream, setIsPlaying, userId, role }) =>
           />
         </svg>
       </ControlItem>
-      {isSuperhost && (
+      {isMainScreen && (
         <ControlItem onClick={screenHandler} isActive={hasScreen}>
           <svg
             width="30"

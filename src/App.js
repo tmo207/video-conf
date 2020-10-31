@@ -67,6 +67,11 @@ const App = ({ rtc, rtm }) => {
         setIsOpen(true);
         setSuperhostId(msg.issuer);
         break;
+      case 'stage-invitation':
+        setInvitationType('stage');
+        setIsOpen(true);
+        setSuperhostId(msg.issuer);
+        break;
       case 'host-invitation-accepted':
         toast(`host invitation accepted from: ${msg.issuer}`, {
           autoClose: 8000,
@@ -197,6 +202,7 @@ const App = ({ rtc, rtm }) => {
               setIsPlaying={setIsPlaying}
               userId={userId}
               role={userRole}
+              mainScreenId={currentMainId}
             />
           )}
           <Modal

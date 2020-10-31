@@ -53,7 +53,7 @@ export const UserList = ({ rtm, uid, streams }) => {
   };
 
   const promoteHostOnStage = (peerId) => {
-    rtm.inviteAudienceToBecomeHost({ peerId, ownId: uid });
+    rtm.inviteHostToBecomeStage({ peerId, ownId: uid });
   };
 
   const getMembers = () => {

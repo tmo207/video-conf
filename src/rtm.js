@@ -89,6 +89,10 @@ export default class Rtm extends EventEmitter {
     return this.client.sendMessageToPeer({ text: this.generateHostInvitation(ownId) }, peerId);
   }
 
+  async inviteHostToBecomeStage({ peerId, ownId }) {
+    return this.client.sendMessageToPeer({ text: this.generateStageInvitation(ownId) }, peerId);
+  }
+
   async queryPeersOnlineStatus(memberId) {
     console.log('queryPeersOnlineStatus', memberId);
     return this.client.queryPeersOnlineStatus([memberId]);
@@ -114,6 +118,15 @@ export default class Rtm extends EventEmitter {
   generateHostInvitationAccept = (issuerId) => {
     return JSON.stringify({
       subject: 'host-invitation-accepted',
+      issuer: issuerId,
+      token:
+        '00609055eb4141f4ab4809ff8a2302254e9IAD8tvnQu5r8hAlgFGLlmZ8Cre6tU1VvEdKs/WvGmuFU4uAbzEcAAAAAEADOpjO6dw9yXwEAAQB2D3Jf',
+    });
+  };
+
+  generateStageInvitation = (issuerId) => {
+    return JSON.stringify({
+      subject: 'stage-invitation',
       issuer: issuerId,
       token:
         '00609055eb4141f4ab4809ff8a2302254e9IAD8tvnQu5r8hAlgFGLlmZ8Cre6tU1VvEdKs/WvGmuFU4uAbzEcAAAAAEADOpjO6dw9yXwEAAQB2D3Jf',
