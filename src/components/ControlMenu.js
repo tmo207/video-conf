@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components/macro';
 
+import { roles } from '../constants';
 import { border } from './helpers/sharedStyles';
 
 const ControlMenuContainer = styled.div`
@@ -42,9 +43,14 @@ const ControlItem = styled.button`
   }
 `;
 
-export const ControlMenu = ({ rtc, localstream, setIsPlaying, userId }) => {
+const { superhost } = roles;
+
+export const ControlMenu = ({ rtc, localstream, setIsPlaying, userId, role }) => {
   const [hasVideo, setHasVideo] = useState(localstream.hasVideo());
   const [hasAudio, setHasAudio] = useState(localstream.hasAudio());
+  const [hasScreen, setHasScreen] = useState(false);
+
+  const isSuperhost = role === superhost;
 
   const videoHandler = () => {
     if (hasVideo) {
@@ -59,7 +65,6 @@ export const ControlMenu = ({ rtc, localstream, setIsPlaying, userId }) => {
   const audioHandler = () => {
     if (hasAudio) {
       localstream.muteAudio();
-
       setHasAudio(false);
     } else {
       localstream.enableAudio();
@@ -67,14 +72,32 @@ export const ControlMenu = ({ rtc, localstream, setIsPlaying, userId }) => {
     }
   };
 
+  const screenHandler = () => {
+    if (hasScreen) {
+      const newStream = rtc.createStream(userId, role);
+      newStream.init(() => {
+        const newVideoTrack = newStream.getVideoTrack();
+        localstream.replaceTrack(newVideoTrack);
+        setHasScreen(false);
+      });
+    } else {
+      const newStream = rtc.createStream(userId, role, true);
+      newStream.init(() => {
+        const newVideoTrack = newStream.getVideoTrack();
+        localstream.replaceTrack(newVideoTrack);
+        setHasScreen(true);
+      });
+    }
+  };
+
   return (
     <ControlMenuContainer>
       <ControlItem
+        red
         onClick={() => {
           rtc.removeStream(userId);
           setIsPlaying(false);
         }}
-        red
       >
         <svg
           width="29"
@@ -117,6 +140,22 @@ export const ControlMenu = ({ rtc, localstream, setIsPlaying, userId }) => {
           />
         </svg>
       </ControlItem>
+      {isSuperhost && (
+        <ControlItem onClick={screenHandler} isActive={hasScreen}>
+          <svg
+            width="30"
+            height="28"
+            viewBox="0 0 30 28"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M2.5 0H27.5C28.8802 0 30 1.17578 30 2.625V20.125C30 21.5742 28.8802 22.75 27.5 22.75H17.5L18.3333 25.375H22.0833C22.776 25.375 23.3333 25.9602 23.3333 26.6875C23.3333 27.4148 22.776 28 22.0833 28H7.91667C7.22396 28 6.66667 27.4148 6.66667 26.6875C6.66667 25.9602 7.22396 25.375 7.91667 25.375H11.6667L12.5 22.75H2.5C1.11979 22.75 0 21.5742 0 20.125V2.625C0 1.17578 1.11979 0 2.5 0ZM3.33333 19.25H26.6667V3.5H3.33333V19.25Z"
+              fill="#373737"
+            />
+          </svg>
+        </ControlItem>
+      )}
     </ControlMenuContainer>
   );
 };

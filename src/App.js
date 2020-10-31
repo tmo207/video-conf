@@ -196,6 +196,7 @@ const App = ({ rtc, rtm }) => {
               rtc={rtc}
               setIsPlaying={setIsPlaying}
               userId={userId}
+              role={userRole}
             />
           )}
           <Modal

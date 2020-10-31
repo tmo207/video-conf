@@ -52,7 +52,7 @@ export default class Rtc {
   }
 
   publishAndStartStream(uid, role) {
-    const stream = this.initStream(uid, role);
+    const stream = this.createStream(uid, role);
 
     stream.init(() => {
       this.client.publish(stream, handleFail);
@@ -63,12 +63,12 @@ export default class Rtc {
     }, handleFail);
   }
 
-  initStream(uid, attendeeMode) {
+  createStream(uid, attendeeMode, screen) {
     const defaultConfig = {
       streamID: uid,
       audio: false,
       video: false,
-      screen: false,
+      screen,
     };
 
     switch (attendeeMode) {
