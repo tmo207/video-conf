@@ -1,20 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import styled from 'styled-components/macro';
 import PropTypes from 'prop-types';
 
-import { WithBorder, borderRadius } from './helpers/sharedStyles';
+import { WithBorder, borderRadius, moveToHost, moveToMain } from './helpers/sharedStyles';
 import { roles } from '../constants';
-
-const HostsContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  flex-grow: 2;
-`;
 
 const Host = styled(WithBorder)`
   background: grey;
   margin: 0 5px;
   text-align: center;
+  height: 200px;
+  width: 200px;
+  max-width: 20%;
+  position: relative;
+  order: 2;
 
   & > div {
     ${borderRadius}
@@ -25,38 +24,33 @@ const Host = styled(WithBorder)`
   }
 `;
 
-const MainHost = styled(Host)`
-  height: 300px;
-`;
-
-const CoHostsContainer = styled.div`
+const HostsContainer = styled.div`
   display: flex;
+  flex-wrap: wrap;
   margin-top: 20px;
-`;
-
-const CoHost = styled(Host)`
-  height: 200px;
-  width: 200px;
-  position: relative;
+  width: 80%;
 `;
 
 const { audience, host, moderator, superhost } = roles;
 
-export const Hosts = ({ streams, role }) => (
-  <HostsContainer>
-    {/* {streams.map((stream) => stream.getId() === '1' && <MainHost id={superhost} />)} */}
-    <CoHostsContainer>
+export const Hosts = ({ streams, currentMainId }) => {
+  useEffect(() => {
+    moveToMain(currentMainId);
+    streams.map((stream) => {
+      if (stream.streamId !== currentMainId) {
+        moveToHost(stream.streamId);
+      }
+    });
+  });
+  return (
+    <HostsContainer>
       {streams.map((stream) => {
-        const streamID = stream.getId();
-        // TODO: query for superhost user id
-        // if (streamID === 'superhost-userID') {
-        //   return <MainHost id={superhost} />;
-        // }
-        return <CoHost key={streamID} id={`video-${streamID}`} />;
+        const { streamId } = stream;
+        return <Host key={streamId} id={`video-${streamId}`} />;
       })}
-    </CoHostsContainer>
-  </HostsContainer>
-);
+    </HostsContainer>
+  );
+};
 
 Hosts.defaultProps = {
   streams: [],

@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components/macro';
 
+import { roles } from '../constants';
 import { GridItemSmall } from './helpers/sharedStyles';
 
 const isOdd = (num) => num % 2 === 1;
+const { audience, host } = roles;
 
 const ListTypeContainer = styled.div`
   display: flex;
@@ -33,65 +34,94 @@ const UserActionContainer = styled.div`
   width: 20%;
 `;
 
-export const UserList = ({ users, sendMessageToPeer }) => {
-  // State types = viewer | host;
-  const [showUsersWithRole, setShowUsersWithRole] = useState('viewer');
+export const UserList = ({ rtm, uid, streams }) => {
+  // State types = audience | host;
+  const [showUsersWithRole, setShowUsersWithRole] = useState(audience);
   const [searchValue, setSearchValue] = useState('');
-  const [usersInList, setUsersInList] = useState(users);
+  const [usersInList, setUsersInList] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [show, setShow] = useState(false);
+  const [hosts, setHosts] = useState([]);
+
+  useEffect(() => {
+    const currentHosts = streams.map((stream) => stream.streamId);
+    setHosts(currentHosts);
+  }, [streams]);
+
+  const promoteUserToHost = (peerId) => {
+    rtm.inviteAudienceToBecomeHost({ peerId, ownId: uid });
+  };
+
+  const promoteHostOnStage = (peerId) => {
+    rtm.inviteAudienceToBecomeHost({ peerId, ownId: uid });
+  };
+
+  const getMembers = () => {
+    rtm.getMembers().then((members) => {
+      setUsers(members);
+    });
+  };
+
+  const toggleList = () => {
+    rtm.subscribeChannelEvents(getMembers);
+    rtm.getMembers().then((members) => {
+      setUsers(members);
+      setShow((prevShow) => !prevShow);
+    });
+  };
 
   const onChange = (e) => {
     setSearchValue(e.target.value.toLowerCase());
   };
 
-  const promoteUserToHost = (userId) => {
-    sendMessageToPeer('hey', userId);
-  };
-
   return (
     <UserListContainer>
-      <ListTypeContainer>
-        <ListType
-          onClick={() => {
-            console.log({ users });
-            setShowUsersWithRole('viewer');
-          }}
-        >
-          Zuschauer
-        </ListType>
-        <ListType onClick={() => setShowUsersWithRole('host')}>Teilnehmer</ListType>
-      </ListTypeContainer>
-      <input type="text" onChange={onChange} />
-      {/* {usersInList.map(
-        (user, index) =>
-          user.role === showUsersWithRole && (
-            <UserContainer index={index} key={user.id}>
-              <UserName>{user.name}</UserName>
-              <UserActionContainer>
-                {showUsersWithRole === 'viewer' && (
-                  <button type="button" onClick={() => promoteUserToHost(user.id)}>
-                    +
-                  </button>
-                )}
-                {showUsersWithRole === 'host' && (
-                  <>
-                    <button type="button">A</button>
-                    <button type="button">-</button>
-                  </>
-                )}
-              </UserActionContainer>
-            </UserContainer>
-          )
-      )} */}
-      {users.map((user, index) => (
-        <UserContainer index={index} key={user}>
-          <UserName>{user}</UserName>
-          <UserActionContainer>
-            <button type="button" onClick={() => promoteUserToHost(user)}>
-              +
-            </button>
-          </UserActionContainer>
-        </UserContainer>
-      ))}
+      <button type="button" onClick={toggleList}>
+        Toggle list
+      </button>
+      {show && (
+        <>
+          <ListTypeContainer>
+            <ListType
+              onClick={() => {
+                setShowUsersWithRole(audience);
+              }}
+            >
+              Zuschauer
+            </ListType>
+            <ListType onClick={() => setShowUsersWithRole(host)}>Teilnehmer</ListType>
+          </ListTypeContainer>
+          <input type="text" onChange={onChange} />
+          {users.map((user, index) => {
+            const isAudience = !hosts.includes(user);
+            const isHost = hosts.includes(user);
+            if (isAudience && showUsersWithRole === audience) {
+              return (
+                <UserContainer index={index} key={user}>
+                  <UserName>{user}</UserName>
+                  <UserActionContainer>
+                    <button type="button" onClick={() => promoteUserToHost(user)}>
+                      +
+                    </button>
+                  </UserActionContainer>
+                </UserContainer>
+              );
+            }
+            if (isHost && showUsersWithRole === host) {
+              return (
+                <UserContainer index={index} key={user}>
+                  <UserName>{user}</UserName>
+                  <UserActionContainer>
+                    <button type="button" onClick={() => promoteHostOnStage(user)}>
+                      A
+                    </button>
+                  </UserActionContainer>
+                </UserContainer>
+              );
+            }
+          })}
+        </>
+      )}
     </UserListContainer>
   );
 };

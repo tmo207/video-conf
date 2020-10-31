@@ -1,211 +1,238 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components/macro';
-import AgoraRTC from 'agora-rtc-sdk';
+import { ToastContainer, toast } from 'react-toastify';
+import Modal from 'react-modal';
 
-import Rtm from './rtm';
-import { Chat, Hosts, UserList, ControlMenu } from './components';
+import { Hosts, UserList, ControlMenu } from './components';
 
-import { appId, channelName, roles } from './constants';
-
-const dbUsers = [
-  { name: 'Max Muster', role: 'viewer', id: 0 },
-  { name: 'Jan Bsp', role: 'viewer', id: 1 },
-  { name: 'Lena Lauthatnenlaaaaaaaangennamen', role: 'viewer', id: 2 },
-  { name: 'Ole Some', role: 'viewer', id: 3 },
-  { name: 'Alina Hallo', role: 'viewer', id: 4 },
-  { name: 'Tungi Dang', role: 'viewer', id: 5 },
-  { name: 'Klaus Kleber', role: 'viewer', id: 6 },
-  { name: 'Günther Lange', role: 'viewer', id: 7 },
-  { name: 'Anna Tafel', role: 'viewer', id: 8 },
-  { name: 'Look Atme', role: 'host', id: 9 },
-  { name: 'Like Talking', role: 'host', id: 10 },
-  { name: 'Great Talker', role: 'host', id: 11 },
-  { name: 'Important Guy', role: 'host', id: 12 },
-  { name: 'One Host', role: 'host', id: 13 },
-];
-
-const LayoutGrid = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  height: 100%;
-  background-color: darkgrey;
-`;
+import { channelName, roles } from './constants';
 
 const { audience, host, moderator, superhost } = roles;
 
-const App = () => {
-  const [streams, setStreams] = useState([]);
+const LayoutGrid = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+`;
+
+const ModalButton = styled.button`
+  background-color: ${(props) => (props.accept ? 'green' : 'darkred')};
+  border: none;
+  border-radius: 20px;
+  color: white;
+  padding: 8px 30px:
+  margin: 0 8px;
+`;
+
+const modalStyle = {
+  content: {
+    color: 'black',
+    maxWidth: '90vw',
+    width: '300px',
+    height: 'fit-content',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    borderRadius: '20px',
+  },
+};
+
+const App = ({ rtc, rtm }) => {
+  const [userId, setUid] = useState();
   const [users, setUsers] = useState([]);
-  const [userId, setUserId] = useState(Math.floor(Math.random() * 10000).toString());
-  const [client, setClient] = useState(AgoraRTC.createClient({ mode: 'live', codec: 'vp8' }));
-  const [localstream, setLocalstream] = useState();
-  const [role, setRole] = useState(audience);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [modalIsOpen, setIsOpen] = useState(false);
+  const [superhostId, setSuperhostId] = useState();
+  const [currentMainId, setMainScreenId] = useState();
+  const [streams, setStreams] = useState([]);
+  const [userRole, setRole] = useState();
+  // Types: host | stage
+  const [invitationType, setInvitationType] = useState();
 
-  const rtm = new Rtm({ appId, channelName, uid: userId, userCallback: setUsers });
-
-  const handleFail = (error) => console.log('Error:', error);
-
-  const addVideoStream = (stream) => {
-    setStreams((currentStreams) => [...currentStreams, stream]);
+  const onMessage = (message) => {
+    const msg = JSON.parse(message);
+    if (!msg || !msg.subject || !msg.issuer) {
+      return false;
+    }
+    switch (msg.subject) {
+      case 'host-invitation':
+        setInvitationType(host);
+        setIsOpen(true);
+        setSuperhostId(msg.issuer);
+        break;
+      case 'host-invitation-accepted':
+        toast(`host invitation accepted from: ${msg.issuer}`, {
+          autoClose: 8000,
+          draggable: true,
+          closeOnClick: true,
+        });
+        break;
+      case 'host-invitation-declined':
+        toast(`host invitation declined from: ${msg.issuer}`, {
+          autoClose: 8000,
+          draggable: true,
+          closeOnClick: true,
+        });
+        break;
+      case 'stage-invitation-accepted':
+        setMainScreenId(msg.issuer);
+        break;
+      default:
+        break;
+    }
   };
 
-  const removeStream = (uid) => {
-    streams.map((item, index) => {
-      if (item.getId() === uid) {
-        item.close();
-        const tempList = [...streams];
-        tempList.splice(index, 1);
-        setStreams(tempList);
+  const acceptHostInvitation = () => {
+    rtm.acceptHostInvitation(userId, superhostId);
+    rtc.client.setClientRole(host, (error) => {
+      if (!error) {
+        rtc.publishAndStartStream(userId, host);
+      } else {
+        console.log('setHost error', error);
       }
     });
   };
 
-  const subscribeToStreamEvents = () => {
-    client.on('stream-published', (event) => {
-      console.log('stream-published');
-    });
-
-    client.on('stream-added', (event) => {
-      const { stream } = event;
-      console.log('ADDED', stream);
-      addVideoStream(stream);
-      client.subscribe(stream, handleFail);
-    });
-
-    // Here we are receiving the remote stream
-    client.on('stream-subscribed', (event) => {
-      const { stream } = event;
-      console.log('SUBSCRIBED', { stream });
-      const streamId = stream.getId(); // Same value as uid. Turning into string because ID of DOM elements can only be strings.
-      stream.play(`video-${streamId}`);
-    });
-
-    client.on('stream-removed', (event) => removeStream(event.stream.getId()));
-
-    client.on('peer-leave', (event) => removeStream(event.stream.getId()));
-
-    client.on('client-role-changed', (event) => {
-      console.log('client role has changed', event);
-    });
-
-    client.on('mute-video', () => {
-      console.log('successfully muted');
-    });
-  };
-
-  const initStream = (uid, attendeeMode) => {
-    const defaultConfig = {
-      streamID: uid,
-      audio: false,
-      video: false,
-      screen: false,
-    };
-
-    switch (attendeeMode) {
-      case host:
-      case superhost:
-        defaultConfig.video = true;
-        defaultConfig.audio = true;
-        break;
-      default:
-      case audience:
-        break;
-    }
-
-    const stream = AgoraRTC.createStream(defaultConfig);
-
-    stream.init(() => {
-      const videoWindowId = `video-${stream.streamId}`;
-      addVideoStream(stream);
-      stream.play(videoWindowId);
-      client.publish(stream, handleFail);
-      setLocalstream(stream);
-      setIsPlaying(true);
-    }, handleFail);
+  const acceptStageInvitation = () => {
+    rtm.acceptStageInvitation(userId, currentMainId);
+    setMainScreenId(userId);
   };
 
   useEffect(() => {
-    client.init(
-      appId,
-      () => {
-        console.log('successfully initialized');
-        subscribeToStreamEvents();
-        client.join(
-          null, // tokenOrKey: Token or Channel Key
-          channelName, // channelId
-          userId, // User specific ID. Type: Number or string, must be the same type for all users
-          (uid) => {
-            rtm.init();
-            console.log(`userWith id ${uid} joined the channel`);
-            initStream(uid);
-          },
-          handleFail
-        );
-      },
-      () => console.log('failed to initialize')
+    const video = document.getElementById(`video-${currentMainId}`);
+    if (video) {
+      video.style.maxWidth = '100%';
+      video.style.width = '100%';
+      video.style.order = 1;
+    }
+  }, [currentMainId]);
+
+  useEffect(() => {
+    fetch('https://agora.service-sample.de/api/test/init/test').then((response) =>
+      response.json().then((data) => {
+        setUsers(data);
+        const currentMainScreen = data[0].currentMainScreen.toString();
+        setMainScreenId(currentMainScreen);
+      })
     );
 
-    return () => rtm.leaveChannel();
+    return () => {
+      // rtc.removeStream(rtc.localstream);
+      rtm.leaveChannel();
+    };
   }, []);
 
-  const sendMessageToPeer = (message, uid) => {
-    // rtm.client.queryPeersOnlineStatus([uid]);
-    rtm.sendMessageToPeer(message, uid);
+  const rtmLogin = (uid) => {
+    try {
+      const rtmHandlers = {
+        onMessage,
+        setIsPlaying,
+      };
+      rtm.init(rtmHandlers);
+      rtm.login(uid, null).then(() => {
+        rtm.setLoggedIn(true);
+        rtm.joinChannel(channelName);
+      });
+      rtm.subscribeClientEvents();
+    } catch (err) {
+      console.log('rtm login failed', err);
+    }
   };
+
+  const startRtc = ({ uid, role }) => {
+    const rtcHandlers = {
+      setMainScreenId,
+      setIsPlaying,
+      setStreams,
+    };
+    rtc.createClient();
+    rtc.initClient(uid, role, rtcHandlers);
+    rtmLogin(uid);
+  };
+
+  useEffect(() => {
+    console.log({ invitationType });
+  }, [invitationType]);
+
+  const hasAdminRights = userRole === superhost || userRole === moderator;
+  const isHostInvitation = invitationType === host;
+  const isStageInvitation = invitationType === 'stage';
 
   return (
     <>
-      {isPlaying && (
-        <ControlMenu
-          localstream={localstream}
-          removeStream={removeStream}
-          setIsPlaying={setIsPlaying}
-          userId={userId}
-        />
+      {users.length &&
+        !userId &&
+        users.map((currentUser) => (
+          <button
+            key={currentUser.id}
+            style={{ width: '100%', height: 150, margin: '300 40', fontSize: 40 }}
+            type="button"
+            onClick={() => {
+              const currentUid = currentUser.id.toString();
+              setUid(currentUid);
+              setRole(currentUser.role);
+              startRtc({ role: currentUser.role, uid: currentUid });
+              if (currentUser.role === superhost) {
+                setMainScreenId(currentUid);
+              }
+            }}
+          >
+            {currentUser.role}
+          </button>
+        ))}
+      {userId && (
+        <>
+          <ToastContainer autoClose closeButton={false} draggable={false} closeOnClick={false} />
+          {isPlaying && (
+            <ControlMenu
+              localstream={rtc.localstream}
+              rtc={rtc}
+              setIsPlaying={setIsPlaying}
+              userId={userId}
+            />
+          )}
+          <Modal
+            isOpen={modalIsOpen}
+            onAfterOpen={() => console.log('after open')}
+            onRequestClose={() => console.log('request close')}
+            style={modalStyle}
+            contentLabel="Example Modal"
+            ariaHideApp={false}
+          >
+            <p>
+              {isHostInvitation
+                ? 'Der Host dieser Konferenz hat dich dazu eingeladen der Bühne beizutreten. Hierfür werden Mikrofon und deine Kamera aktiviert. Möchtest du beitreten?'
+                : 'Der Host dieser Konferenz hat dich dazu eingeladen den Hauptbildschirm einzunehmen. Möchtest du das?'}
+            </p>
+            <ModalButton
+              accept
+              type="button"
+              onClick={() => {
+                if (isHostInvitation) acceptHostInvitation();
+                if (isStageInvitation) acceptStageInvitation();
+                setIsOpen(false);
+              }}
+            >
+              Beitreten
+            </ModalButton>
+            <ModalButton
+              type="button"
+              onClick={() => {
+                rtm.declineHostInvitation(userId, superhostId);
+                setIsOpen(false);
+              }}
+            >
+              Ablehnen
+            </ModalButton>
+          </Modal>
+          <LayoutGrid>
+            {hasAdminRights && <UserList rtm={rtm} uid={userId} streams={streams} />}
+            <Hosts streams={streams} currentMainId={currentMainId} />
+            {hasAdminRights && <div style={{ width: '20%' }} />}
+          </LayoutGrid>
+        </>
       )}
-      <span
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          width: 200,
-          backgroundColor: 'grey',
-          position: 'fixed',
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => {
-            setRole(superhost);
-            initStream(userId, superhost);
-          }}
-        >
-          BECOME SUPERHOST
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setRole(host);
-            initStream(userId, host);
-          }}
-        >
-          BECOME HOST
-        </button>
-        <button type="button" onClick={() => setRole(moderator)}>
-          BECOME MODERATOR
-        </button>
-        <button type="button" onClick={() => setRole(audience)}>
-          BECOME AUDIENCE
-        </button>
-      </span>
-      <LayoutGrid>
-        {(role === superhost || role === moderator) && (
-          <UserList users={users} sendMessageToPeer={sendMessageToPeer} />
-        )}
-        <Hosts streams={streams} role={role} />
-        <Chat />
-      </LayoutGrid>
     </>
   );
 };
