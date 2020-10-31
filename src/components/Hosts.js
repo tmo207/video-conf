@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import styled from 'styled-components/macro';
 import PropTypes from 'prop-types';
 
-import { WithBorder, borderRadius } from './helpers/sharedStyles';
+import { WithBorder, borderRadius, moveToHost, moveToMain } from './helpers/sharedStyles';
 import { roles } from '../constants';
 
 const Host = styled(WithBorder)`
@@ -28,29 +28,19 @@ const HostsContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
   margin-top: 20px;
-  width: 100%;
+  width: 80%;
 `;
 
 const { audience, host, moderator, superhost } = roles;
 
 export const Hosts = ({ streams, currentMainId }) => {
-  React.useEffect(() => {
+  useEffect(() => {
+    moveToMain(currentMainId);
     streams.map((stream) => {
       if (stream.streamId !== currentMainId) {
-        const noHost = document.getElementById(`video-${stream.streamId}`);
-        if (noHost) {
-          noHost.style.maxWidth = '20%';
-          noHost.style.width = '200px';
-          noHost.style.order = 2;
-        }
+        moveToHost(stream.streamId);
       }
     });
-    const video = document.getElementById(`video-${currentMainId}`);
-    if (video) {
-      video.style.maxWidth = '100%';
-      video.style.width = '100%';
-      video.style.order = 1;
-    }
   });
   return (
     <HostsContainer>

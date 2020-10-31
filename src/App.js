@@ -3,7 +3,7 @@ import styled from 'styled-components/macro';
 import { ToastContainer, toast } from 'react-toastify';
 import Modal from 'react-modal';
 
-import { Chat, Hosts, UserList, ControlMenu } from './components';
+import { Hosts, UserList, ControlMenu } from './components';
 
 import { channelName, roles } from './constants';
 
@@ -11,10 +11,32 @@ const { audience, host, moderator, superhost } = roles;
 
 const LayoutGrid = styled.div`
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   height: 100%;
 `;
+
+const ModalButton = styled.button`
+  background-color: ${(props) => (props.accept ? 'green' : 'darkred')};
+  border: none;
+  border-radius: 20px;
+  color: white;
+  padding: 8px 30px:
+  margin: 0 8px;
+`;
+
+const modalStyle = {
+  content: {
+    color: 'black',
+    maxWidth: '90vw',
+    width: '300px',
+    height: 'fit-content',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    borderRadius: '20px',
+  },
+};
 
 const App = ({ rtc, rtm }) => {
   const [userId, setUid] = useState();
@@ -25,6 +47,8 @@ const App = ({ rtc, rtm }) => {
   const [currentMainId, setMainScreenId] = useState();
   const [streams, setStreams] = useState([]);
   const [userRole, setRole] = useState();
+  // Types: host | stage
+  const [invitationType, setInvitationType] = useState();
 
   const onMessage = (message) => {
     const msg = JSON.parse(message);
@@ -33,6 +57,7 @@ const App = ({ rtc, rtm }) => {
     }
     switch (msg.subject) {
       case 'host-invitation':
+        setInvitationType(host);
         setIsOpen(true);
         setSuperhostId(msg.issuer);
         break;
@@ -92,7 +117,10 @@ const App = ({ rtc, rtm }) => {
       })
     );
 
-    return () => rtm.leaveChannel();
+    return () => {
+      // rtc.removeStream(rtc.localstream);
+      rtm.leaveChannel();
+    };
   }, []);
 
   const rtmLogin = (uid) => {
@@ -123,6 +151,14 @@ const App = ({ rtc, rtm }) => {
     rtmLogin(uid);
   };
 
+  useEffect(() => {
+    console.log({ invitationType });
+  }, [invitationType]);
+
+  const hasAdminRights = userRole === superhost || userRole === moderator;
+  const isHostInvitation = invitationType === host;
+  const isStageInvitation = invitationType === 'stage';
+
   return (
     <>
       {users.length &&
@@ -147,7 +183,6 @@ const App = ({ rtc, rtm }) => {
         ))}
       {userId && (
         <>
-          <h1>{userId}</h1>
           <ToastContainer autoClose closeButton={false} draggable={false} closeOnClick={false} />
           {isPlaying && (
             <ControlMenu
@@ -161,53 +196,40 @@ const App = ({ rtc, rtm }) => {
             isOpen={modalIsOpen}
             onAfterOpen={() => console.log('after open')}
             onRequestClose={() => console.log('request close')}
-            style={{}}
+            style={modalStyle}
             contentLabel="Example Modal"
             ariaHideApp={false}
           >
-            <h1>Hey</h1>
-            <button
+            <p>
+              {isHostInvitation
+                ? 'Der Host dieser Konferenz hat dich dazu eingeladen der Bühne beizutreten. Hierfür werden Mikrofon und deine Kamera aktiviert. Möchtest du beitreten?'
+                : 'Der Host dieser Konferenz hat dich dazu eingeladen den Hauptbildschirm einzunehmen. Möchtest du das?'}
+            </p>
+            <ModalButton
+              accept
               type="button"
               onClick={() => {
-                acceptHostInvitation();
+                if (isHostInvitation) acceptHostInvitation();
+                if (isStageInvitation) acceptStageInvitation();
                 setIsOpen(false);
               }}
             >
-              Accept Host
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                rtm.declineHostInvitation(userId, superhostId);
-                setIsOpen(false);
-              }}
-            >
-              Decline Host
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                acceptStageInvitation();
-                setIsOpen(false);
-              }}
-            >
-              Accept Stage
-            </button>
-            <button
+              Beitreten
+            </ModalButton>
+            <ModalButton
               type="button"
               onClick={() => {
                 rtm.declineHostInvitation(userId, superhostId);
                 setIsOpen(false);
               }}
             >
-              Decline Stage
-            </button>
+              Ablehnen
+            </ModalButton>
           </Modal>
           <LayoutGrid>
-            {(userRole === superhost || userRole === moderator) && (
-              <UserList rtm={rtm} uid={userId} streams={streams} />
-            )}
+            {hasAdminRights && <UserList rtm={rtm} uid={userId} streams={streams} />}
             <Hosts streams={streams} currentMainId={currentMainId} />
+            {hasAdminRights && <div style={{ width: '20%' }} />}
           </LayoutGrid>
         </>
       )}

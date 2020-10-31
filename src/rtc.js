@@ -114,7 +114,8 @@ export default class Rtc {
       this.removeStream(stream.streamId);
     });
 
-    this.client.on('peer-leave', () => {
+    this.client.on('peer-leave', ({ stream }) => {
+      this.removeStream(stream.streamId);
       console.log('peer left');
     });
 
