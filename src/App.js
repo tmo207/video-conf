@@ -16,18 +16,24 @@ const LayoutGrid = styled.div`
   height: 100%;
 `;
 
+const ButtonContainer = styled.div`
+  display: flex;
+  justify-content: center;
+`;
+
 const ModalButton = styled.button`
   background-color: ${(props) => (props.accept ? 'green' : 'darkred')};
   border: none;
   border-radius: 20px;
   color: white;
-  padding: 8px 30px:
+  padding: 8px 30px;
   margin: 0 8px;
 `;
 
 const modalStyle = {
   content: {
     color: 'black',
+    textAlign: 'center',
     maxWidth: '90vw',
     width: '300px',
     height: 'fit-content',
@@ -200,31 +206,34 @@ const App = ({ rtc, rtm }) => {
             contentLabel="Example Modal"
             ariaHideApp={false}
           >
+            <h1>{isHostInvitation ? 'Konferenz beitreten?' : 'Bühne betreten?'}</h1>
             <p>
               {isHostInvitation
-                ? 'Der Host dieser Konferenz hat dich dazu eingeladen der Bühne beizutreten. Hierfür werden Mikrofon und deine Kamera aktiviert. Möchtest du beitreten?'
-                : 'Der Host dieser Konferenz hat dich dazu eingeladen den Hauptbildschirm einzunehmen. Möchtest du das?'}
+                ? 'Der Host dieser Konferenz hat dich dazu eingeladen der Konferenz beizutreten. Hierfür werden Mikrofon und deine Kamera aktiviert. Möchtest du beitreten?'
+                : 'Der Host dieser Konferenz hat dich dazu eingeladen die Bühne zu betreten. Möchtest du das?'}
             </p>
-            <ModalButton
-              accept
-              type="button"
-              onClick={() => {
-                if (isHostInvitation) acceptHostInvitation();
-                if (isStageInvitation) acceptStageInvitation();
-                setIsOpen(false);
-              }}
-            >
-              Beitreten
-            </ModalButton>
-            <ModalButton
-              type="button"
-              onClick={() => {
-                rtm.declineHostInvitation(userId, superhostId);
-                setIsOpen(false);
-              }}
-            >
-              Ablehnen
-            </ModalButton>
+            <ButtonContainer>
+              <ModalButton
+                accept
+                type="button"
+                onClick={() => {
+                  if (isHostInvitation) acceptHostInvitation();
+                  if (isStageInvitation) acceptStageInvitation();
+                  setIsOpen(false);
+                }}
+              >
+                Beitreten
+              </ModalButton>
+              <ModalButton
+                type="button"
+                onClick={() => {
+                  rtm.declineHostInvitation(userId, superhostId);
+                  setIsOpen(false);
+                }}
+              >
+                Ablehnen
+              </ModalButton>
+            </ButtonContainer>
           </Modal>
           <LayoutGrid>
             {hasAdminRights && <UserList rtm={rtm} uid={userId} streams={streams} />}
