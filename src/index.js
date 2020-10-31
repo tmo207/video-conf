@@ -9,12 +9,24 @@ import App from './App';
 import { appId, channelName } from './constants';
 
 const GlobalStyle = createGlobalStyle`
+* {
+  &:focus {
+    outline:none;
+  }
+}
+
   html, body, #root {
     height: 100%;
     margin: 0;
     padding: 0;
-    color: white;
-    background-color: black;
+    color: #000000;
+    font-family: Roboto;
+    font-size: 14px;
+    line-height: 16px;
+  }
+
+  html {
+    background-image: url(/background.jpg);
   }
 `;
 

@@ -27,8 +27,8 @@ const Host = styled(WithBorder)`
 const HostsContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
-  margin-top: 20px;
   width: 80%;
+  max-width: 58vw;
 `;
 
 const { audience, host, moderator, superhost } = roles;

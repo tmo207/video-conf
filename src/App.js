@@ -5,15 +5,18 @@ import Modal from 'react-modal';
 
 import { Hosts, UserList, ControlMenu } from './components';
 
+import { green, red, ControlItem } from './components/helpers/sharedStyles';
 import { channelName, roles } from './constants';
 
-const { audience, host, moderator, superhost } = roles;
+const { host, moderator, superhost } = roles;
 
 const LayoutGrid = styled.div`
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: start;
   height: 100%;
+  width: 100%;
+  margin-top: 200px;
 `;
 
 const ButtonContainer = styled.div`
@@ -22,12 +25,16 @@ const ButtonContainer = styled.div`
 `;
 
 const ModalButton = styled.button`
-  background-color: ${(props) => (props.accept ? 'green' : 'darkred')};
+  background-color: ${(props) => (props.accept ? green : red)};
   border: none;
   border-radius: 20px;
   color: white;
   padding: 8px 30px;
   margin: 0 8px;
+`;
+
+const ModalIcon = styled(ControlItem)`
+  margin: 0 auto;
 `;
 
 const modalStyle = {
@@ -213,12 +220,37 @@ const App = ({ rtc, rtm }) => {
             contentLabel="Example Modal"
             ariaHideApp={false}
           >
-            <h1>{isHostInvitation ? 'Konferenz beitreten?' : 'Bühne betreten?'}</h1>
-            <p>
-              {isHostInvitation
-                ? 'Der Host dieser Konferenz hat dich dazu eingeladen der Konferenz beizutreten. Hierfür werden Mikrofon und deine Kamera aktiviert. Möchtest du beitreten?'
-                : 'Der Host dieser Konferenz hat dich dazu eingeladen die Bühne zu betreten. Möchtest du das?'}
-            </p>
+            {isHostInvitation ? (
+              <>
+                <ModalIcon isActive>
+                  <svg
+                    width="28"
+                    height="19"
+                    viewBox="0 0 28 19"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M16.3431 0.875H2.32361C1.04028 0.875 0 1.83633 0 3.02227V15.9777C0 17.1637 1.04028 18.125 2.32361 18.125H16.3431C17.6264 18.125 18.6667 17.1637 18.6667 15.9777V3.02227C18.6667 1.83633 17.6264 0.875 16.3431 0.875ZM25.55 2.56855L20.2222 5.96465V13.0354L25.55 16.427C26.5806 17.0828 28 16.4135 28 15.268V3.72754C28 2.58652 26.5854 1.9127 25.55 2.56855Z"
+                      fill="#373737"
+                    />
+                  </svg>
+                </ModalIcon>
+                <h1>Konferenz beitreten?</h1>
+                <p>
+                  Der Host dieser Konferenz hat dich dazu eingeladen der Konferenz beizutreten.
+                  Hierfür werden Mikrofon und deine Kamera aktiviert. Möchtest du beitreten?
+                </p>
+              </>
+            ) : (
+              <>
+                <h1>Bühne betreten?</h1>
+                <p>
+                  Der Host dieser Konferenz hat dich dazu eingeladen die Bühne zu betreten. Möchtest
+                  du das? du das?
+                </p>
+              </>
+            )}
             <ButtonContainer>
               <ModalButton
                 accept
@@ -242,10 +274,9 @@ const App = ({ rtc, rtm }) => {
               </ModalButton>
             </ButtonContainer>
           </Modal>
+          {hasAdminRights && <UserList rtm={rtm} uid={userId} streams={streams} />}
           <LayoutGrid>
-            {hasAdminRights && <UserList rtm={rtm} uid={userId} streams={streams} />}
             <Hosts streams={streams} currentMainId={currentMainId} />
-            {hasAdminRights && <div style={{ width: '20%' }} />}
           </LayoutGrid>
         </>
       )}

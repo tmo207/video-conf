@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components/macro';
 
-import { border } from './helpers/sharedStyles';
+import { ControlItem } from './helpers/sharedStyles';
 
 const ControlMenuContainer = styled.div`
   z-index: 1000;
@@ -17,29 +17,6 @@ const ControlMenuContainer = styled.div`
   justify-content: space-between;
   align-items: center;
   border-radius: 10px;
-`;
-
-const ControlItem = styled.button`
-  width: 60px;
-  height: 60px;
-  background-color: white;
-  border-radius: 30px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  ${(props) => (props.red ? 'border: none;' : border)}
-  background-color: ${(props) => {
-    let color;
-    if (props.red) {
-      color = 'red';
-    } else {
-      color = props.isActive ? 'white' : 'grey';
-    }
-    return color;
-  }};
-  &:hover {
-    cursor: pointer;
-  }
 `;
 
 export const ControlMenu = ({ rtc, localstream, setIsPlaying, userId, role, mainScreenId }) => {
