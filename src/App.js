@@ -5,7 +5,7 @@ import Modal from 'react-modal';
 
 import { Hosts, UserList, ControlMenu } from './components';
 
-import { green, red, ControlItem } from './components/helpers/sharedStyles';
+import { green, red, ControlItem, contentMarginTop } from './components/helpers/sharedStyles';
 import { channelName, roles } from './constants';
 
 const { host, moderator, superhost } = roles;
@@ -16,7 +16,7 @@ const LayoutGrid = styled.div`
   align-items: start;
   height: 100%;
   width: 100%;
-  margin-top: 200px;
+  margin-top: ${contentMarginTop};
 `;
 
 const ButtonContainer = styled.div`
@@ -136,7 +136,7 @@ const App = ({ rtc, rtm }) => {
     );
 
     return () => {
-      // rtc.removeStream(rtc.localstream);
+      rtc.removeStream(rtc.localstream);
       rtm.leaveChannel();
     };
   }, []);
@@ -169,10 +169,6 @@ const App = ({ rtc, rtm }) => {
     rtmLogin(uid);
   };
 
-  useEffect(() => {
-    console.log({ invitationType });
-  }, [invitationType]);
-
   const hasAdminRights = userRole === superhost || userRole === moderator;
   const isHostInvitation = invitationType === host;
   const isStageInvitation = invitationType === 'stage';
@@ -201,7 +197,18 @@ const App = ({ rtc, rtm }) => {
         ))}
       {userId && (
         <>
-          <ToastContainer autoClose closeButton={false} draggable={false} closeOnClick={false} />
+          <ToastContainer
+            position="top-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            pauseOnHover
+            closeButton={false}
+            draggable={false}
+          />
           {isPlaying && (
             <ControlMenu
               localstream={rtc.localstream}

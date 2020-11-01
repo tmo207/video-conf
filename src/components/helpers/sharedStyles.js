@@ -6,6 +6,7 @@ export const red = '#ab0000';
 export const black = '#000000';
 export const borderRadius = 'border-radius: 20px;';
 export const border = `border: 2px solid ${green};`;
+export const contentMarginTop = '200px';
 
 export const GridItemSmall = styled.div`
   flex-grow: 1;

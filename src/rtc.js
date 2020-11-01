@@ -1,7 +1,7 @@
 import AgoraRTC from 'agora-rtc-sdk';
 import { appId, channelName, roles } from './constants';
 
-const { host, superhost, audience, moderator } = roles;
+const { host, superhost, audience } = roles;
 
 const handleFail = (error) => console.log('Error:', error);
 
@@ -46,6 +46,7 @@ export default class Rtc {
         stream.close();
         const tempList = [...this.streams];
         tempList.splice(index, 1);
+        this.streams = tempList;
         this.handlers.setStreams(tempList);
       }
     });

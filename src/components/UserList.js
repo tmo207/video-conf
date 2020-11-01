@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components/macro';
 
 import { roles } from '../constants';
-import { GridItemSmall, ControlItem, green, black } from './helpers/sharedStyles';
+import { GridItemSmall, ControlItem, green, black, contentMarginTop } from './helpers/sharedStyles';
 
 const isOdd = (num) => num % 2 === 1;
 const { audience, host } = roles;
@@ -10,6 +10,7 @@ const { audience, host } = roles;
 const UserListContainer = styled(GridItemSmall)`
   position: fixed;
   z-index: 1;
+  top: ${contentMarginTop};
 `;
 
 const Wrapper = styled.div`
@@ -26,7 +27,7 @@ const Content = styled.div`
   position: absolute;
   background-color: white;
   border-radius: 10px;
-  height: calc(100vh - 200px);
+  height: calc(100vh - ${contentMarginTop});
   z-index: 1;
   width: 20vw;
 `;
