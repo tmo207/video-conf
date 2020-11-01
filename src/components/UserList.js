@@ -91,7 +91,7 @@ const UserActionItem = styled.button`
   }
 `;
 
-export const UserList = ({ rtc, rtm, uid, streams }) => {
+export const UserList = ({ rtm, uid, streams }) => {
   // State types = audience | host;
   const [showUsersWithRole, setShowUsersWithRole] = useState(audience);
   const [searchValue, setSearchValue] = useState('');

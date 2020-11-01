@@ -26,11 +26,15 @@ export default class Rtc {
           channelName, // channelId
           uid, // User specific ID. Type: Number or string, must be the same type for all users
           (id) => {
-            const isHost = role === host;
+            const isHost = role === host || role === 'cohost';
             const isSuperHost = role === superhost;
 
-            if (isHost || isSuperHost) {
+            if (isSuperHost) {
               this.publishAndStartStream(id, role);
+            }
+
+            if (isHost) {
+              this.publishAndStartStream(id, host);
             }
           },
           handleFail
