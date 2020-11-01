@@ -80,10 +80,10 @@ export default class Rtm extends EventEmitter {
     return this.channels[channelName].channel.sendMessage({ text });
   }
 
-  async sendPeerMessage(text, peerId) {
+  /* async sendPeerMessage(text, peerId) {
     console.log('sendPeerMessage', text, peerId);
     return this.client.sendMessageToPeer({ text }, peerId);
-  }
+  } */
 
   async inviteAudienceToBecomeHost({ peerId, ownId }) {
     return this.client.sendMessageToPeer({ text: this.generateHostInvitation(ownId) }, peerId);
@@ -93,10 +93,14 @@ export default class Rtm extends EventEmitter {
     return this.client.sendMessageToPeer({ text: this.generateStageInvitation(ownId) }, peerId);
   }
 
-  async queryPeersOnlineStatus(memberId) {
+  removeHost(hostId) {
+    return this.client.sendMessageToPeer({ text: this.generateRemoveHostMessage(hostId) }, hostId);
+  }
+
+  /*  async queryPeersOnlineStatus(memberId) {
     console.log('queryPeersOnlineStatus', memberId);
     return this.client.queryPeersOnlineStatus([memberId]);
-  }
+  } */
 
   async getMembers() {
     return this.channels[channelName].channel.getMembers().then((userList) => {
@@ -105,6 +109,15 @@ export default class Rtm extends EventEmitter {
       }
     });
   }
+
+  generateRemoveHostMessage = (hostId) => {
+    return JSON.stringify({
+      subject: 'remove-you-as-host',
+      issuer: hostId, // Here: id of host to be removed
+      token:
+        '00609055eb4141f4ab4809ff8a2302254e9IAD8tvnQu5r8hAlgFGLlmZ8Cre6tU1VvEdKs/WvGmuFU4uAbzEcAAAAAEADOpjO6dw9yXwEAAQB2D3Jf',
+    });
+  };
 
   generateHostInvitation = (issuerId) => {
     return JSON.stringify({

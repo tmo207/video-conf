@@ -85,9 +85,13 @@ const UserActionContainer = styled.div`
 const UserActionItem = styled.button`
   border: none;
   background-color: transparent;
+
+  &:hover {
+    cursor: pointer;
+  }
 `;
 
-export const UserList = ({ rtm, uid, streams }) => {
+export const UserList = ({ rtc, rtm, uid, streams }) => {
   // State types = audience | host;
   const [showUsersWithRole, setShowUsersWithRole] = useState(audience);
   const [searchValue, setSearchValue] = useState('');
@@ -107,6 +111,10 @@ export const UserList = ({ rtm, uid, streams }) => {
 
   const promoteHostOnStage = (peerId) => {
     rtm.inviteHostToBecomeStage({ peerId, ownId: uid });
+  };
+
+  const removeHost = (userId) => {
+    rtm.removeHost(userId);
   };
 
   const getMembers = () => {
@@ -208,10 +216,7 @@ export const UserList = ({ rtm, uid, streams }) => {
                           />
                         </svg>
                       </UserActionItem>
-                      <UserActionItem
-                        type="button"
-                        onClick={() => console.log('removehostfromstage')}
-                      >
+                      <UserActionItem type="button" onClick={() => removeHost(user)}>
                         <svg
                           width="7"
                           height="4"

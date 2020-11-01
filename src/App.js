@@ -8,7 +8,7 @@ import { Hosts, UserList, ControlMenu } from './components';
 import { green, red, ControlItem, contentMarginTop } from './components/helpers/sharedStyles';
 import { channelName, roles } from './constants';
 
-const { host, moderator, superhost } = roles;
+const { audience, host, moderator, superhost } = roles;
 
 const LayoutGrid = styled.div`
   display: flex;
@@ -95,6 +95,16 @@ const App = ({ rtc, rtm }) => {
         break;
       case 'stage-invitation-accepted':
         setMainScreenId(msg.issuer);
+        break;
+      case 'remove-you-as-host':
+        rtc.client.setClientRole(audience, (error) => {
+          if (!error) {
+            rtc.removeStream(msg.issuer);
+            console.log('remove host success');
+          } else {
+            console.log('removeHost error', error);
+          }
+        });
         break;
       default:
         break;
