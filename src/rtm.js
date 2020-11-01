@@ -48,6 +48,7 @@ export default class Rtm extends EventEmitter {
 
     this.channels[channelName].channel.on('ChannelMessage', (...args) => {
       const message = args.filter((arg) => arg.text)[0];
+      console.log({ message });
       this.handlers.onMessage(message.text);
     });
   }

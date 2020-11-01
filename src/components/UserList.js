@@ -91,7 +91,7 @@ const UserActionItem = styled.button`
   }
 `;
 
-export const UserList = ({ rtm, uid, streams }) => {
+export const UserList = ({ rtm, uid, streams, currentMainId, setMainScreenId }) => {
   // State types = audience | host;
   const [showUsersWithRole, setShowUsersWithRole] = useState(audience);
   const [searchValue, setSearchValue] = useState('');
@@ -115,6 +115,7 @@ export const UserList = ({ rtm, uid, streams }) => {
 
   const removeHost = (userId) => {
     rtm.removeHost(userId);
+    setMainScreenId(null);
   };
 
   const getMembers = () => {
@@ -202,7 +203,17 @@ export const UserList = ({ rtm, uid, streams }) => {
                   <UserContainer index={index} key={user}>
                     <UserName>{user}</UserName>
                     <UserActionContainer>
-                      <UserActionItem type="button" onClick={() => promoteHostOnStage(user)}>
+                      <UserActionItem
+                        type="button"
+                        onClick={() => {
+                          if (user === uid) {
+                            rtm.acceptStageInvitation(uid, currentMainId);
+                            setMainScreenId(uid);
+                          } else {
+                            promoteHostOnStage(user);
+                          }
+                        }}
+                      >
                         <svg
                           width="12"
                           height="16"

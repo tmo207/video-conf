@@ -160,7 +160,9 @@ const App = ({ rtc, rtm }) => {
       rtm.init(rtmHandlers);
       rtm.login(uid, null).then(() => {
         rtm.setLoggedIn(true);
-        rtm.joinChannel(channelName);
+        rtm.joinChannel(channelName).then(() => {
+          rtm.subscribeChannelEvents(() => {});
+        });
       });
       rtm.subscribeClientEvents();
     } catch (err) {
@@ -291,7 +293,15 @@ const App = ({ rtc, rtm }) => {
               </ModalButton>
             </ButtonContainer>
           </Modal>
-          {hasAdminRights && <UserList rtm={rtm} uid={userId} streams={streams} />}
+          {hasAdminRights && (
+            <UserList
+              currentMainId={currentMainId}
+              setMainScreenId={setMainScreenId}
+              rtm={rtm}
+              uid={userId}
+              streams={streams}
+            />
+          )}
           <LayoutGrid>
             <Hosts streams={streams} currentMainId={currentMainId} />
           </LayoutGrid>
