@@ -2,15 +2,13 @@ import { useEffect } from 'react';
 import styled from 'styled-components/macro';
 import PropTypes from 'prop-types';
 
-import { WithBorder, borderRadius, moveToHost, moveToMain } from '../utils';
+import { WithBorder, borderRadius, hostVideoWidth, moveToHost, moveToMain } from '../utils';
 
 const Host = styled(WithBorder)`
   background: grey;
   margin: 0 5px;
   text-align: center;
-  height: 200px;
-  width: 200px;
-  max-width: 20%;
+  width: ${hostVideoWidth};
   position: relative;
   order: 2;
 
