@@ -19,4 +19,5 @@ export const MESSAGES = {
   STAGE_INVITE_ACCEPTED: 'stage-invitation-accepted',
   REMOVE_AS_HOST: 'remove-you-as-host',
   CHANNEL_OPENED: 'channel-opened',
+  MAIN_SCREEN_HOST_REMOVED: 'main-screen-host-removed',
 };

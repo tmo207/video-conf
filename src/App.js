@@ -15,6 +15,7 @@ const {
   STAGE_INVITE_ACCEPTED,
   REMOVE_AS_HOST,
   CHANNEL_OPENED,
+  MAIN_SCREEN_HOST_REMOVED,
 } = MESSAGES;
 
 const LayoutGrid = styled.div`
@@ -41,7 +42,7 @@ const App = ({ rtc, rtm }) => {
 
   const onMessage = (message) => {
     const msg = JSON.parse(message);
-    if (!msg || !msg.subject || !msg.issuer) {
+    if (!msg || !msg.subject || !(msg.issuer || msg.receiver)) {
       return false;
     }
     switch (msg.subject) {
@@ -77,11 +78,21 @@ const App = ({ rtc, rtm }) => {
           if (!error) {
             rtc.removeStream(msg.issuer);
             rtc.client.unpublish(rtc.localstream);
+            console.log({ receiver: msg.receiver, currentMainId }, msg.receiver === currentMainId);
+            if (msg.receiver === currentMainId) {
+              console.log('inside');
+              setMainScreenId(null);
+              rtm.sendChannelMessage(rtm.generateMainScreenHostRemovedMessage(msg.receiver));
+            }
             console.log('remove host success');
           } else {
             console.log('removeHost error', error);
           }
         });
+        break;
+      case MAIN_SCREEN_HOST_REMOVED:
+        console.log('main screen host removed');
+        setMainScreenId(null);
         break;
       case CHANNEL_OPENED:
         setIsWaitingRoom(false);
@@ -91,6 +102,22 @@ const App = ({ rtc, rtm }) => {
         break;
     }
   };
+
+  // const acceptHostInvitation = () => {
+  //   rtm.acceptHostInvitation(userId, superhostId);
+  //   rtc.client.setClientRole(host, (error) => {
+  //     if (!error) {
+  //       rtc.publishAndStartStream(userId, host);
+  //     } else {
+  //       console.log('setHost error', error);
+  //     }
+  //   });
+  // };
+
+  // const acceptStageInvitation = () => {
+  //   setMainScreenId(userId);
+  //   rtm.acceptStageInvitation(userId, currentMainId);
+  // };
 
   useEffect(() => {
     const video = document.getElementById(`video-${currentMainId}`);

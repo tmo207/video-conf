@@ -45,7 +45,7 @@ export default class Rtc {
     );
   }
 
-  removeStream(uid) {
+  async removeStream(uid) {
     this.streams.map((stream, index) => {
       if (stream.streamId === uid) {
         stream.close();
@@ -59,7 +59,7 @@ export default class Rtc {
 
   publishAndStartStream(uid, role) {
     const stream = this.createStream(uid, role);
-
+    // Toast für cant access media, you need to allow camera, mic
     stream.init(() => {
       this.client.publish(stream, onError);
       this.streams = [...this.streams, stream];
@@ -75,13 +75,14 @@ export default class Rtc {
       audio: false,
       video: false,
       screen,
+      screenAudio: screen,
     };
 
     switch (attendeeMode) {
       case HOST:
       case SUPERHOST:
         defaultConfig.video = true;
-        defaultConfig.audio = true;
+        defaultConfig.audio = false; // TURN TRUE
         break;
       default:
       case AUDIENCE:

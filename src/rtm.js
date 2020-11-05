@@ -13,6 +13,7 @@ const {
   STAGE_INVITE_ACCEPTED,
   REMOVE_AS_HOST,
   CHANNEL_OPENED,
+  MAIN_SCREEN_HOST_REMOVED,
 } = MESSAGES;
 
 export default class Rtm extends EventEmitter {
@@ -60,7 +61,6 @@ export default class Rtm extends EventEmitter {
 
     this.channels[CHANNEL_NAME].channel.on('ChannelMessage', (...args) => {
       const message = args.filter((arg) => arg.text)[0];
-      console.log({ message });
       this.handlers.onMessage(message.text);
     });
   }
@@ -120,6 +120,15 @@ export default class Rtm extends EventEmitter {
     });
   };
 
+  generateRemoveHostMessage = (hostId) => {
+    return JSON.stringify({
+      subject: 'remove-you-as-host',
+      receiver: hostId, // Here: id of host to be removed
+      token:
+        '00609055eb4141f4ab4809ff8a2302254e9IAD8tvnQu5r8hAlgFGLlmZ8Cre6tU1VvEdKs/WvGmuFU4uAbzEcAAAAAEADOpjO6dw9yXwEAAQB2D3Jf',
+    });
+  };
+
   generateHostInvitationAccept = (issuerId) => {
     return JSON.stringify({
       subject: HOST_INVITE_ACCEPTED,
@@ -159,6 +168,15 @@ export default class Rtm extends EventEmitter {
     return JSON.stringify({
       subject: REMOVE_AS_HOST,
       issuer: hostId, // Here: id of host to be removed
+      token:
+        '00609055eb4141f4ab4809ff8a2302254e9IAD8tvnQu5r8hAlgFGLlmZ8Cre6tU1VvEdKs/WvGmuFU4uAbzEcAAAAAEADOpjO6dw9yXwEAAQB2D3Jf',
+    });
+  };
+
+  generateMainScreenHostRemovedMessage = (issuerId) => {
+    return JSON.stringify({
+      subject: MAIN_SCREEN_HOST_REMOVED,
+      issuer: issuerId,
       token:
         '00609055eb4141f4ab4809ff8a2302254e9IAD8tvnQu5r8hAlgFGLlmZ8Cre6tU1VvEdKs/WvGmuFU4uAbzEcAAAAAEADOpjO6dw9yXwEAAQB2D3Jf',
     });

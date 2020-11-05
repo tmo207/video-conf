@@ -123,7 +123,9 @@ export const UserList = ({ rtm, uid, streams, currentMainId, setMainScreenId }) 
 
   const removeHost = (userId) => {
     rtm.removeHost(userId);
-    setMainScreenId(null);
+    if (currentMainId === userId) {
+      setMainScreenId(null);
+    }
   };
 
   const getMembers = () => {
