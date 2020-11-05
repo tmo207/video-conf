@@ -1,7 +1,7 @@
 import ReactModal from 'react-modal';
 import styled from 'styled-components/macro';
 
-import { ControlItem, green, hangUpIcon, hangUp, red, roles, stage } from '../utils';
+import { ControlItem, green, hangUpIcon, hangUp, red, roles, stage, videoIcon } from '../utils';
 
 const { host } = roles;
 
@@ -88,7 +88,7 @@ export const Modal = ({
       {isHostInvitation && (
         <ModalContent
           {...{
-            icon: hangUpIcon,
+            icon: videoIcon,
             headline: 'Konferenz beitreten?',
             text:
               'Der Host dieser Konferenz hat dich dazu eingeladen der Konferenz beizutreten. Hierfür werden Mikrofon und deine Kamera aktiviert. Möchtest du beitreten?',
@@ -113,6 +113,7 @@ export const Modal = ({
       {isHangUp && (
         <ModalContent
           {...{
+            icon: hangUpIcon,
             headline: 'Bist du dir sicher?',
             text:
               'Willst du wirklich aus der Videokonferenz austreten? Dein Platz wird eventuell neu besetzt.',
