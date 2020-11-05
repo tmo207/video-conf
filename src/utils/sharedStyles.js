@@ -6,6 +6,7 @@ export const black = '#000000';
 export const borderRadius = 'border-radius: 20px;';
 export const border = `border: 2px solid ${green};`;
 export const contentMarginTop = '200px';
+export const hostVideoWidth = '18%';
 
 export const GridItemSmall = styled.div`
   flex-grow: 1;
@@ -43,9 +44,7 @@ export const WithBorder = styled.div`
 export const moveToHost = (id) => {
   const el = document.getElementById(`video-${id}`);
   if (el) {
-    el.style.maxWidth = '20%';
-    el.style.width = '200px';
-    el.style.height = '200px';
+    el.style.width = hostVideoWidth;
     el.style.order = 2;
     el.style.marginBottom = 0;
   }
@@ -54,9 +53,7 @@ export const moveToHost = (id) => {
 export const moveToMain = (id) => {
   const el = document.getElementById(`video-${id}`);
   if (el) {
-    el.style.maxWidth = '100%';
     el.style.width = '100%';
-    el.style.height = '500px';
     el.style.order = 1;
     el.style.marginBottom = '20px';
   }
