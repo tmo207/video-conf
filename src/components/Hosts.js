@@ -1,9 +1,8 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import styled from 'styled-components/macro';
 import PropTypes from 'prop-types';
 
-import { WithBorder, borderRadius, moveToHost, moveToMain } from './helpers/sharedStyles';
-import { roles } from '../constants';
+import { WithBorder, borderRadius, moveToHost, moveToMain } from '../utils';
 
 const Host = styled(WithBorder)`
   background: grey;
@@ -31,8 +30,6 @@ const HostsContainer = styled.div`
   max-width: 58vw;
 `;
 
-const { audience, host, moderator, superhost } = roles;
-
 export const Hosts = ({ streams, currentMainId }) => {
   useEffect(() => {
     moveToMain(currentMainId);
@@ -57,6 +54,5 @@ Hosts.defaultProps = {
 };
 
 Hosts.propTypes = {
-  role: PropTypes.oneOf([audience, host, moderator, superhost]).isRequired,
   streams: PropTypes.arrayOf(PropTypes.object),
 };

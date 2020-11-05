@@ -7,10 +7,14 @@
       "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }],
       "react/jsx-props-no-spreading": "off",
       "react/jsx-wrap-multilines": "off",
+      "react/jsx-uses-react": "off",
+      "react/react-in-jsx-scope": "off",
       "import/prefer-default-export": "off",
       "no-unused-vars": "warn",
       "react/prop-types": "off",
       "unused-imports/no-unused-imports": "warn",
+      "consistent-return": "off",
+      "array-callback-return": "off",
       "unused-imports/no-unused-vars": [
         "warn",
         { "vars": "all", "varsIgnorePattern": "^_", "args": "after-used", "argsIgnorePattern": "^_" }

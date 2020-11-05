@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 import styled from 'styled-components/macro';
 
 export const green = '#8bbb48';

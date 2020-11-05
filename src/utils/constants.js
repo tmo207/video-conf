@@ -1,7 +1,3 @@
-import { createContext } from 'react';
-
-export const UserContext = createContext({ uid: '', role: '', setRole: () => {} });
-
 export const appCertificate = '7ec8340b6e3e4d36807ff15eb2d307ed';
 export const appId = 'faf886e398cb4bfdbd38868cfdf11f29';
 export const channelName = 'react-test';
@@ -14,3 +10,6 @@ export const roles = {
   moderator: 'moderator',
   audience: 'audience',
 };
+
+export const stage = 'stage';
+export const hangUp = 'hangup';

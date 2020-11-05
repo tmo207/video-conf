@@ -1,7 +1,7 @@
 import AgoraRTM from 'agora-rtm-sdk';
 import EventEmitter from 'events';
 
-import { appId, channelName } from './constants';
+import { appId, channelName } from './utils';
 
 export default class Rtm extends EventEmitter {
   constructor() {

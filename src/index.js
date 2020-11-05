@@ -6,7 +6,7 @@ import Rtm from './rtm';
 import Rtc from './rtc';
 import App from './App';
 
-import { appId, channelName } from './constants';
+import { appId, channelName } from './utils';
 
 const GlobalStyle = createGlobalStyle`
 * {

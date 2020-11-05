@@ -1,5 +1,5 @@
 import AgoraRTC from 'agora-rtc-sdk';
-import { appId, channelName, roles } from './constants';
+import { appId, channelName, roles } from './utils';
 
 const { host, superhost, audience } = roles;
 

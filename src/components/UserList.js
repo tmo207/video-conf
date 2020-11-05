@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import styled from 'styled-components/macro';
 
-import { roles } from '../constants';
-import { GridItemSmall, ControlItem, green, black, contentMarginTop } from './helpers/sharedStyles';
+import { GridItemSmall, ControlItem, green, black, contentMarginTop, roles } from '../utils';
 
 const isOdd = (num) => num % 2 === 1;
 const { audience, host } = roles;
