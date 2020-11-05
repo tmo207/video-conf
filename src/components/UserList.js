@@ -1,7 +1,17 @@
 import { useState, useEffect } from 'react';
 import styled from 'styled-components/macro';
 
-import { GridItemSmall, ControlItem, green, black, contentMarginTop, roles } from '../utils';
+import {
+  ControlItem,
+  GridItemSmall,
+  black,
+  contentMarginTop,
+  green,
+  minusIcon,
+  plusIcon,
+  roles,
+  StageIcon,
+} from '../utils';
 
 const isOdd = (num) => num % 2 === 1;
 const { audience, host } = roles;
@@ -91,10 +101,9 @@ const UserActionItem = styled.button`
 `;
 
 export const UserList = ({ rtm, uid, streams, currentMainId, setMainScreenId }) => {
-  // State types = audience | host;
+  // showUsersWithRole types = audience | host;
   const [showUsersWithRole, setShowUsersWithRole] = useState(audience);
   const [searchValue, setSearchValue] = useState('');
-  const [usersInList, setUsersInList] = useState([]);
   const [users, setUsers] = useState([]);
   const [show, setShow] = useState(false);
   const [hosts, setHosts] = useState([]);
@@ -138,6 +147,8 @@ export const UserList = ({ rtm, uid, streams, currentMainId, setMainScreenId }) 
   const showAudience = showUsersWithRole === audience;
   const showHosts = showUsersWithRole === host;
 
+  const inSearchResults = (user) => user.includes(searchValue) || searchValue === '';
+
   return (
     <UserListContainer>
       <Wrapper>
@@ -170,81 +181,52 @@ export const UserList = ({ rtm, uid, streams, currentMainId, setMainScreenId }) 
                 Teilnehmer
               </ListType>
             </ListTypeContainer>
-            <UserSearchInput type="text" placeholder="Suchen" onChange={onChange} />
-            {users.map((user, index) => {
-              const isAudience = !hosts.includes(user);
-              const isHost = hosts.includes(user);
-              if (isAudience && showAudience) {
-                return (
-                  <UserContainer index={index} key={user}>
-                    <UserName>{user}</UserName>
-                    <UserActionContainer>
-                      <UserActionItem type="button" onClick={() => promoteUserToHost(user)}>
-                        <svg
-                          width="11"
-                          height="11"
-                          viewBox="0 0 11 11"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
+            <UserSearchInput type="text" placeholder="Suchen..." onChange={onChange} />
+            {showAudience &&
+              users.map((user, index) => {
+                const isAudience = !hosts.includes(user);
+                if (isAudience && inSearchResults(user)) {
+                  return (
+                    <UserContainer index={index} key={user}>
+                      <UserName>{user}</UserName>
+                      <UserActionContainer>
+                        <UserActionItem type="button" onClick={() => promoteUserToHost(user)}>
+                          {plusIcon}
+                        </UserActionItem>
+                      </UserActionContainer>
+                    </UserContainer>
+                  );
+                }
+              })}
+            {showHosts &&
+              hosts.map((user, index) => {
+                const isCurrentMain = user === currentMainId;
+                if (inSearchResults(user)) {
+                  return (
+                    <UserContainer index={index} key={user}>
+                      <UserName>{user}</UserName>
+                      <UserActionContainer>
+                        <UserActionItem
+                          type="button"
+                          onClick={() => {
+                            if (user === uid) {
+                              rtm.acceptStageInvitation(uid, currentMainId);
+                              setMainScreenId(uid);
+                            } else {
+                              promoteHostOnStage(user);
+                            }
+                          }}
                         >
-                          <path
-                            d="M6.81836 4.04102H10.3438V6.58984H6.81836V10.5742H4.13281V6.58984H0.597656V4.04102H4.13281V0.222656H6.81836V4.04102Z"
-                            fill="#8BBB48"
-                          />
-                        </svg>
-                      </UserActionItem>
-                    </UserActionContainer>
-                  </UserContainer>
-                );
-              }
-              if (isHost && showHosts) {
-                return (
-                  <UserContainer index={index} key={user}>
-                    <UserName>{user}</UserName>
-                    <UserActionContainer>
-                      <UserActionItem
-                        type="button"
-                        onClick={() => {
-                          if (user === uid) {
-                            rtm.acceptStageInvitation(uid, currentMainId);
-                            setMainScreenId(uid);
-                          } else {
-                            promoteHostOnStage(user);
-                          }
-                        }}
-                      >
-                        <svg
-                          width="12"
-                          height="16"
-                          viewBox="0 0 12 16"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M0 6H2V4.81625C0.8375 4.40312 0 3.30438 0 2H2V1C2 0.447812 2.44781 0 3 0H9C9.55219 0 10 0.447812 10 1V2H12C12 3.30438 11.1625 4.40312 10 4.81625V6H12C12 7.30438 11.1625 8.40312 10 8.81625V10H12C12 11.3387 11.1172 12.4591 9.90656 12.8453C9.51813 14.6475 7.91875 16 6 16C4.08125 16 2.48187 14.6475 2.09344 12.8453C0.882812 12.4591 0 11.3387 0 10H2V8.81625C0.8375 8.40312 0 7.30438 0 6ZM6 13C6.82844 13 7.5 12.3284 7.5 11.5C7.5 10.6716 6.82844 10 6 10C5.17156 10 4.5 10.6716 4.5 11.5C4.5 12.3284 5.17156 13 6 13ZM6 9C6.82844 9 7.5 8.32844 7.5 7.5C7.5 6.67156 6.82844 6 6 6C5.17156 6 4.5 6.67156 4.5 7.5C4.5 8.32844 5.17156 9 6 9ZM6 5C6.82844 5 7.5 4.32844 7.5 3.5C7.5 2.67156 6.82844 2 6 2C5.17156 2 4.5 2.67156 4.5 3.5C4.5 4.32844 5.17156 5 6 5Z"
-                            fill="#8BBB48"
-                          />
-                        </svg>
-                      </UserActionItem>
-                      <UserActionItem type="button" onClick={() => removeHost(user)}>
-                        <svg
-                          width="7"
-                          height="4"
-                          viewBox="0 0 7 4"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M6.19531 3.04883H0.697266V0.773438H6.19531V3.04883Z"
-                            fill="#DE0000"
-                          />
-                        </svg>
-                      </UserActionItem>
-                    </UserActionContainer>
-                  </UserContainer>
-                );
-              }
-            })}
+                          <StageIcon isActive={isCurrentMain} />
+                        </UserActionItem>
+                        <UserActionItem type="button" onClick={() => removeHost(user)}>
+                          {minusIcon}
+                        </UserActionItem>
+                      </UserActionContainer>
+                    </UserContainer>
+                  );
+                }
+              })}
           </Content>
         )}
       </Wrapper>
