@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import styled from 'styled-components/macro';
-import { ToastContainer, toast } from 'react-toastify';
+import { ToastContainer, toast, cssTransition } from 'react-toastify';
 
 import { Modal, Hosts, UserList, ControlMenu } from './components';
 
@@ -16,6 +16,15 @@ const LayoutGrid = styled.div`
   width: 100%;
   margin-top: ${contentMarginTop};
 `;
+
+const Zoom = cssTransition({
+  enter: 'zoomIn',
+  exit: 'zoomOut',
+  duration: 750,
+  appendPosition: false,
+  collapse: true,
+  collapseDuration: 300,
+});
 
 const App = ({ rtc, rtm }) => {
   const [userId, setUid] = useState();
@@ -47,16 +56,24 @@ const App = ({ rtc, rtm }) => {
         break;
       case 'host-invitation-accepted':
         toast(`host invitation accepted from: ${msg.issuer}`, {
-          autoClose: 8000,
-          draggable: true,
+          position: 'top-right',
+          autoClose: 5000,
+          hideProgressBar: false,
           closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
         });
         break;
       case 'host-invitation-declined':
         toast(`host invitation declined from: ${msg.issuer}`, {
-          autoClose: 8000,
-          draggable: true,
+          position: 'top-right',
+          autoClose: 5000,
+          hideProgressBar: false,
           closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
         });
         break;
       case 'stage-invitation-accepted':
@@ -130,12 +147,33 @@ const App = ({ rtc, rtm }) => {
     rtc.createClient();
     rtc.initClient(uid, role, rtcHandlers);
     rtmLogin(uid);
+    toast(`Host invitation accepted from User Abc`, {
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    });
   };
 
   const hasAdminRights = userRole === superhost || userRole === moderator;
 
   return (
     <>
+      <Zoom>
+        <ToastContainer
+          closeButton={false}
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          transition="bounce"
+        />
+      </Zoom>
       {users.length &&
         !userId &&
         users.map((currentUser) => (
@@ -158,18 +196,6 @@ const App = ({ rtc, rtm }) => {
         ))}
       {userId && (
         <>
-          <ToastContainer
-            position="top-right"
-            autoClose={5000}
-            hideProgressBar={false}
-            newestOnTop={false}
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            pauseOnHover
-            closeButton={false}
-            draggable={false}
-          />
           {isPlaying && (
             <ControlMenu
               {...{
