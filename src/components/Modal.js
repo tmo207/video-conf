@@ -44,6 +44,7 @@ const modalStyle = {
 export const Modal = ({
   currentMainId,
   isOpen,
+  isWaitingRoom,
   modalType,
   rtc,
   rtm,
@@ -56,11 +57,9 @@ export const Modal = ({
   const acceptHostInvitation = () => {
     rtm.acceptHostInvitation(userId, superhostId);
     rtc.client.setClientRole(host, (error) => {
-      if (!error) {
-        rtc.publishAndStartStream(userId, host);
-      } else {
-        console.log('setHost error', error);
-      }
+      if (!error && isWaitingRoom) rtc.join(userId, host);
+      else if (!error && !isWaitingRoom) rtc.publishAndStartStream(userId, host);
+      else console.log('setHost error', error);
     });
   };
 
@@ -114,6 +113,7 @@ export const Modal = ({
         <ModalContent
           {...{
             icon: hangUpIcon,
+            iconRed: true,
             headline: 'Bist du dir sicher?',
             text:
               'Willst du wirklich aus der Videokonferenz austreten? Dein Platz wird eventuell neu besetzt.',
@@ -126,9 +126,13 @@ export const Modal = ({
   );
 };
 
-const ModalContent = ({ icon, headline, text, onAccept, onDecline, setIsOpen }) => (
+const ModalContent = ({ icon, iconRed, headline, text, onAccept, onDecline, setIsOpen }) => (
   <>
-    {icon && <ModalIcon isActive>{icon}</ModalIcon>}
+    {icon && (
+      <ModalIcon red={iconRed} isActive>
+        {icon}
+      </ModalIcon>
+    )}
     {headline && <h1>{headline}</h1>}
     {text && <p>{text}</p>}
     <ButtonContainer>

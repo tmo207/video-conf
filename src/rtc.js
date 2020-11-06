@@ -15,30 +15,34 @@ export default class Rtc {
     return this.client;
   }
 
-  initClient(uid, role, handlers) {
+  join(uid, role) {
+    this.client.join(
+      null, // tokenOrKey: Token or Channel Key
+      channelName, // channelId
+      uid, // User specific ID. Type: Number or string, must be the same type for all users
+      (id) => {
+        const isHost = role === host || role === 'cohost';
+        const isSuperHost = role === superhost;
+
+        if (isSuperHost) {
+          this.publishAndStartStream(id, role);
+        }
+
+        if (isHost) {
+          this.publishAndStartStream(id, host);
+        }
+      },
+      handleFail
+    );
+  }
+
+  init(handlers, onSuccess) {
     this.handlers = handlers;
     this.client.init(
       appId,
       () => {
         this.subscribeToStreamEvents();
-        this.client.join(
-          null, // tokenOrKey: Token or Channel Key
-          channelName, // channelId
-          uid, // User specific ID. Type: Number or string, must be the same type for all users
-          (id) => {
-            const isHost = role === host || role === 'cohost';
-            const isSuperHost = role === superhost;
-
-            if (isSuperHost) {
-              this.publishAndStartStream(id, role);
-            }
-
-            if (isHost) {
-              this.publishAndStartStream(id, host);
-            }
-          },
-          handleFail
-        );
+        onSuccess();
       },
       () => console.log('failed to initialize')
     );

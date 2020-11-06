@@ -4,9 +4,18 @@ import { ToastContainer, toast } from 'react-toastify';
 
 import { Modal, Hosts, UserList, ControlMenu } from './components';
 
-import { channelName, roles, contentMarginTop, stage } from './utils';
+import { channelName, roles, contentMarginTop, stage, messages } from './utils';
 
 const { audience, host, moderator, superhost } = roles;
+const {
+  hostInvite,
+  hostInviteAccepted,
+  hostInviteDeclined,
+  stageInvite,
+  stageInviteAccepted,
+  removeHostRight,
+  channelOpened,
+} = messages;
 
 const LayoutGrid = styled.div`
   display: flex;
@@ -23,9 +32,10 @@ const App = ({ rtc, rtm }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [modalIsOpen, setIsOpen] = useState(false);
   const [superhostId, setSuperhostId] = useState();
-  const [currentMainId, setMainScreenId] = useState();
+  const [currentMainId, setMainScreenId] = useState(); // Serverseitig
   const [streams, setStreams] = useState([]);
   const [userRole, setRole] = useState();
+  const [isWaitingRoom, setIsWaitingRoom] = useState(true); // Serverseitig
   // Types: host | stage | hangup
   const [modalType, setModalType] = useState();
 
@@ -35,34 +45,34 @@ const App = ({ rtc, rtm }) => {
       return false;
     }
     switch (msg.subject) {
-      case 'host-invitation':
+      case hostInvite:
         setModalType(host);
         setIsOpen(true);
         setSuperhostId(msg.issuer);
         break;
-      case 'stage-invitation':
-        setModalType(stage);
-        setIsOpen(true);
-        setSuperhostId(msg.issuer);
-        break;
-      case 'host-invitation-accepted':
+      case hostInviteAccepted:
         toast(`host invitation accepted from: ${msg.issuer}`, {
           autoClose: 8000,
           draggable: true,
           closeOnClick: true,
         });
         break;
-      case 'host-invitation-declined':
+      case hostInviteDeclined:
         toast(`host invitation declined from: ${msg.issuer}`, {
           autoClose: 8000,
           draggable: true,
           closeOnClick: true,
         });
         break;
-      case 'stage-invitation-accepted':
+      case stageInvite:
+        setModalType(stage);
+        setIsOpen(true);
+        setSuperhostId(msg.issuer);
+        break;
+      case stageInviteAccepted:
         setMainScreenId(msg.issuer);
         break;
-      case 'remove-you-as-host':
+      case removeHostRight:
         rtc.client.setClientRole(audience, (error) => {
           if (!error) {
             rtc.removeStream(msg.issuer);
@@ -72,6 +82,10 @@ const App = ({ rtc, rtm }) => {
             console.log('removeHost error', error);
           }
         });
+        break;
+      case channelOpened:
+        setIsWaitingRoom(false);
+        rtc.join(userId, userRole);
         break;
       default:
         break;
@@ -127,9 +141,20 @@ const App = ({ rtc, rtm }) => {
       setIsPlaying,
       setStreams,
     };
+
+    const onInitSuccess = () => {
+      if (!isWaitingRoom || role === superhost) rtc.join(uid, role);
+    };
+
     rtc.createClient();
-    rtc.initClient(uid, role, rtcHandlers);
+    rtc.init(rtcHandlers, onInitSuccess);
+
     rtmLogin(uid);
+  };
+
+  const openChannel = () => {
+    setIsWaitingRoom(false);
+    rtm.openChannel();
   };
 
   const hasAdminRights = userRole === superhost || userRole === moderator;
@@ -188,6 +213,7 @@ const App = ({ rtc, rtm }) => {
             {...{
               currentMainId,
               isOpen: modalIsOpen,
+              isWaitingRoom,
               modalType,
               rtc,
               rtm,
@@ -199,13 +225,18 @@ const App = ({ rtc, rtm }) => {
             }}
           />
           {hasAdminRights && (
-            <UserList
-              currentMainId={currentMainId}
-              setMainScreenId={setMainScreenId}
-              rtm={rtm}
-              uid={userId}
-              streams={streams}
-            />
+            <>
+              <button type="button" onClick={openChannel}>
+                Channel öffnen
+              </button>
+              <UserList
+                currentMainId={currentMainId}
+                setMainScreenId={setMainScreenId}
+                rtm={rtm}
+                uid={userId}
+                streams={streams}
+              />
+            </>
           )}
           <LayoutGrid>
             <Hosts streams={streams} currentMainId={currentMainId} />

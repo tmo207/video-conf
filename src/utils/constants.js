@@ -13,3 +13,13 @@ export const roles = {
 
 export const stage = 'stage';
 export const hangUp = 'hangup';
+
+export const messages = {
+  hostInvite: 'host-invitation',
+  hostInviteAccepted: 'host-invitation-accepted',
+  hostInviteDeclined: 'host-invitation-declined',
+  stageInvite: 'stage-invitation',
+  stageInviteAccepted: 'stage-invitation-accepted',
+  removeHostRight: 'remove-you-as-host',
+  channelOpened: 'channel-opened',
+};
