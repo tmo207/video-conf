@@ -8,6 +8,8 @@ export const ROLES = {
   AUDIENCE: 'audience',
 };
 
+export const NO_CURRENT_MAIN_ID = '00000';
+
 export const STAGE = 'stage';
 export const HANGUP = 'hangup';
 

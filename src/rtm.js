@@ -154,11 +154,10 @@ export default class Rtm extends EventEmitter {
     });
   };
 
-  generateStageInvitationAccept = (issuerId, currentMainId) => {
+  generateStageInvitationAccept = (issuerId) => {
     return JSON.stringify({
       subject: STAGE_INVITE_ACCEPTED,
       issuer: issuerId,
-      previousMain: currentMainId,
       token:
         '00609055eb4141f4ab4809ff8a2302254e9IAD8tvnQu5r8hAlgFGLlmZ8Cre6tU1VvEdKs/WvGmuFU4uAbzEcAAAAAEADOpjO6dw9yXwEAAQB2D3Jf',
     });
@@ -173,10 +172,10 @@ export default class Rtm extends EventEmitter {
     });
   };
 
-  generateMainScreenHostRemovedMessage = (issuerId) => {
+  generateMainScreenHostRemovedMessage = () => {
     return JSON.stringify({
       subject: MAIN_SCREEN_HOST_REMOVED,
-      issuer: issuerId,
+      issuer: SUPERHOST,
       token:
         '00609055eb4141f4ab4809ff8a2302254e9IAD8tvnQu5r8hAlgFGLlmZ8Cre6tU1VvEdKs/WvGmuFU4uAbzEcAAAAAEADOpjO6dw9yXwEAAQB2D3Jf',
     });
@@ -213,14 +212,20 @@ export default class Rtm extends EventEmitter {
     return this.client.sendMessageToPeer({ text: this.generateStageInvitation(ownId) }, peerId);
   }
 
-  acceptStageInvitation(uid, currentMainId) {
+  acceptStageInvitation(uid) {
     this.channels[CHANNEL_NAME].channel.sendMessage({
-      text: this.generateStageInvitationAccept(uid, currentMainId),
+      text: this.generateStageInvitationAccept(uid),
     });
   }
 
   removeHost(hostId) {
     return this.client.sendMessageToPeer({ text: this.generateRemoveHostMessage(hostId) }, hostId);
+  }
+
+  removeMain() {
+    this.channels[CHANNEL_NAME].channel.sendMessage({
+      text: this.generateMainScreenHostRemovedMessage(),
+    });
   }
 
   openChannel() {

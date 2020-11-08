@@ -1,7 +1,18 @@
 import ReactModal from 'react-modal';
 import styled from 'styled-components/macro';
 
-import { ControlItem, GREEN, hangUpIcon, HANGUP, RED, ROLES, STAGE, videoIcon } from '../utils';
+import {
+  ControlItem,
+  GREEN,
+  HANGUP,
+  NO_CURRENT_MAIN_ID,
+  RED,
+  ROLES,
+  STAGE,
+  hangUpIcon,
+  setCurrentMainScreen,
+  videoIcon,
+} from '../utils';
 
 const { HOST } = ROLES;
 
@@ -50,27 +61,33 @@ export const Modal = ({
   rtm,
   setIsOpen,
   setIsPlaying,
-  setMainScreenId,
+  setLocalMainScreen,
   superhostId,
   userId,
 }) => {
   const acceptHostInvitation = () => {
     rtm.acceptHostInvitation(userId, superhostId);
     rtc.client.setClientRole(HOST, (error) => {
-      if (!error && isWaitingRoom) rtc.join(userId, HOST);
+      if (!error && isWaitingRoom) rtc.join(userId, (uid) => rtc.publishAndStartStream(uid, HOST));
       else if (!error && !isWaitingRoom) rtc.publishAndStartStream(userId, HOST);
       else console.log('setHost error', error);
     });
   };
 
   const acceptStageInvitation = () => {
+    setCurrentMainScreen(userId);
+    setLocalMainScreen(userId);
     rtm.acceptStageInvitation(userId, currentMainId);
-    setMainScreenId(userId);
   };
 
   const acceptHangUp = () => {
-    rtc.removeStream(userId);
+    if (userId === currentMainId) {
+      setCurrentMainScreen(NO_CURRENT_MAIN_ID).then(() => rtc.removeStream(userId));
+    } else {
+      rtc.removeStream(userId);
+    }
     setIsPlaying(false);
+    rtc.client.unpublish(rtc.localstream);
   };
 
   const isHostInvitation = modalType === HOST;

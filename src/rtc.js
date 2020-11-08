@@ -1,5 +1,5 @@
 import AgoraRTC from 'agora-rtc-sdk';
-import { APP_ID, CHANNEL_NAME, ROLES } from './utils';
+import { APP_ID, CHANNEL_NAME, ROLES, getCurrentMainScreen } from './utils';
 
 const { AUDIENCE, HOST, SUPERHOST } = ROLES;
 
@@ -15,15 +15,7 @@ export default class Rtc {
     return this.client;
   }
 
-  join(uid, role) {
-    const onSuccess = (id) => {
-      const isHost = role === HOST || role === 'cohost';
-      const isSuperHost = role === SUPERHOST;
-
-      if (isSuperHost) this.publishAndStartStream(id, role);
-      if (isHost) this.publishAndStartStream(id, HOST);
-    };
-
+  join(uid, onSuccess = () => {}) {
     this.client.join(
       null, // tokenOrKey: Token or Channel Key
       CHANNEL_NAME, // channelId
@@ -46,6 +38,9 @@ export default class Rtc {
   }
 
   async removeStream(uid) {
+    getCurrentMainScreen(
+      (currentMainScreen) => currentMainScreen === uid && this.handlers.setLocalMainScreen(null)
+    );
     this.streams.map((stream, index) => {
       if (stream.streamId === uid) {
         stream.close();
@@ -104,17 +99,12 @@ export default class Rtc {
 
     // Here we are receiving the remote stream
     this.client.on('stream-subscribed', (event) => {
-      fetch('https://agora.service-sample.de/api/test/init/test').then((response) =>
-        response.json().then((data) => {
-          const mainScreenId = data[0].currentMainScreen.toString();
-          this.handlers.setMainScreenId(mainScreenId);
-          const { stream } = event;
-          this.streams = [...this.streams, stream];
-          this.handlers.setStreams(this.streams);
-          const streamId = stream.getId(); // Same value as uid. Turning into string because ID of DOM elements can only be strings.
-          stream.play(`video-${streamId}`);
-        })
-      );
+      getCurrentMainScreen(this.handlers.setLocalMainScreen);
+      const { stream } = event;
+      this.streams = [...this.streams, stream];
+      this.handlers.setStreams(this.streams);
+      const streamId = stream.getId(); // Same value as uid. Turning into string because ID of DOM elements can only be strings.
+      stream.play(`video-${streamId}`);
     });
 
     this.client.on('stream-removed', ({ stream }) => {

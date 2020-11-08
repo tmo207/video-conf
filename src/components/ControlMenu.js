@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import styled from 'styled-components/macro';
 
-import { ControlItem, audioIcon, HANGUP, hangUpIcon, screenIcon, videoIcon } from '../utils';
+import { ControlItem, HANGUP, audioIcon, hangUpIcon, screenIcon, videoIcon } from '../utils';
 
 const ControlMenuContainer = styled.div`
   z-index: 1000;

@@ -2,19 +2,22 @@ import { useState, useEffect } from 'react';
 import styled from 'styled-components/macro';
 
 import {
-  ControlItem,
-  GridItemSmall,
   BLACK,
   CONTENT_MARGIN_TOP,
+  ControlItem,
   GREEN,
-  minusIcon,
-  plusIcon,
+  GridItemSmall,
+  NO_CURRENT_MAIN_ID,
   ROLES,
   StageIcon,
+  getCurrentMainScreen,
+  minusIcon,
+  plusIcon,
+  setCurrentMainScreen,
 } from '../utils';
 
 const isOdd = (num) => num % 2 === 1;
-const { AUDIENCE, HOST } = ROLES;
+const { AUDIENCE, HOST, SUPERHOST } = ROLES;
 
 const UserListContainer = styled(GridItemSmall)`
   position: fixed;
@@ -100,7 +103,7 @@ const UserActionItem = styled.button`
   }
 `;
 
-export const UserList = ({ rtm, uid, streams, currentMainId, setMainScreenId }) => {
+export const UserList = ({ rtc, rtm, uid, streams, currentMainId, setLocalMainScreen }) => {
   // showUsersWithRole types = audience | host;
   const [showUsersWithRole, setShowUsersWithRole] = useState(AUDIENCE);
   const [searchValue, setSearchValue] = useState('');
@@ -114,17 +117,41 @@ export const UserList = ({ rtm, uid, streams, currentMainId, setMainScreenId }) 
   }, [streams]);
 
   const promoteUserToHost = (peerId) => {
-    rtm.inviteAudienceToBecomeHost({ peerId, ownId: uid });
+    const getCurrentMainScreenCb = (currentMainScreen) => {
+      if (currentMainScreen) {
+        rtc.publishAndStartStream(uid, HOST);
+      } else {
+        rtc.publishAndStartStream(uid, SUPERHOST);
+        setCurrentMainScreen(uid);
+        setLocalMainScreen(uid);
+      }
+    };
+
+    if (peerId === uid) getCurrentMainScreen(getCurrentMainScreenCb);
+    else rtm.inviteAudienceToBecomeHost({ peerId, ownId: uid });
   };
 
   const promoteHostOnStage = (peerId) => {
-    rtm.inviteHostToBecomeStage({ peerId, ownId: uid });
+    if (peerId === uid) {
+      rtm.acceptStageInvitation(uid);
+      setCurrentMainScreen(uid);
+      setLocalMainScreen(uid);
+    } else {
+      rtm.inviteHostToBecomeStage({ peerId, ownId: uid });
+    }
+  };
+
+  const degradeMainToHost = () => {
+    setCurrentMainScreen(NO_CURRENT_MAIN_ID);
+    setLocalMainScreen(null);
+    rtm.removeMain();
   };
 
   const removeHost = (userId) => {
     rtm.removeHost(userId);
     if (currentMainId === userId) {
-      setMainScreenId(null);
+      setCurrentMainScreen(NO_CURRENT_MAIN_ID);
+      setLocalMainScreen(null);
     }
   };
 
@@ -203,6 +230,7 @@ export const UserList = ({ rtm, uid, streams, currentMainId, setMainScreenId }) 
             {showHosts &&
               hosts.map((user, index) => {
                 const isCurrentMain = user === currentMainId;
+                const isYourself = user === uid;
                 if (inSearchResults(user)) {
                   return (
                     <UserContainer index={index} key={user}>
@@ -211,19 +239,17 @@ export const UserList = ({ rtm, uid, streams, currentMainId, setMainScreenId }) 
                         <UserActionItem
                           type="button"
                           onClick={() => {
-                            if (user === uid) {
-                              rtm.acceptStageInvitation(uid, currentMainId);
-                              setMainScreenId(uid);
-                            } else {
-                              promoteHostOnStage(user);
-                            }
+                            if (isCurrentMain) degradeMainToHost();
+                            else promoteHostOnStage(user);
                           }}
                         >
                           <StageIcon isActive={isCurrentMain} />
                         </UserActionItem>
-                        <UserActionItem type="button" onClick={() => removeHost(user)}>
-                          {minusIcon}
-                        </UserActionItem>
+                        {!isYourself && (
+                          <UserActionItem type="button" onClick={() => removeHost(user)}>
+                            {minusIcon}
+                          </UserActionItem>
+                        )}
                       </UserActionContainer>
                     </UserContainer>
                   );
