@@ -1,9 +1,9 @@
 import ReactModal from 'react-modal';
 import styled from 'styled-components/macro';
 
-import { ControlItem, green, hangUpIcon, hangUp, red, roles, stage, videoIcon } from '../utils';
+import { ControlItem, GREEN, hangUpIcon, HANGUP, RED, ROLES, STAGE, videoIcon } from '../utils';
 
-const { host } = roles;
+const { HOST } = ROLES;
 
 const ButtonContainer = styled.div`
   display: flex;
@@ -11,7 +11,7 @@ const ButtonContainer = styled.div`
 `;
 
 const ModalButton = styled.button`
-  background-color: ${(props) => (props.accept ? green : red)};
+  background-color: ${(props) => (props.accept ? GREEN : RED)};
   border: none;
   border-radius: 20px;
   color: white;
@@ -29,7 +29,7 @@ const ModalIcon = styled(ControlItem)`
 
 const modalStyle = {
   content: {
-    color: 'black',
+    color: 'BLACK',
     textAlign: 'center',
     maxWidth: '90vw',
     width: '300px',
@@ -56,9 +56,9 @@ export const Modal = ({
 }) => {
   const acceptHostInvitation = () => {
     rtm.acceptHostInvitation(userId, superhostId);
-    rtc.client.setClientRole(host, (error) => {
-      if (!error && isWaitingRoom) rtc.join(userId, host);
-      else if (!error && !isWaitingRoom) rtc.publishAndStartStream(userId, host);
+    rtc.client.setClientRole(HOST, (error) => {
+      if (!error && isWaitingRoom) rtc.join(userId, HOST);
+      else if (!error && !isWaitingRoom) rtc.publishAndStartStream(userId, HOST);
       else console.log('setHost error', error);
     });
   };
@@ -73,9 +73,9 @@ export const Modal = ({
     setIsPlaying(false);
   };
 
-  const isHostInvitation = modalType === host;
-  const isStageInvitation = modalType === stage;
-  const isHangUp = modalType === hangUp;
+  const isHostInvitation = modalType === HOST;
+  const isStageInvitation = modalType === STAGE;
+  const isHangUp = modalType === HANGUP;
 
   return (
     <ReactModal

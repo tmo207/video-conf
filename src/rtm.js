@@ -1,17 +1,19 @@
 import AgoraRTM from 'agora-rtm-sdk';
 import EventEmitter from 'events';
 
-import { appId, channelName, messages } from './utils';
+import { APP_ID, CHANNEL_NAME, ROLES, MESSAGES } from './utils';
+
+const { SUPERHOST } = ROLES;
 
 const {
-  hostInvite,
-  hostInviteAccepted,
-  hostInviteDeclined,
-  stageInvite,
-  stageInviteAccepted,
-  removeHostRight,
-  channelOpened,
-} = messages;
+  HOST_INVITE,
+  HOST_INVITE_ACCEPTED,
+  HOST_INVITE_DECLINED,
+  STAGE_INVITE,
+  STAGE_INVITE_ACCEPTED,
+  REMOVE_AS_HOST,
+  CHANNEL_OPENED,
+} = MESSAGES;
 
 export default class Rtm extends EventEmitter {
   constructor() {
@@ -26,7 +28,7 @@ export default class Rtm extends EventEmitter {
 
   init(handlers) {
     this.handlers = handlers;
-    this.client = AgoraRTM.createInstance(appId);
+    this.client = AgoraRTM.createInstance(APP_ID);
   }
 
   async renewToken(token) {
@@ -49,14 +51,14 @@ export default class Rtm extends EventEmitter {
   subscribeChannelEvents(handler) {
     const memberEvents = ['MemberJoined', 'MemberLeft'];
     memberEvents.forEach((eventName) => {
-      this.channels[channelName].channel.on(eventName, (...args) => {
+      this.channels[CHANNEL_NAME].channel.on(eventName, (...args) => {
         this.getMembers();
         handler();
-        this.emit(eventName, { channelName, args });
+        this.emit(eventName, { CHANNEL_NAME, args });
       });
     });
 
-    this.channels[channelName].channel.on('ChannelMessage', (...args) => {
+    this.channels[CHANNEL_NAME].channel.on('ChannelMessage', (...args) => {
       const message = args.filter((arg) => arg.text)[0];
       console.log({ message });
       this.handlers.onMessage(message.text);
@@ -87,8 +89,8 @@ export default class Rtm extends EventEmitter {
   }
 
   async sendChannelMessage(text) {
-    if (!this.channels[channelName] || !this.channels[channelName].joined) return;
-    return this.channels[channelName].channel.sendMessage({ text });
+    if (!this.channels[CHANNEL_NAME] || !this.channels[CHANNEL_NAME].joined) return;
+    return this.channels[CHANNEL_NAME].channel.sendMessage({ text });
   }
 
   /* async sendPeerMessage(text, peerId) {
@@ -102,7 +104,7 @@ export default class Rtm extends EventEmitter {
   } */
 
   async getMembers() {
-    return this.channels[channelName].channel.getMembers().then((userList) => {
+    return this.channels[CHANNEL_NAME].channel.getMembers().then((userList) => {
       if (userList !== this.users) {
         return userList;
       }
@@ -111,7 +113,7 @@ export default class Rtm extends EventEmitter {
 
   generateHostInvitation = (issuerId) => {
     return JSON.stringify({
-      subject: hostInvite,
+      subject: HOST_INVITE,
       issuer: issuerId,
       token:
         '00609055eb4141f4ab4809ff8a2302254e9IAD8tvnQu5r8hAlgFGLlmZ8Cre6tU1VvEdKs/WvGmuFU4uAbzEcAAAAAEADOpjO6dw9yXwEAAQB2D3Jf',
@@ -120,7 +122,7 @@ export default class Rtm extends EventEmitter {
 
   generateHostInvitationAccept = (issuerId) => {
     return JSON.stringify({
-      subject: hostInviteAccepted,
+      subject: HOST_INVITE_ACCEPTED,
       issuer: issuerId,
       token:
         '00609055eb4141f4ab4809ff8a2302254e9IAD8tvnQu5r8hAlgFGLlmZ8Cre6tU1VvEdKs/WvGmuFU4uAbzEcAAAAAEADOpjO6dw9yXwEAAQB2D3Jf',
@@ -129,14 +131,14 @@ export default class Rtm extends EventEmitter {
 
   generateHostInvitationDecline = (issuerId) => {
     return JSON.stringify({
-      subject: hostInviteDeclined,
+      subject: HOST_INVITE_DECLINED,
       issuer: issuerId,
     });
   };
 
   generateStageInvitation = (issuerId) => {
     return JSON.stringify({
-      subject: stageInvite,
+      subject: STAGE_INVITE,
       issuer: issuerId,
       token:
         '00609055eb4141f4ab4809ff8a2302254e9IAD8tvnQu5r8hAlgFGLlmZ8Cre6tU1VvEdKs/WvGmuFU4uAbzEcAAAAAEADOpjO6dw9yXwEAAQB2D3Jf',
@@ -145,7 +147,7 @@ export default class Rtm extends EventEmitter {
 
   generateStageInvitationAccept = (issuerId, currentMainId) => {
     return JSON.stringify({
-      subject: stageInviteAccepted,
+      subject: STAGE_INVITE_ACCEPTED,
       issuer: issuerId,
       previousMain: currentMainId,
       token:
@@ -155,7 +157,7 @@ export default class Rtm extends EventEmitter {
 
   generateRemoveHostMessage = (hostId) => {
     return JSON.stringify({
-      subject: removeHostRight,
+      subject: REMOVE_AS_HOST,
       issuer: hostId, // Here: id of host to be removed
       token:
         '00609055eb4141f4ab4809ff8a2302254e9IAD8tvnQu5r8hAlgFGLlmZ8Cre6tU1VvEdKs/WvGmuFU4uAbzEcAAAAAEADOpjO6dw9yXwEAAQB2D3Jf',
@@ -164,8 +166,8 @@ export default class Rtm extends EventEmitter {
 
   generateChannelOpened = () => {
     return JSON.stringify({
-      subject: channelOpened,
-      issuer: 'superhost',
+      subject: CHANNEL_OPENED,
+      issuer: SUPERHOST,
       token:
         '00609055eb4141f4ab4809ff8a2302254e9IAD8tvnQu5r8hAlgFGLlmZ8Cre6tU1VvEdKs/WvGmuFU4uAbzEcAAAAAEADOpjO6dw9yXwEAAQB2D3Jf',
     });
@@ -194,7 +196,7 @@ export default class Rtm extends EventEmitter {
   }
 
   acceptStageInvitation(uid, currentMainId) {
-    this.channels[channelName].channel.sendMessage({
+    this.channels[CHANNEL_NAME].channel.sendMessage({
       text: this.generateStageInvitationAccept(uid, currentMainId),
     });
   }
@@ -204,7 +206,7 @@ export default class Rtm extends EventEmitter {
   }
 
   openChannel() {
-    this.channels[channelName].channel.sendMessage({
+    this.channels[CHANNEL_NAME].channel.sendMessage({
       text: this.generateChannelOpened(),
     });
   }

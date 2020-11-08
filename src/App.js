@@ -4,18 +4,18 @@ import { ToastContainer, toast } from 'react-toastify';
 
 import { Modal, Hosts, UserList, ControlMenu } from './components';
 
-import { channelName, roles, contentMarginTop, stage, messages } from './utils';
+import { CHANNEL_NAME, ROLES, CONTENT_MARGIN_TOP, STAGE, MESSAGES } from './utils';
 
-const { audience, host, moderator, superhost } = roles;
+const { AUDIENCE, HOST, MODERATOR, SUPERHOST } = ROLES;
 const {
-  hostInvite,
-  hostInviteAccepted,
-  hostInviteDeclined,
-  stageInvite,
-  stageInviteAccepted,
-  removeHostRight,
-  channelOpened,
-} = messages;
+  HOST_INVITE,
+  HOST_INVITE_ACCEPTED,
+  HOST_INVITE_DECLINED,
+  STAGE_INVITE,
+  STAGE_INVITE_ACCEPTED,
+  REMOVE_AS_HOST,
+  CHANNEL_OPENED,
+} = MESSAGES;
 
 const LayoutGrid = styled.div`
   display: flex;
@@ -23,7 +23,7 @@ const LayoutGrid = styled.div`
   align-items: start;
   height: 100%;
   width: 100%;
-  margin-top: ${contentMarginTop};
+  margin-top: ${CONTENT_MARGIN_TOP};
 `;
 
 const App = ({ rtc, rtm }) => {
@@ -45,35 +45,35 @@ const App = ({ rtc, rtm }) => {
       return false;
     }
     switch (msg.subject) {
-      case hostInvite:
-        setModalType(host);
+      case HOST_INVITE:
+        setModalType(HOST);
         setIsOpen(true);
         setSuperhostId(msg.issuer);
         break;
-      case hostInviteAccepted:
+      case HOST_INVITE_ACCEPTED:
         toast(`host invitation accepted from: ${msg.issuer}`, {
           autoClose: 8000,
           draggable: true,
           closeOnClick: true,
         });
         break;
-      case hostInviteDeclined:
+      case HOST_INVITE_DECLINED:
         toast(`host invitation declined from: ${msg.issuer}`, {
           autoClose: 8000,
           draggable: true,
           closeOnClick: true,
         });
         break;
-      case stageInvite:
-        setModalType(stage);
+      case STAGE_INVITE:
+        setModalType(STAGE);
         setIsOpen(true);
         setSuperhostId(msg.issuer);
         break;
-      case stageInviteAccepted:
+      case STAGE_INVITE_ACCEPTED:
         setMainScreenId(msg.issuer);
         break;
-      case removeHostRight:
-        rtc.client.setClientRole(audience, (error) => {
+      case REMOVE_AS_HOST:
+        rtc.client.setClientRole(AUDIENCE, (error) => {
           if (!error) {
             rtc.removeStream(msg.issuer);
             rtc.client.unpublish(rtc.localstream);
@@ -83,7 +83,7 @@ const App = ({ rtc, rtm }) => {
           }
         });
         break;
-      case channelOpened:
+      case CHANNEL_OPENED:
         setIsWaitingRoom(false);
         rtc.join(userId, userRole);
         break;
@@ -125,7 +125,7 @@ const App = ({ rtc, rtm }) => {
       rtm.init(rtmHandlers);
       rtm.login(uid, null).then(() => {
         rtm.setLoggedIn(true);
-        rtm.joinChannel(channelName).then(() => {
+        rtm.joinChannel(CHANNEL_NAME).then(() => {
           rtm.subscribeChannelEvents(() => {});
         });
       });
@@ -143,7 +143,7 @@ const App = ({ rtc, rtm }) => {
     };
 
     const onInitSuccess = () => {
-      if (!isWaitingRoom || role === superhost) rtc.join(uid, role);
+      if (!isWaitingRoom || role === SUPERHOST) rtc.join(uid, role);
     };
 
     rtc.createClient();
@@ -157,7 +157,7 @@ const App = ({ rtc, rtm }) => {
     rtm.openChannel();
   };
 
-  const hasAdminRights = userRole === superhost || userRole === moderator;
+  const hasAdminRights = userRole === SUPERHOST || userRole === MODERATOR;
 
   return (
     <>
@@ -173,7 +173,7 @@ const App = ({ rtc, rtm }) => {
               setUid(currentUid);
               setRole(currentUser.role);
               startRtc({ role: currentUser.role, uid: currentUid });
-              if (currentUser.role === superhost) {
+              if (currentUser.role === SUPERHOST) {
                 setMainScreenId(currentUid);
               }
             }}
