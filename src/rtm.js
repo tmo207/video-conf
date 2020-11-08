@@ -10,10 +10,9 @@ const {
   HOST_INVITE_ACCEPTED,
   HOST_INVITE_DECLINED,
   STAGE_INVITE,
-  STAGE_INVITE_ACCEPTED,
   REMOVE_AS_HOST,
   CHANNEL_OPENED,
-  MAIN_SCREEN_HOST_REMOVED,
+  MAIN_SCREEN_UPDATED,
 } = MESSAGES;
 
 export default class Rtm extends EventEmitter {
@@ -78,7 +77,7 @@ export default class Rtm extends EventEmitter {
     const channel = this.client.createChannel(name);
     this.channels[name] = {
       channel,
-      joined: false, // channel state
+      joined: false,
     };
     return channel.join();
   }
@@ -93,16 +92,6 @@ export default class Rtm extends EventEmitter {
     return this.channels[CHANNEL_NAME].channel.sendMessage({ text });
   }
 
-  /* async sendPeerMessage(text, peerId) {
-    console.log('sendPeerMessage', text, peerId);
-    return this.client.sendMessageToPeer({ text }, peerId);
-  } */
-
-  /*  async queryPeersOnlineStatus(memberId) {
-    console.log('queryPeersOnlineStatus', memberId);
-    return this.client.queryPeersOnlineStatus([memberId]);
-  } */
-
   async getMembers() {
     return this.channels[CHANNEL_NAME].channel.getMembers().then((userList) => {
       if (userList !== this.users) {
@@ -115,15 +104,6 @@ export default class Rtm extends EventEmitter {
     return JSON.stringify({
       subject: HOST_INVITE,
       issuer: issuerId,
-      token:
-        '00609055eb4141f4ab4809ff8a2302254e9IAD8tvnQu5r8hAlgFGLlmZ8Cre6tU1VvEdKs/WvGmuFU4uAbzEcAAAAAEADOpjO6dw9yXwEAAQB2D3Jf',
-    });
-  };
-
-  generateRemoveHostMessage = (hostId) => {
-    return JSON.stringify({
-      subject: 'remove-you-as-host',
-      receiver: hostId, // Here: id of host to be removed
       token:
         '00609055eb4141f4ab4809ff8a2302254e9IAD8tvnQu5r8hAlgFGLlmZ8Cre6tU1VvEdKs/WvGmuFU4uAbzEcAAAAAEADOpjO6dw9yXwEAAQB2D3Jf',
     });
@@ -154,15 +134,6 @@ export default class Rtm extends EventEmitter {
     });
   };
 
-  generateStageInvitationAccept = (issuerId) => {
-    return JSON.stringify({
-      subject: STAGE_INVITE_ACCEPTED,
-      issuer: issuerId,
-      token:
-        '00609055eb4141f4ab4809ff8a2302254e9IAD8tvnQu5r8hAlgFGLlmZ8Cre6tU1VvEdKs/WvGmuFU4uAbzEcAAAAAEADOpjO6dw9yXwEAAQB2D3Jf',
-    });
-  };
-
   generateRemoveHostMessage = (hostId) => {
     return JSON.stringify({
       subject: REMOVE_AS_HOST,
@@ -172,10 +143,10 @@ export default class Rtm extends EventEmitter {
     });
   };
 
-  generateMainScreenHostRemovedMessage = () => {
+  generateUpdateMainScreen = (uid) => {
     return JSON.stringify({
-      subject: MAIN_SCREEN_HOST_REMOVED,
-      issuer: SUPERHOST,
+      subject: MAIN_SCREEN_UPDATED,
+      issuer: uid,
       token:
         '00609055eb4141f4ab4809ff8a2302254e9IAD8tvnQu5r8hAlgFGLlmZ8Cre6tU1VvEdKs/WvGmuFU4uAbzEcAAAAAEADOpjO6dw9yXwEAAQB2D3Jf',
     });
@@ -212,19 +183,13 @@ export default class Rtm extends EventEmitter {
     return this.client.sendMessageToPeer({ text: this.generateStageInvitation(ownId) }, peerId);
   }
 
-  acceptStageInvitation(uid) {
-    this.channels[CHANNEL_NAME].channel.sendMessage({
-      text: this.generateStageInvitationAccept(uid),
-    });
-  }
-
   removeHost(hostId) {
     return this.client.sendMessageToPeer({ text: this.generateRemoveHostMessage(hostId) }, hostId);
   }
 
-  removeMain() {
+  updateMainScreen(uid) {
     this.channels[CHANNEL_NAME].channel.sendMessage({
-      text: this.generateMainScreenHostRemovedMessage(),
+      text: this.generateUpdateMainScreen(uid),
     });
   }
 

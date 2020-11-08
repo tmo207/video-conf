@@ -13,7 +13,6 @@ import {
   getCurrentMainScreen,
   MinusIcon,
   PlusIcon,
-  setCurrentMainScreen,
 } from '../utils';
 
 const isOdd = (num) => num % 2 === 1;
@@ -103,7 +102,7 @@ const UserActionItem = styled.button`
   }
 `;
 
-export const UserList = ({ rtc, rtm, uid, streams, currentMainId, setLocalMainScreen }) => {
+export const UserList = ({ rtc, rtm, uid, streams, currentMainId }) => {
   // showUsersWithRole types = audience | host;
   const [showUsersWithRole, setShowUsersWithRole] = useState(AUDIENCE);
   const [searchValue, setSearchValue] = useState('');
@@ -122,8 +121,8 @@ export const UserList = ({ rtc, rtm, uid, streams, currentMainId, setLocalMainSc
         rtc.publishAndStartStream(uid, HOST);
       } else {
         rtc.publishAndStartStream(uid, SUPERHOST);
-        setCurrentMainScreen(uid);
-        setLocalMainScreen(uid);
+        rtc.setMainScreen(uid);
+        rtm.updateMainScreen(uid);
       }
     };
 
@@ -133,26 +132,23 @@ export const UserList = ({ rtc, rtm, uid, streams, currentMainId, setLocalMainSc
 
   const promoteHostOnStage = (peerId) => {
     if (peerId === uid) {
-      rtm.acceptStageInvitation(uid);
-      setCurrentMainScreen(uid);
-      setLocalMainScreen(uid);
+      rtc.setMainScreen(uid);
+      rtm.updateMainScreen(uid);
     } else {
       rtm.inviteHostToBecomeStage({ peerId, ownId: uid });
     }
   };
 
   const degradeMainToHost = () => {
-    setCurrentMainScreen(NO_CURRENT_MAIN_ID);
-    setLocalMainScreen(null);
-    rtm.removeMain();
+    rtc.setMainScreen(NO_CURRENT_MAIN_ID);
+    rtm.updateMainScreen(NO_CURRENT_MAIN_ID);
   };
 
   const removeHost = (userId) => {
     rtm.removeHost(userId);
     if (currentMainId === userId) {
-      setCurrentMainScreen(NO_CURRENT_MAIN_ID);
-      setLocalMainScreen(null);
-      rtm.removeMain();
+      rtc.setMainScreen(NO_CURRENT_MAIN_ID);
+      rtm.updateMainScreen(NO_CURRENT_MAIN_ID);
     }
   };
 

@@ -10,7 +10,6 @@ import {
   ROLES,
   STAGE,
   HangUpIcon,
-  setCurrentMainScreen,
   VideoIcon,
 } from '../utils';
 
@@ -61,7 +60,6 @@ export const Modal = ({
   rtm,
   setIsOpen,
   setIsPlaying,
-  setLocalMainScreen,
   superhostId,
   userId,
 }) => {
@@ -75,14 +73,14 @@ export const Modal = ({
   };
 
   const acceptStageInvitation = () => {
-    setCurrentMainScreen(userId);
-    setLocalMainScreen(userId);
-    rtm.acceptStageInvitation(userId, currentMainId);
+    rtc.setMainScreen(userId);
+    rtm.updateMainScreen(userId);
   };
 
   const acceptHangUp = () => {
     if (userId === currentMainId) {
-      setCurrentMainScreen(NO_CURRENT_MAIN_ID).then(() => rtc.removeStream(userId));
+      rtc.setMainScreen(NO_CURRENT_MAIN_ID).then(() => rtc.removeStream(userId));
+      rtm.updateMainScreen(NO_CURRENT_MAIN_ID);
     } else {
       rtc.removeStream(userId);
     }

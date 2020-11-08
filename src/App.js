@@ -19,10 +19,9 @@ const {
   HOST_INVITE_ACCEPTED,
   HOST_INVITE_DECLINED,
   STAGE_INVITE,
-  STAGE_INVITE_ACCEPTED,
   REMOVE_AS_HOST,
   CHANNEL_OPENED,
-  MAIN_SCREEN_HOST_REMOVED,
+  MAIN_SCREEN_UPDATED,
 } = MESSAGES;
 
 const LayoutGrid = styled.div`
@@ -77,7 +76,7 @@ const App = ({ rtc, rtm }) => {
         setIsOpen(true);
         setSuperhostId(msg.issuer);
         break;
-      case STAGE_INVITE_ACCEPTED:
+      case MAIN_SCREEN_UPDATED:
         setLocalMainScreen(msg.issuer);
         break;
       case REMOVE_AS_HOST:
@@ -85,15 +84,10 @@ const App = ({ rtc, rtm }) => {
           if (!error) {
             rtc.removeStream(msg.issuer);
             rtc.client.unpublish(rtc.localstream);
-            console.log('remove host success');
           } else {
             console.log('removeHost error', error);
           }
         });
-        break;
-      case MAIN_SCREEN_HOST_REMOVED:
-        console.log('main screen host removed');
-        setLocalMainScreen(null);
         break;
       case CHANNEL_OPENED:
         setIsWaitingRoom(false);
@@ -187,9 +181,6 @@ const App = ({ rtc, rtm }) => {
               setUid(currentUid);
               setRole(currentUser.role);
               startRtc({ role: currentUser.role, uid: currentUid });
-              if (currentUser.role === SUPERHOST) {
-                setLocalMainScreen(currentUid);
-              }
             }}
           >
             {currentUser.role}
@@ -233,7 +224,6 @@ const App = ({ rtc, rtm }) => {
               rtm,
               setIsOpen,
               setIsPlaying,
-              setLocalMainScreen,
               superhostId,
               userId,
             }}
@@ -246,12 +236,13 @@ const App = ({ rtc, rtm }) => {
                 </button>
               )}
               <UserList
-                currentMainId={currentMainId}
-                setLocalMainScreen={setLocalMainScreen}
-                rtc={rtc}
-                rtm={rtm}
-                uid={userId}
-                streams={streams}
+                {...{
+                  currentMainId,
+                  rtc,
+                  rtm,
+                  streams,
+                  uid: userId,
+                }}
               />
             </>
           )}

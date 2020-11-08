@@ -1,5 +1,5 @@
 import AgoraRTC from 'agora-rtc-sdk';
-import { APP_ID, CHANNEL_NAME, ROLES, getCurrentMainScreen } from './utils';
+import { APP_ID, CHANNEL_NAME, ROLES, getCurrentMainScreen, setCurrentMainScreen } from './utils';
 
 const { AUDIENCE, HOST, SUPERHOST } = ROLES;
 
@@ -85,6 +85,11 @@ export default class Rtc {
     }
     this.localstream = AgoraRTC.createStream(defaultConfig);
     return this.localstream;
+  }
+
+  async setMainScreen(uid) {
+    setCurrentMainScreen(uid);
+    this.handlers.setLocalMainScreen(uid);
   }
 
   subscribeToStreamEvents() {
