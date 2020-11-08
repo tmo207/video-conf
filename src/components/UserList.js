@@ -147,6 +147,8 @@ export const UserList = ({ rtm, uid, streams, currentMainId, setMainScreenId }) 
   const showAudience = showUsersWithRole === audience;
   const showHosts = showUsersWithRole === host;
 
+  const inSearchResults = (user) => user.includes(searchValue) || searchValue === '';
+
   return (
     <UserListContainer>
       <Wrapper>
@@ -183,8 +185,7 @@ export const UserList = ({ rtm, uid, streams, currentMainId, setMainScreenId }) 
             {showAudience &&
               users.map((user, index) => {
                 const isAudience = !hosts.includes(user);
-                const isSearchResult = user.includes(searchValue);
-                if (isAudience && isSearchResult) {
+                if (isAudience && inSearchResults(user)) {
                   return (
                     <UserContainer index={index} key={user}>
                       <UserName>{user}</UserName>
@@ -200,8 +201,7 @@ export const UserList = ({ rtm, uid, streams, currentMainId, setMainScreenId }) 
             {showHosts &&
               hosts.map((user, index) => {
                 const isCurrentMain = user === currentMainId;
-                const isSearchResult = user.includes(searchValue);
-                if (isSearchResult) {
+                if (inSearchResults(user)) {
                   return (
                     <UserContainer index={index} key={user}>
                       <UserName>{user}</UserName>
