@@ -83,10 +83,6 @@ const App = ({ rtc, rtm }) => {
       case REMOVE_AS_HOST:
         rtc.client.setClientRole(AUDIENCE, (error) => {
           if (!error) {
-            if (msg.receiver === currentMainId) {
-              setLocalMainScreen(null);
-              rtm.removeMain();
-            }
             rtc.removeStream(msg.issuer);
             rtc.client.unpublish(rtc.localstream);
             console.log('remove host success');

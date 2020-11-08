@@ -118,7 +118,7 @@ export const UserList = ({ rtc, rtm, uid, streams, currentMainId, setLocalMainSc
 
   const promoteUserToHost = (peerId) => {
     const getCurrentMainScreenCb = (currentMainScreen) => {
-      if (currentMainScreen) {
+      if (currentMainScreen !== NO_CURRENT_MAIN_ID) {
         rtc.publishAndStartStream(uid, HOST);
       } else {
         rtc.publishAndStartStream(uid, SUPERHOST);
@@ -152,6 +152,7 @@ export const UserList = ({ rtc, rtm, uid, streams, currentMainId, setLocalMainSc
     if (currentMainId === userId) {
       setCurrentMainScreen(NO_CURRENT_MAIN_ID);
       setLocalMainScreen(null);
+      rtm.removeMain();
     }
   };
 
