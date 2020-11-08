@@ -9,9 +9,9 @@ import {
   RED,
   ROLES,
   STAGE,
-  hangUpIcon,
+  HangUpIcon,
   setCurrentMainScreen,
-  videoIcon,
+  VideoIcon,
 } from '../utils';
 
 const { HOST } = ROLES;
@@ -104,7 +104,7 @@ export const Modal = ({
       {isHostInvitation && (
         <ModalContent
           {...{
-            icon: videoIcon,
+            icon: VideoIcon,
             headline: 'Konferenz beitreten?',
             text:
               'Der Host dieser Konferenz hat dich dazu eingeladen der Konferenz beizutreten. Hierfür werden Mikrofon und deine Kamera aktiviert. Möchtest du beitreten?',
@@ -129,7 +129,7 @@ export const Modal = ({
       {isHangUp && (
         <ModalContent
           {...{
-            icon: hangUpIcon,
+            icon: HangUpIcon,
             iconRed: true,
             headline: 'Bist du dir sicher?',
             text:

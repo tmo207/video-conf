@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import styled from 'styled-components/macro';
 
-import { ControlItem, HANGUP, audioIcon, hangUpIcon, screenIcon, videoIcon } from '../utils';
+import { ControlItem, HANGUP, AudioIcon, HangUpIcon, ScreenIcon, VideoIcon } from '../utils';
 
 const ControlMenuContainer = styled.div`
   z-index: 1000;
@@ -80,17 +80,17 @@ export const ControlMenu = ({
   return (
     <ControlMenuContainer>
       <ControlItem red onClick={onHangUp}>
-        {hangUpIcon}
+        {HangUpIcon}
       </ControlItem>
       <ControlItem onClick={onVideo} isActive={hasVideo}>
-        {videoIcon}
+        {VideoIcon}
       </ControlItem>
       <ControlItem onClick={onAudio} isActive={hasAudio}>
-        {audioIcon}
+        {AudioIcon}
       </ControlItem>
       {isMainScreen && (
         <ControlItem onClick={onScreen} isActive={hasScreen}>
-          {screenIcon}
+          {ScreenIcon}
         </ControlItem>
       )}
     </ControlMenuContainer>

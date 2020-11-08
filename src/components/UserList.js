@@ -11,8 +11,8 @@ import {
   ROLES,
   StageIcon,
   getCurrentMainScreen,
-  minusIcon,
-  plusIcon,
+  MinusIcon,
+  PlusIcon,
   setCurrentMainScreen,
 } from '../utils';
 
@@ -220,7 +220,7 @@ export const UserList = ({ rtc, rtm, uid, streams, currentMainId, setLocalMainSc
                       <UserName>{user}</UserName>
                       <UserActionContainer>
                         <UserActionItem type="button" onClick={() => promoteUserToHost(user)}>
-                          {plusIcon}
+                          {PlusIcon}
                         </UserActionItem>
                       </UserActionContainer>
                     </UserContainer>
@@ -247,7 +247,7 @@ export const UserList = ({ rtc, rtm, uid, streams, currentMainId, setLocalMainSc
                         </UserActionItem>
                         {!isYourself && (
                           <UserActionItem type="button" onClick={() => removeHost(user)}>
-                            {minusIcon}
+                            {MinusIcon}
                           </UserActionItem>
                         )}
                       </UserActionContainer>
