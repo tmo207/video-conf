@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import styled from 'styled-components/macro';
 
-import { ControlItem, audioIcon, hangUp, hangUpIcon, screenIcon, videoIcon } from '../utils';
+import { ControlItem, audioIcon, HANGUP, hangUpIcon, screenIcon, videoIcon } from '../utils';
 
 const ControlMenuContainer = styled.div`
   z-index: 1000;
@@ -35,7 +35,7 @@ export const ControlMenu = ({
   const isMainScreen = userId === currentMainId;
 
   const onHangUp = () => {
-    setModalType(hangUp);
+    setModalType(HANGUP);
     setIsOpen(true);
   };
 

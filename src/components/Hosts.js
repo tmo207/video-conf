@@ -2,20 +2,19 @@ import { useEffect } from 'react';
 import styled from 'styled-components/macro';
 import PropTypes from 'prop-types';
 
-import { WithBorder, borderRadius, moveToHost, moveToMain } from '../utils';
+import { BORDER_RADIUS, HOST_VIDEO_WIDTH, moveToHost, moveToMain, withBorder } from '../utils';
 
-const Host = styled(WithBorder)`
+const Host = styled.div`
+  ${withBorder}
   background: grey;
   margin: 0 5px;
   text-align: center;
-  height: 200px;
-  width: 200px;
-  max-width: 20%;
+  width: ${HOST_VIDEO_WIDTH};
   position: relative;
   order: 2;
 
   & > div {
-    ${borderRadius}
+    ${BORDER_RADIUS}
 
     > video {
       position: relative !important;

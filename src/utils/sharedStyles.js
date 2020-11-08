@@ -1,11 +1,12 @@
-import styled from 'styled-components/macro';
+import styled, { css } from 'styled-components/macro';
 
-export const green = '#8bbb48';
-export const red = '#ab0000';
-export const black = '#000000';
-export const borderRadius = 'border-radius: 20px;';
-export const border = `border: 2px solid ${green};`;
-export const contentMarginTop = '200px';
+export const GREEN = '#8bbb48';
+export const RED = '#ab0000';
+export const BLACK = '#000000';
+export const BORDER_RADIUS = 'border-radius: 20px;';
+export const BORDER = `border: 2px solid ${GREEN};`;
+export const CONTENT_MARGIN_TOP = '200px';
+export const HOST_VIDEO_WIDTH = '18%';
 
 export const GridItemSmall = styled.div`
   flex-grow: 1;
@@ -20,7 +21,7 @@ export const ControlItem = styled.button`
   display: flex;
   justify-content: center;
   align-items: center;
-  ${(props) => (props.red ? 'border: none;' : border)}
+  ${(props) => (props.red ? 'border: none;' : BORDER)}
   background-color: ${(props) => {
     let color;
     if (props.red) {
@@ -35,17 +36,15 @@ export const ControlItem = styled.button`
   }
 `;
 
-export const WithBorder = styled.div`
-  ${borderRadius}
-  ${border}
+export const withBorder = css`
+  ${BORDER_RADIUS}
+  ${BORDER}
 `;
 
 export const moveToHost = (id) => {
   const el = document.getElementById(`video-${id}`);
   if (el) {
-    el.style.maxWidth = '20%';
-    el.style.width = '200px';
-    el.style.height = '200px';
+    el.style.width = HOST_VIDEO_WIDTH;
     el.style.order = 2;
     el.style.marginBottom = 0;
   }
@@ -54,9 +53,7 @@ export const moveToHost = (id) => {
 export const moveToMain = (id) => {
   const el = document.getElementById(`video-${id}`);
   if (el) {
-    el.style.maxWidth = '100%';
     el.style.width = '100%';
-    el.style.height = '500px';
     el.style.order = 1;
     el.style.marginBottom = '20px';
   }

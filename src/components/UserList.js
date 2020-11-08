@@ -4,22 +4,22 @@ import styled from 'styled-components/macro';
 import {
   ControlItem,
   GridItemSmall,
-  black,
-  contentMarginTop,
-  green,
+  BLACK,
+  CONTENT_MARGIN_TOP,
+  GREEN,
   minusIcon,
   plusIcon,
-  roles,
+  ROLES,
   StageIcon,
 } from '../utils';
 
 const isOdd = (num) => num % 2 === 1;
-const { audience, host } = roles;
+const { AUDIENCE, HOST } = ROLES;
 
 const UserListContainer = styled(GridItemSmall)`
   position: fixed;
   z-index: 1;
-  top: ${contentMarginTop};
+  top: ${CONTENT_MARGIN_TOP};
 `;
 
 const Wrapper = styled.div`
@@ -36,7 +36,7 @@ const Content = styled.div`
   position: absolute;
   background-color: white;
   border-radius: 10px;
-  height: calc(100vh - ${contentMarginTop});
+  height: calc(100vh - ${CONTENT_MARGIN_TOP});
   z-index: 1;
   width: 20vw;
 `;
@@ -49,7 +49,7 @@ const ListTypeContainer = styled.div`
 `;
 
 const ListType = styled.p`
-  color: ${(props) => (props.isActive ? green : black)};
+  color: ${(props) => (props.isActive ? GREEN : BLACK)};
 
   &:hover {
     cursor: pointer;
@@ -59,12 +59,12 @@ const ListType = styled.p`
 const UserSearchInput = styled.input`
   margin: 0 0 15px 3px;
   border: none;
-  border-bottom: 2px solid ${black};
-  color: black;
+  border-bottom: 2px solid ${BLACK};
+  color: BLACK;
   width: 90%;
 
   ::placeholder {
-    color: black:
+    color: BLACK:
   }
 `;
 
@@ -102,7 +102,7 @@ const UserActionItem = styled.button`
 
 export const UserList = ({ rtm, uid, streams, currentMainId, setMainScreenId }) => {
   // showUsersWithRole types = audience | host;
-  const [showUsersWithRole, setShowUsersWithRole] = useState(audience);
+  const [showUsersWithRole, setShowUsersWithRole] = useState(AUDIENCE);
   const [searchValue, setSearchValue] = useState('');
   const [users, setUsers] = useState([]);
   const [show, setShow] = useState(false);
@@ -144,8 +144,8 @@ export const UserList = ({ rtm, uid, streams, currentMainId, setMainScreenId }) 
     setSearchValue(e.target.value.toLowerCase());
   };
 
-  const showAudience = showUsersWithRole === audience;
-  const showHosts = showUsersWithRole === host;
+  const showAudience = showUsersWithRole === AUDIENCE;
+  const showHosts = showUsersWithRole === HOST;
 
   const inSearchResults = (user) => user.includes(searchValue) || searchValue === '';
 
@@ -172,12 +172,12 @@ export const UserList = ({ rtm, uid, streams, currentMainId, setMainScreenId }) 
               <ListType
                 isActive={showAudience}
                 onClick={() => {
-                  setShowUsersWithRole(audience);
+                  setShowUsersWithRole(AUDIENCE);
                 }}
               >
                 Zuschauer
               </ListType>
-              <ListType isActive={showHosts} onClick={() => setShowUsersWithRole(host)}>
+              <ListType isActive={showHosts} onClick={() => setShowUsersWithRole(HOST)}>
                 Teilnehmer
               </ListType>
             </ListTypeContainer>

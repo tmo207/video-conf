@@ -1,9 +1,9 @@
 import AgoraRTC from 'agora-rtc-sdk';
-import { appId, channelName, roles } from './utils';
+import { APP_ID, CHANNEL_NAME, ROLES } from './utils';
 
-const { host, superhost, audience } = roles;
+const { AUDIENCE, HOST, SUPERHOST } = ROLES;
 
-const handleFail = (error) => console.log('Error:', error);
+const onError = (error) => console.log('Error:', error);
 
 export default class Rtc {
   constructor() {
@@ -15,30 +15,31 @@ export default class Rtc {
     return this.client;
   }
 
-  initClient(uid, role, handlers) {
+  join(uid, role) {
+    const onSuccess = (id) => {
+      const isHost = role === HOST || role === 'cohost';
+      const isSuperHost = role === SUPERHOST;
+
+      if (isSuperHost) this.publishAndStartStream(id, role);
+      if (isHost) this.publishAndStartStream(id, HOST);
+    };
+
+    this.client.join(
+      null, // tokenOrKey: Token or Channel Key
+      CHANNEL_NAME, // channelId
+      uid, // User specific ID. Type: Number or string, must be the same type for all users
+      onSuccess,
+      onError
+    );
+  }
+
+  init(handlers, onSuccess) {
     this.handlers = handlers;
     this.client.init(
-      appId,
+      APP_ID,
       () => {
         this.subscribeToStreamEvents();
-        this.client.join(
-          null, // tokenOrKey: Token or Channel Key
-          channelName, // channelId
-          uid, // User specific ID. Type: Number or string, must be the same type for all users
-          (id) => {
-            const isHost = role === host || role === 'cohost';
-            const isSuperHost = role === superhost;
-
-            if (isSuperHost) {
-              this.publishAndStartStream(id, role);
-            }
-
-            if (isHost) {
-              this.publishAndStartStream(id, host);
-            }
-          },
-          handleFail
-        );
+        onSuccess();
       },
       () => console.log('failed to initialize')
     );
@@ -60,12 +61,12 @@ export default class Rtc {
     const stream = this.createStream(uid, role);
 
     stream.init(() => {
-      this.client.publish(stream, handleFail);
+      this.client.publish(stream, onError);
       this.streams = [...this.streams, stream];
       this.handlers.setStreams(this.streams);
       stream.play(`video-${stream.streamId}`);
       this.handlers.setIsPlaying(true);
-    }, handleFail);
+    }, onError);
   }
 
   createStream(uid, attendeeMode, screen) {
@@ -77,13 +78,13 @@ export default class Rtc {
     };
 
     switch (attendeeMode) {
-      case host:
-      case superhost:
+      case HOST:
+      case SUPERHOST:
         defaultConfig.video = true;
         defaultConfig.audio = true;
         break;
       default:
-      case audience:
+      case AUDIENCE:
         break;
     }
     this.localstream = AgoraRTC.createStream(defaultConfig);
@@ -97,7 +98,7 @@ export default class Rtc {
 
     this.client.on('stream-added', (event) => {
       const { stream } = event;
-      this.client.subscribe(stream, handleFail);
+      this.client.subscribe(stream, onError);
     });
 
     // Here we are receiving the remote stream

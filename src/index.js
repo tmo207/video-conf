@@ -6,7 +6,7 @@ import Rtm from './rtm';
 import Rtc from './rtc';
 import App from './App';
 
-import { appId, channelName } from './utils';
+import { APP_ID, CHANNEL_NAME } from './utils';
 
 const GlobalStyle = createGlobalStyle`
 * {
@@ -31,7 +31,7 @@ const GlobalStyle = createGlobalStyle`
 `;
 
 const rtc = new Rtc();
-const rtm = new Rtm({ appId, channelName, uid: 333 });
+const rtm = new Rtm({ APP_ID, CHANNEL_NAME, uid: 333 });
 
 ReactDOM.render(
   <React.StrictMode>
