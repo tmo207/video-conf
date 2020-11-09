@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import styled from 'styled-components/macro';
 import { ToastContainer, toast } from 'react-toastify';
 
 import { Modal, Hosts, UserList, ControlMenu } from './components';
 
+import { UserContext } from './state';
 import {
   CHANNEL_NAME,
   CONTENT_MARGIN_TOP,
@@ -34,7 +35,7 @@ const LayoutGrid = styled.div`
 `;
 
 const App = ({ rtc, rtm }) => {
-  const [userId, setUid] = useState();
+  const { userId, setUid } = useContext(UserContext);
   const [users, setUsers] = useState([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [modalIsOpen, setIsOpen] = useState(false);
@@ -42,7 +43,7 @@ const App = ({ rtc, rtm }) => {
   const [currentMainId, setLocalMainScreen] = useState(null);
   const [streams, setStreams] = useState([]);
   const [userRole, setRole] = useState();
-  const [isWaitingRoom, setIsWaitingRoom] = useState(false); // Serverseitig
+  const [isWaitingRoom, setIsWaitingRoom] = useState(true); // Serverseitig
   // Types: host | stage | hangup
   const [modalType, setModalType] = useState();
 
@@ -91,7 +92,6 @@ const App = ({ rtc, rtm }) => {
         break;
       case CHANNEL_OPENED:
         setIsWaitingRoom(false);
-        rtc.join(userId);
         break;
       default:
         break;
@@ -109,6 +109,7 @@ const App = ({ rtc, rtm }) => {
 
   useEffect(() => {
     getCurrentMainScreen(setLocalMainScreen);
+    streams.map((stream) => stream.play(`video-${stream.streamId}`));
   }, [isWaitingRoom]);
 
   useEffect(() => {
@@ -143,20 +144,14 @@ const App = ({ rtc, rtm }) => {
     }
   };
 
-  const startRtc = ({ uid, role }) => {
+  const startRtc = ({ uid }) => {
     const rtcHandlers = {
       setLocalMainScreen,
       setIsPlaying,
       setStreams,
     };
-
-    const onInitSuccess = () => {
-      if (!isWaitingRoom || role === SUPERHOST) rtc.join(uid);
-    };
-
     rtc.createClient();
-    rtc.init(rtcHandlers, onInitSuccess);
-
+    rtc.init(rtcHandlers, uid);
     rtmLogin(uid);
   };
 
@@ -180,7 +175,7 @@ const App = ({ rtc, rtm }) => {
               const currentUid = currentUser.id.toString();
               setUid(currentUid);
               setRole(currentUser.role);
-              startRtc({ role: currentUser.role, uid: currentUid });
+              startRtc({ uid: currentUid });
             }}
           >
             {currentUser.role}
@@ -224,6 +219,7 @@ const App = ({ rtc, rtm }) => {
               rtm,
               setIsOpen,
               setIsPlaying,
+              setIsWaitingRoom,
               superhostId,
               userId,
             }}
@@ -246,9 +242,13 @@ const App = ({ rtc, rtm }) => {
               />
             </>
           )}
-          <LayoutGrid>
-            <Hosts streams={streams} currentMainId={currentMainId} />
-          </LayoutGrid>
+          {!isWaitingRoom || hasAdminRights ? (
+            <LayoutGrid>
+              <Hosts streams={streams} currentMainId={currentMainId} />
+            </LayoutGrid>
+          ) : (
+            <h1>Das Event beginnt in Kürze.</h1>
+          )}
         </>
       )}
     </>

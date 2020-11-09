@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import styled from 'styled-components/macro';
+
+import { UserContext } from '../state';
 
 import {
   BLACK,
@@ -102,7 +104,9 @@ const UserActionItem = styled.button`
   }
 `;
 
-export const UserList = ({ rtc, rtm, uid, streams, currentMainId }) => {
+export const UserList = ({ rtc, rtm, streams, currentMainId }) => {
+  const { userId } = useContext(UserContext);
+
   // showUsersWithRole types = audience | host;
   const [showUsersWithRole, setShowUsersWithRole] = useState(AUDIENCE);
   const [searchValue, setSearchValue] = useState('');
@@ -118,24 +122,24 @@ export const UserList = ({ rtc, rtm, uid, streams, currentMainId }) => {
   const promoteUserToHost = (peerId) => {
     const getCurrentMainScreenCb = (currentMainScreen) => {
       if (currentMainScreen !== NO_CURRENT_MAIN_ID) {
-        rtc.publishAndStartStream(uid, HOST);
+        rtc.publishAndStartStream(userId, HOST);
       } else {
-        rtc.publishAndStartStream(uid, SUPERHOST);
-        rtc.setMainScreen(uid);
-        rtm.updateMainScreen(uid);
+        rtc.publishAndStartStream(userId, SUPERHOST);
+        rtc.setMainScreen(userId);
+        rtm.updateMainScreen(userId);
       }
     };
 
-    if (peerId === uid) getCurrentMainScreen(getCurrentMainScreenCb);
-    else rtm.inviteAudienceToBecomeHost({ peerId, ownId: uid });
+    if (peerId === userId) getCurrentMainScreen(getCurrentMainScreenCb);
+    else rtm.inviteAudienceToBecomeHost({ peerId, ownId: userId });
   };
 
   const promoteHostOnStage = (peerId) => {
-    if (peerId === uid) {
-      rtc.setMainScreen(uid);
-      rtm.updateMainScreen(uid);
+    if (peerId === userId) {
+      rtc.setMainScreen(userId);
+      rtm.updateMainScreen(userId);
     } else {
-      rtm.inviteHostToBecomeStage({ peerId, ownId: uid });
+      rtm.inviteHostToBecomeStage({ peerId, ownId: userId });
     }
   };
 
@@ -144,9 +148,9 @@ export const UserList = ({ rtc, rtm, uid, streams, currentMainId }) => {
     rtm.updateMainScreen(NO_CURRENT_MAIN_ID);
   };
 
-  const removeHost = (userId) => {
-    rtm.removeHost(userId);
-    if (currentMainId === userId) {
+  const removeHost = (uid) => {
+    rtm.removeHost(uid);
+    if (currentMainId === uid) {
       rtc.setMainScreen(NO_CURRENT_MAIN_ID);
       rtm.updateMainScreen(NO_CURRENT_MAIN_ID);
     }
@@ -227,7 +231,7 @@ export const UserList = ({ rtc, rtm, uid, streams, currentMainId }) => {
             {showHosts &&
               hosts.map((user, index) => {
                 const isCurrentMain = user === currentMainId;
-                const isYourself = user === uid;
+                const isYourself = user === userId;
                 if (inSearchResults(user)) {
                   return (
                     <UserContainer index={index} key={user}>

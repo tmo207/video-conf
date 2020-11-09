@@ -15,23 +15,21 @@ export default class Rtc {
     return this.client;
   }
 
-  join(uid, onSuccess = () => {}) {
-    this.client.join(
-      null, // tokenOrKey: Token or Channel Key
-      CHANNEL_NAME, // channelId
-      uid, // User specific ID. Type: Number or string, must be the same type for all users
-      onSuccess,
-      onError
-    );
-  }
-
-  init(handlers, onSuccess) {
+  init(handlers, uid) {
     this.handlers = handlers;
     this.client.init(
       APP_ID,
       () => {
         this.subscribeToStreamEvents();
-        onSuccess();
+        this.client.join(
+          null, // tokenOrKey: Token or Channel Key
+          CHANNEL_NAME, // channelId
+          uid, // User specific ID. Type: Number or string, must be the same type for all users
+          (id) => {
+            console.log('JOINED CHANNEL with', id);
+          },
+          onError
+        );
       },
       () => console.log('failed to initialize')
     );

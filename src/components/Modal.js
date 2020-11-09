@@ -60,15 +60,17 @@ export const Modal = ({
   rtm,
   setIsOpen,
   setIsPlaying,
+  setIsWaitingRoom,
   superhostId,
   userId,
 }) => {
   const acceptHostInvitation = () => {
     rtm.acceptHostInvitation(userId, superhostId);
     rtc.client.setClientRole(HOST, (error) => {
-      if (!error && isWaitingRoom) rtc.join(userId, (uid) => rtc.publishAndStartStream(uid, HOST));
-      else if (!error && !isWaitingRoom) rtc.publishAndStartStream(userId, HOST);
-      else console.log('setHost error', error);
+      if (!error) {
+        if (isWaitingRoom) setIsWaitingRoom(false);
+        rtc.publishAndStartStream(userId, HOST);
+      } else console.log('setHost error', error);
     });
   };
 
