@@ -1,29 +1,14 @@
 import AgoraRTM from 'agora-rtm-sdk';
 import EventEmitter from 'events';
 
-import { APP_ID, CHANNEL_NAME, ROLES, MESSAGES } from './utils';
+import { APP_ID, CHANNEL_NAME, MESSAGES } from './utils';
 
-const { SUPERHOST } = ROLES;
-
-const {
-  HOST_INVITE,
-  HOST_INVITE_ACCEPTED,
-  HOST_INVITE_DECLINED,
-  STAGE_INVITE,
-  REMOVE_AS_HOST,
-  CHANNEL_OPENED,
-  MAIN_SCREEN_UPDATED,
-} = MESSAGES;
+const { REMOVE_AS_HOST } = MESSAGES;
 
 export default class Rtm extends EventEmitter {
   constructor() {
     super();
     this.channels = {};
-    this.loggedIn = false;
-  }
-
-  setLoggedIn(isLoggedIn) {
-    this.loggedIn = isLoggedIn;
   }
 
   init(handlers) {
@@ -36,11 +21,8 @@ export default class Rtm extends EventEmitter {
   }
 
   subscribeClientEvents() {
-    const clientEvents = ['ConnectionStateChanged'];
-    clientEvents.forEach((eventName) => {
-      this.client.on(eventName, (...args) => {
-        this.emit(eventName, ...args);
-      });
+    this.client.on('ConnectionStateChanged', (...args) => {
+      this.emit('ConnectionStateChanged', ...args);
     });
 
     this.client.on('MessageFromPeer', (message) => {
@@ -69,10 +51,6 @@ export default class Rtm extends EventEmitter {
     return this.client.login({ uid: this.accountName, token });
   }
 
-  async logout() {
-    return this.client.logout();
-  }
-
   async joinChannel(name) {
     const channel = this.client.createChannel(name);
     this.channels[name] = {
@@ -80,16 +58,6 @@ export default class Rtm extends EventEmitter {
       joined: false,
     };
     return channel.join();
-  }
-
-  async leaveChannel(name) {
-    if (!this.channels[name] || (this.channels[name] && !this.channels[name].joined)) return;
-    return this.channels[name].channel.leave();
-  }
-
-  async sendChannelMessage(text) {
-    if (!this.channels[CHANNEL_NAME] || !this.channels[CHANNEL_NAME].joined) return;
-    return this.channels[CHANNEL_NAME].channel.sendMessage({ text });
   }
 
   async getMembers() {
@@ -100,102 +68,29 @@ export default class Rtm extends EventEmitter {
     });
   }
 
-  generateHostInvitation = (issuerId) => {
+  generateMessage = (userId, subject) => {
     return JSON.stringify({
-      subject: HOST_INVITE,
-      issuer: issuerId,
+      subject,
+      userId,
       token:
         '00609055eb4141f4ab4809ff8a2302254e9IAD8tvnQu5r8hAlgFGLlmZ8Cre6tU1VvEdKs/WvGmuFU4uAbzEcAAAAAEADOpjO6dw9yXwEAAQB2D3Jf',
     });
   };
 
-  generateHostInvitationAccept = (issuerId) => {
-    return JSON.stringify({
-      subject: HOST_INVITE_ACCEPTED,
-      issuer: issuerId,
-      token:
-        '00609055eb4141f4ab4809ff8a2302254e9IAD8tvnQu5r8hAlgFGLlmZ8Cre6tU1VvEdKs/WvGmuFU4uAbzEcAAAAAEADOpjO6dw9yXwEAAQB2D3Jf',
+  async sendChannelMessage(userId, subject) {
+    return this.channels[CHANNEL_NAME].channel.sendMessage({
+      text: this.generateMessage(userId, subject),
     });
-  };
-
-  generateHostInvitationDecline = (issuerId) => {
-    return JSON.stringify({
-      subject: HOST_INVITE_DECLINED,
-      issuer: issuerId,
-    });
-  };
-
-  generateStageInvitation = (issuerId) => {
-    return JSON.stringify({
-      subject: STAGE_INVITE,
-      issuer: issuerId,
-      token:
-        '00609055eb4141f4ab4809ff8a2302254e9IAD8tvnQu5r8hAlgFGLlmZ8Cre6tU1VvEdKs/WvGmuFU4uAbzEcAAAAAEADOpjO6dw9yXwEAAQB2D3Jf',
-    });
-  };
-
-  generateRemoveHostMessage = (hostId) => {
-    return JSON.stringify({
-      subject: REMOVE_AS_HOST,
-      issuer: hostId, // Here: id of host to be removed
-      token:
-        '00609055eb4141f4ab4809ff8a2302254e9IAD8tvnQu5r8hAlgFGLlmZ8Cre6tU1VvEdKs/WvGmuFU4uAbzEcAAAAAEADOpjO6dw9yXwEAAQB2D3Jf',
-    });
-  };
-
-  generateUpdateMainScreen = (uid) => {
-    return JSON.stringify({
-      subject: MAIN_SCREEN_UPDATED,
-      issuer: uid,
-      token:
-        '00609055eb4141f4ab4809ff8a2302254e9IAD8tvnQu5r8hAlgFGLlmZ8Cre6tU1VvEdKs/WvGmuFU4uAbzEcAAAAAEADOpjO6dw9yXwEAAQB2D3Jf',
-    });
-  };
-
-  generateChannelOpened = () => {
-    return JSON.stringify({
-      subject: CHANNEL_OPENED,
-      issuer: SUPERHOST,
-      token:
-        '00609055eb4141f4ab4809ff8a2302254e9IAD8tvnQu5r8hAlgFGLlmZ8Cre6tU1VvEdKs/WvGmuFU4uAbzEcAAAAAEADOpjO6dw9yXwEAAQB2D3Jf',
-    });
-  };
-
-  async inviteAudienceToBecomeHost({ peerId, ownId }) {
-    return this.client.sendMessageToPeer({ text: this.generateHostInvitation(ownId) }, peerId);
   }
 
-  acceptHostInvitation(uid, remoteUid) {
-    this.client.sendMessageToPeer(
-      { text: this.generateHostInvitationAccept(uid) }, // An RtmMessage object.
-      remoteUid // The user ID of the remote user.
-    );
-  }
-
-  declineHostInvitation(uid, remoteUid) {
-    this.client.sendMessageToPeer(
-      { text: this.generateHostInvitationDecline(uid) }, // An RtmMessage object.
-      remoteUid // The user ID of the remote user.
-    );
-  }
-
-  async inviteHostToBecomeStage({ peerId, ownId }) {
-    return this.client.sendMessageToPeer({ text: this.generateStageInvitation(ownId) }, peerId);
+  async sendPeerMessage(peerId, remoteId, subject) {
+    return this.client.sendMessageToPeer({ text: this.generateMessage(remoteId, subject) }, peerId);
   }
 
   removeHost(hostId) {
-    return this.client.sendMessageToPeer({ text: this.generateRemoveHostMessage(hostId) }, hostId);
-  }
-
-  updateMainScreen(uid) {
-    this.channels[CHANNEL_NAME].channel.sendMessage({
-      text: this.generateUpdateMainScreen(uid),
-    });
-  }
-
-  openChannel() {
-    this.channels[CHANNEL_NAME].channel.sendMessage({
-      text: this.generateChannelOpened(),
-    });
+    return this.client.sendMessageToPeer(
+      { text: this.generateMessage(hostId, REMOVE_AS_HOST) },
+      hostId
+    );
   }
 }

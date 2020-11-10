@@ -11,7 +11,7 @@ export const getCurrentMainScreen = async (callback) => {
 };
 
 export const setCurrentMainScreen = async (currentMainScreen) => {
-  const url = `https://agora.service-sample.de/api/test/react-test/mainscreen`;
+  const url = `https://agora.service-sample.de/api/test/${CHANNEL_NAME}/mainscreen`;
   const body = JSON.stringify({ currentMainScreen });
   fetch(url, {
     method: 'POST',

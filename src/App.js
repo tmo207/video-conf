@@ -14,7 +14,7 @@ import {
   getCurrentMainScreen,
 } from './utils';
 
-const { AUDIENCE, HOST, MODERATOR, SUPERHOST } = ROLES;
+const { HOST, MODERATOR, SUPERHOST } = ROLES;
 const {
   HOST_INVITE,
   HOST_INVITE_ACCEPTED,
@@ -34,39 +34,45 @@ const LayoutGrid = styled.div`
   margin-top: ${CONTENT_MARGIN_TOP};
 `;
 
+const WaitingRoomNotice = styled.h1`
+  color: white;
+`;
+
 const App = ({ rtc, rtm }) => {
-  const { userId, setUid } = useContext(UserContext);
+  // Host/Admin states
   const [users, setUsers] = useState([]);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [adminId, setAdminId] = useState();
   const [modalIsOpen, setIsOpen] = useState(false);
-  const [superhostId, setSuperhostId] = useState();
+  const [modalType, setModalType] = useState(); // Types: host | stage | hangup
+
+  // Common states
+  const { userId, setUid } = useContext(UserContext);
   const [currentMainId, setLocalMainScreen] = useState(null);
   const [streams, setStreams] = useState([]);
-  const [userRole, setRole] = useState();
+  const [userRole, setRole] = useState(); // Serverseitig
   const [isWaitingRoom, setIsWaitingRoom] = useState(true); // Serverseitig
-  // Types: host | stage | hangup
-  const [modalType, setModalType] = useState();
 
   const onMessage = (message) => {
     const msg = JSON.parse(message);
-    if (!msg || !msg.subject || !(msg.issuer || msg.receiver)) {
+    if (!msg || !msg.subject || !msg.userId) {
       return false;
     }
     switch (msg.subject) {
       case HOST_INVITE:
         setModalType(HOST);
         setIsOpen(true);
-        setSuperhostId(msg.issuer);
+        setAdminId(msg.userId);
         break;
       case HOST_INVITE_ACCEPTED:
-        toast(`host invitation accepted from: ${msg.issuer}`, {
+        toast(`host invitation accepted from: ${msg.userId}`, {
           autoClose: 8000,
           draggable: true,
           closeOnClick: true,
         });
         break;
       case HOST_INVITE_DECLINED:
-        toast(`host invitation declined from: ${msg.issuer}`, {
+        toast(`host invitation declined from: ${msg.userId}`, {
           autoClose: 8000,
           draggable: true,
           closeOnClick: true,
@@ -75,20 +81,14 @@ const App = ({ rtc, rtm }) => {
       case STAGE_INVITE:
         setModalType(STAGE);
         setIsOpen(true);
-        setSuperhostId(msg.issuer);
+        setAdminId(msg.userId);
         break;
       case MAIN_SCREEN_UPDATED:
-        setLocalMainScreen(msg.issuer);
+        setLocalMainScreen(msg.userId);
         break;
       case REMOVE_AS_HOST:
-        rtc.client.setClientRole(AUDIENCE, (error) => {
-          if (!error) {
-            rtc.removeStream(msg.issuer);
-            rtc.client.unpublish(rtc.localstream);
-          } else {
-            console.log('removeHost error', error);
-          }
-        });
+        rtc.removeStream(msg.userId);
+        rtc.client.unpublish(rtc.localstream);
         break;
       case CHANNEL_OPENED:
         setIsWaitingRoom(false);
@@ -108,7 +108,6 @@ const App = ({ rtc, rtm }) => {
   }, [currentMainId]);
 
   useEffect(() => {
-    getCurrentMainScreen(setLocalMainScreen);
     streams.map((stream) => stream.play(`video-${stream.streamId}`));
   }, [isWaitingRoom]);
 
@@ -119,10 +118,6 @@ const App = ({ rtc, rtm }) => {
         getCurrentMainScreen(setLocalMainScreen);
       })
     );
-
-    return () => {
-      rtm.leaveChannel();
-    };
   }, []);
 
   const rtmLogin = (uid) => {
@@ -133,7 +128,6 @@ const App = ({ rtc, rtm }) => {
       };
       rtm.init(rtmHandlers);
       rtm.login(uid, null).then(() => {
-        rtm.setLoggedIn(true);
         rtm.joinChannel(CHANNEL_NAME).then(() => {
           rtm.subscribeChannelEvents(() => {});
         });
@@ -150,6 +144,7 @@ const App = ({ rtc, rtm }) => {
       setIsPlaying,
       setStreams,
     };
+
     rtc.createClient();
     rtc.init(rtcHandlers, uid);
     rtmLogin(uid);
@@ -157,7 +152,7 @@ const App = ({ rtc, rtm }) => {
 
   const openChannel = () => {
     setIsWaitingRoom(false);
-    rtm.openChannel();
+    rtm.sendChannelMessage(SUPERHOST, CHANNEL_OPENED);
   };
 
   const hasAdminRights = userRole === SUPERHOST || userRole === MODERATOR;
@@ -200,7 +195,6 @@ const App = ({ rtc, rtm }) => {
               {...{
                 currentMainId,
                 localstream: rtc.localstream,
-                role: userRole,
                 rtc,
                 setIsOpen,
                 setIsPlaying,
@@ -220,8 +214,7 @@ const App = ({ rtc, rtm }) => {
               setIsOpen,
               setIsPlaying,
               setIsWaitingRoom,
-              superhostId,
-              userId,
+              adminId,
             }}
           />
           {hasAdminRights && (
@@ -237,18 +230,17 @@ const App = ({ rtc, rtm }) => {
                   rtc,
                   rtm,
                   streams,
-                  uid: userId,
                 }}
               />
             </>
           )}
-          {!isWaitingRoom || hasAdminRights ? (
-            <LayoutGrid>
+          <LayoutGrid>
+            {isWaitingRoom && !hasAdminRights ? (
+              <WaitingRoomNotice>Das Event beginnt in Kürze.</WaitingRoomNotice>
+            ) : (
               <Hosts streams={streams} currentMainId={currentMainId} />
-            </LayoutGrid>
-          ) : (
-            <h1>Das Event beginnt in Kürze.</h1>
-          )}
+            )}
+          </LayoutGrid>
         </>
       )}
     </>

@@ -1,10 +1,14 @@
+import { useContext } from 'react';
 import ReactModal from 'react-modal';
 import styled from 'styled-components/macro';
+
+import { UserContext } from '../state';
 
 import {
   ControlItem,
   GREEN,
   HANGUP,
+  MESSAGES,
   NO_CURRENT_MAIN_ID,
   RED,
   ROLES,
@@ -14,6 +18,7 @@ import {
 } from '../utils';
 
 const { HOST } = ROLES;
+const { HOST_INVITE_ACCEPTED, HOST_INVITE_DECLINED, MAIN_SCREEN_UPDATED } = MESSAGES;
 
 const ButtonContainer = styled.div`
   display: flex;
@@ -52,6 +57,7 @@ const modalStyle = {
 };
 
 export const Modal = ({
+  adminId,
   currentMainId,
   isOpen,
   isWaitingRoom,
@@ -61,28 +67,24 @@ export const Modal = ({
   setIsOpen,
   setIsPlaying,
   setIsWaitingRoom,
-  superhostId,
-  userId,
 }) => {
+  const { userId } = useContext(UserContext);
+
   const acceptHostInvitation = () => {
-    rtm.acceptHostInvitation(userId, superhostId);
-    rtc.client.setClientRole(HOST, (error) => {
-      if (!error) {
-        if (isWaitingRoom) setIsWaitingRoom(false);
-        rtc.publishAndStartStream(userId, HOST);
-      } else console.log('setHost error', error);
-    });
+    if (isWaitingRoom) setIsWaitingRoom(false);
+    rtc.publishAndStartStream(userId, HOST);
+    rtm.sendPeerMessage(userId, adminId, HOST_INVITE_ACCEPTED);
   };
 
   const acceptStageInvitation = () => {
     rtc.setMainScreen(userId);
-    rtm.updateMainScreen(userId);
+    rtm.sendChannelMessage(userId, MAIN_SCREEN_UPDATED);
   };
 
   const acceptHangUp = () => {
     if (userId === currentMainId) {
       rtc.setMainScreen(NO_CURRENT_MAIN_ID).then(() => rtc.removeStream(userId));
-      rtm.updateMainScreen(NO_CURRENT_MAIN_ID);
+      rtm.sendChannelMessage(NO_CURRENT_MAIN_ID, MAIN_SCREEN_UPDATED);
     } else {
       rtc.removeStream(userId);
     }
@@ -109,7 +111,7 @@ export const Modal = ({
             text:
               'Der Host dieser Konferenz hat dich dazu eingeladen der Konferenz beizutreten. Hierfür werden Mikrofon und deine Kamera aktiviert. Möchtest du beitreten?',
             onAccept: acceptHostInvitation,
-            onDecline: () => rtm.declineHostInvitation(userId, superhostId),
+            onDecline: () => rtm.sendPeerMessage(userId, adminId, HOST_INVITE_DECLINED),
             setIsOpen,
           }}
         />
@@ -121,7 +123,7 @@ export const Modal = ({
             text:
               'Der Host dieser Konferenz hat dich dazu eingeladen die Bühne zu betreten. Möchtest du das?',
             onAccept: acceptStageInvitation,
-            onDecline: () => rtm.declineHostInvitation(userId, superhostId),
+            onDecline: () => rtm.sendPeerMessage(userId, adminId, HOST_INVITE_DECLINED),
             setIsOpen,
           }}
         />

@@ -1,7 +1,16 @@
 import { useState } from 'react';
 import styled from 'styled-components/macro';
 
-import { ControlItem, HANGUP, AudioIcon, HangUpIcon, ScreenIcon, VideoIcon } from '../utils';
+import {
+  AudioIcon,
+  ControlItem,
+  HANGUP,
+  HangUpIcon,
+  ROLES,
+  SCREEN_SHARE,
+  ScreenIcon,
+  VideoIcon,
+} from '../utils';
 
 const ControlMenuContainer = styled.div`
   z-index: 1000;
@@ -22,7 +31,6 @@ const ControlMenuContainer = styled.div`
 export const ControlMenu = ({
   currentMainId,
   localstream,
-  role,
   rtc,
   setModalType,
   setIsOpen,
@@ -61,14 +69,14 @@ export const ControlMenu = ({
 
   const onScreen = () => {
     if (hasScreen) {
-      const newStream = rtc.createStream(userId, role);
+      const newStream = rtc.createStream(userId, ROLES.SUPERHOST);
       newStream.init(() => {
         const newVideoTrack = newStream.getVideoTrack();
         localstream.replaceTrack(newVideoTrack);
         setHasScreen(false);
       });
     } else {
-      const newStream = rtc.createStream(userId, role, true);
+      const newStream = rtc.createStream(userId, SCREEN_SHARE);
       newStream.init(() => {
         const newVideoTrack = newStream.getVideoTrack();
         localstream.replaceTrack(newVideoTrack);

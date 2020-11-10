@@ -1,5 +1,12 @@
 import AgoraRTC from 'agora-rtc-sdk';
-import { APP_ID, CHANNEL_NAME, ROLES, getCurrentMainScreen, setCurrentMainScreen } from './utils';
+import {
+  APP_ID,
+  CHANNEL_NAME,
+  ROLES,
+  SCREEN_SHARE,
+  getCurrentMainScreen,
+  setCurrentMainScreen,
+} from './utils';
 
 const { AUDIENCE, HOST, SUPERHOST } = ROLES;
 
@@ -62,20 +69,25 @@ export default class Rtc {
     }, onError);
   }
 
-  createStream(uid, attendeeMode, screen) {
+  createStream(uid, attendeeMode) {
     const defaultConfig = {
       streamID: uid,
       audio: false,
       video: false,
-      screen,
-      screenAudio: screen,
+      screen: false,
+      screenAudio: false,
     };
 
     switch (attendeeMode) {
+      case SCREEN_SHARE:
+        defaultConfig.screen = true;
+        defaultConfig.screenAudio = true;
+        defaultConfig.video = false;
+        break;
       case HOST:
       case SUPERHOST:
         defaultConfig.video = true;
-        defaultConfig.audio = false; // TURN TRUE
+        defaultConfig.audio = true;
         break;
       default:
       case AUDIENCE:
