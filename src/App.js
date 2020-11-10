@@ -34,6 +34,10 @@ const LayoutGrid = styled.div`
   margin-top: ${CONTENT_MARGIN_TOP};
 `;
 
+const WaitingRoomNotice = styled.h1`
+  color: white;
+`;
+
 const App = ({ rtc, rtm }) => {
   const { userId, setUid } = useContext(UserContext);
   const [users, setUsers] = useState([]);
@@ -220,7 +224,6 @@ const App = ({ rtc, rtm }) => {
               setIsPlaying,
               setIsWaitingRoom,
               superhostId,
-              userId,
             }}
           />
           {hasAdminRights && (
@@ -236,18 +239,17 @@ const App = ({ rtc, rtm }) => {
                   rtc,
                   rtm,
                   streams,
-                  uid: userId,
                 }}
               />
             </>
           )}
-          {!isWaitingRoom || hasAdminRights ? (
-            <LayoutGrid>
+          <LayoutGrid>
+            {isWaitingRoom && !hasAdminRights ? (
+              <WaitingRoomNotice>Das Event beginnt in Kürze.</WaitingRoomNotice>
+            ) : (
               <Hosts streams={streams} currentMainId={currentMainId} />
-            </LayoutGrid>
-          ) : (
-            <h1>Das Event beginnt in Kürze.</h1>
-          )}
+            )}
+          </LayoutGrid>
         </>
       )}
     </>
