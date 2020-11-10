@@ -1,20 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import styled from 'styled-components/macro';
 
+import { UserContext } from '../state';
+
 import {
-  ControlItem,
-  GridItemSmall,
   BLACK,
   CONTENT_MARGIN_TOP,
+  ControlItem,
   GREEN,
-  minusIcon,
-  plusIcon,
+  GridItemSmall,
+  NO_CURRENT_MAIN_ID,
   ROLES,
   StageIcon,
+  getCurrentMainScreen,
+  MinusIcon,
+  PlusIcon,
 } from '../utils';
 
 const isOdd = (num) => num % 2 === 1;
-const { AUDIENCE, HOST } = ROLES;
+const { AUDIENCE, HOST, SUPERHOST } = ROLES;
 
 const UserListContainer = styled(GridItemSmall)`
   position: fixed;
@@ -100,7 +104,9 @@ const UserActionItem = styled.button`
   }
 `;
 
-export const UserList = ({ rtm, uid, streams, currentMainId, setMainScreenId }) => {
+export const UserList = ({ rtc, rtm, streams, currentMainId }) => {
+  const { userId } = useContext(UserContext);
+
   // showUsersWithRole types = audience | host;
   const [showUsersWithRole, setShowUsersWithRole] = useState(AUDIENCE);
   const [searchValue, setSearchValue] = useState('');
@@ -114,16 +120,40 @@ export const UserList = ({ rtm, uid, streams, currentMainId, setMainScreenId }) 
   }, [streams]);
 
   const promoteUserToHost = (peerId) => {
-    rtm.inviteAudienceToBecomeHost({ peerId, ownId: uid });
+    const getCurrentMainScreenCb = (currentMainScreen) => {
+      if (currentMainScreen !== NO_CURRENT_MAIN_ID) {
+        rtc.publishAndStartStream(userId, HOST);
+      } else {
+        rtc.publishAndStartStream(userId, SUPERHOST);
+        rtc.setMainScreen(userId);
+        rtm.updateMainScreen(userId);
+      }
+    };
+
+    if (peerId === userId) getCurrentMainScreen(getCurrentMainScreenCb);
+    else rtm.inviteAudienceToBecomeHost({ peerId, ownId: userId });
   };
 
   const promoteHostOnStage = (peerId) => {
-    rtm.inviteHostToBecomeStage({ peerId, ownId: uid });
+    if (peerId === userId) {
+      rtc.setMainScreen(userId);
+      rtm.updateMainScreen(userId);
+    } else {
+      rtm.inviteHostToBecomeStage({ peerId, ownId: userId });
+    }
   };
 
-  const removeHost = (userId) => {
-    rtm.removeHost(userId);
-    setMainScreenId(null);
+  const degradeMainToHost = () => {
+    rtc.setMainScreen(NO_CURRENT_MAIN_ID);
+    rtm.updateMainScreen(NO_CURRENT_MAIN_ID);
+  };
+
+  const removeHost = (uid) => {
+    rtm.removeHost(uid);
+    if (currentMainId === uid) {
+      rtc.setMainScreen(NO_CURRENT_MAIN_ID);
+      rtm.updateMainScreen(NO_CURRENT_MAIN_ID);
+    }
   };
 
   const getMembers = () => {
@@ -191,7 +221,7 @@ export const UserList = ({ rtm, uid, streams, currentMainId, setMainScreenId }) 
                       <UserName>{user}</UserName>
                       <UserActionContainer>
                         <UserActionItem type="button" onClick={() => promoteUserToHost(user)}>
-                          {plusIcon}
+                          {PlusIcon}
                         </UserActionItem>
                       </UserActionContainer>
                     </UserContainer>
@@ -201,6 +231,7 @@ export const UserList = ({ rtm, uid, streams, currentMainId, setMainScreenId }) 
             {showHosts &&
               hosts.map((user, index) => {
                 const isCurrentMain = user === currentMainId;
+                const isYourself = user === userId;
                 if (inSearchResults(user)) {
                   return (
                     <UserContainer index={index} key={user}>
@@ -209,19 +240,17 @@ export const UserList = ({ rtm, uid, streams, currentMainId, setMainScreenId }) 
                         <UserActionItem
                           type="button"
                           onClick={() => {
-                            if (user === uid) {
-                              rtm.acceptStageInvitation(uid, currentMainId);
-                              setMainScreenId(uid);
-                            } else {
-                              promoteHostOnStage(user);
-                            }
+                            if (isCurrentMain) degradeMainToHost();
+                            else promoteHostOnStage(user);
                           }}
                         >
                           <StageIcon isActive={isCurrentMain} />
                         </UserActionItem>
-                        <UserActionItem type="button" onClick={() => removeHost(user)}>
-                          {minusIcon}
-                        </UserActionItem>
+                        {!isYourself && (
+                          <UserActionItem type="button" onClick={() => removeHost(user)}>
+                            {MinusIcon}
+                          </UserActionItem>
+                        )}
                       </UserActionContainer>
                     </UserContainer>
                   );

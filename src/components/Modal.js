@@ -1,7 +1,17 @@
 import ReactModal from 'react-modal';
 import styled from 'styled-components/macro';
 
-import { ControlItem, GREEN, hangUpIcon, HANGUP, RED, ROLES, STAGE, videoIcon } from '../utils';
+import {
+  ControlItem,
+  GREEN,
+  HANGUP,
+  NO_CURRENT_MAIN_ID,
+  RED,
+  ROLES,
+  STAGE,
+  HangUpIcon,
+  VideoIcon,
+} from '../utils';
 
 const { HOST } = ROLES;
 
@@ -50,27 +60,34 @@ export const Modal = ({
   rtm,
   setIsOpen,
   setIsPlaying,
-  setMainScreenId,
+  setIsWaitingRoom,
   superhostId,
   userId,
 }) => {
   const acceptHostInvitation = () => {
     rtm.acceptHostInvitation(userId, superhostId);
     rtc.client.setClientRole(HOST, (error) => {
-      if (!error && isWaitingRoom) rtc.join(userId, HOST);
-      else if (!error && !isWaitingRoom) rtc.publishAndStartStream(userId, HOST);
-      else console.log('setHost error', error);
+      if (!error) {
+        if (isWaitingRoom) setIsWaitingRoom(false);
+        rtc.publishAndStartStream(userId, HOST);
+      } else console.log('setHost error', error);
     });
   };
 
   const acceptStageInvitation = () => {
-    rtm.acceptStageInvitation(userId, currentMainId);
-    setMainScreenId(userId);
+    rtc.setMainScreen(userId);
+    rtm.updateMainScreen(userId);
   };
 
   const acceptHangUp = () => {
-    rtc.removeStream(userId);
+    if (userId === currentMainId) {
+      rtc.setMainScreen(NO_CURRENT_MAIN_ID).then(() => rtc.removeStream(userId));
+      rtm.updateMainScreen(NO_CURRENT_MAIN_ID);
+    } else {
+      rtc.removeStream(userId);
+    }
     setIsPlaying(false);
+    rtc.client.unpublish(rtc.localstream);
   };
 
   const isHostInvitation = modalType === HOST;
@@ -87,7 +104,7 @@ export const Modal = ({
       {isHostInvitation && (
         <ModalContent
           {...{
-            icon: videoIcon,
+            icon: VideoIcon,
             headline: 'Konferenz beitreten?',
             text:
               'Der Host dieser Konferenz hat dich dazu eingeladen der Konferenz beizutreten. Hierfür werden Mikrofon und deine Kamera aktiviert. Möchtest du beitreten?',
@@ -112,7 +129,7 @@ export const Modal = ({
       {isHangUp && (
         <ModalContent
           {...{
-            icon: hangUpIcon,
+            icon: HangUpIcon,
             iconRed: true,
             headline: 'Bist du dir sicher?',
             text:

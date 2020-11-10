@@ -38,6 +38,7 @@ export const Hosts = ({ streams, currentMainId }) => {
       }
     });
   });
+
   return (
     <HostsContainer>
       {streams.map((stream) => {

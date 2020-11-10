@@ -8,6 +8,8 @@ export const ROLES = {
   AUDIENCE: 'audience',
 };
 
+export const NO_CURRENT_MAIN_ID = '00000';
+
 export const STAGE = 'stage';
 export const HANGUP = 'hangup';
 
@@ -16,7 +18,7 @@ export const MESSAGES = {
   HOST_INVITE_ACCEPTED: 'host-invitation-accepted',
   HOST_INVITE_DECLINED: 'host-invitation-declined',
   STAGE_INVITE: 'stage-invitation',
-  STAGE_INVITE_ACCEPTED: 'stage-invitation-accepted',
   REMOVE_AS_HOST: 'remove-you-as-host',
   CHANNEL_OPENED: 'channel-opened',
+  MAIN_SCREEN_UPDATED: 'main-screen-updated',
 };

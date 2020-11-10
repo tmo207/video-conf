@@ -1,5 +1,5 @@
 import AgoraRTC from 'agora-rtc-sdk';
-import { APP_ID, CHANNEL_NAME, ROLES } from './utils';
+import { APP_ID, CHANNEL_NAME, ROLES, getCurrentMainScreen, setCurrentMainScreen } from './utils';
 
 const { AUDIENCE, HOST, SUPERHOST } = ROLES;
 
@@ -15,37 +15,30 @@ export default class Rtc {
     return this.client;
   }
 
-  join(uid, role) {
-    const onSuccess = (id) => {
-      const isHost = role === HOST || role === 'cohost';
-      const isSuperHost = role === SUPERHOST;
-
-      if (isSuperHost) this.publishAndStartStream(id, role);
-      if (isHost) this.publishAndStartStream(id, HOST);
-    };
-
-    this.client.join(
-      null, // tokenOrKey: Token or Channel Key
-      CHANNEL_NAME, // channelId
-      uid, // User specific ID. Type: Number or string, must be the same type for all users
-      onSuccess,
-      onError
-    );
-  }
-
-  init(handlers, onSuccess) {
+  init(handlers, uid) {
     this.handlers = handlers;
     this.client.init(
       APP_ID,
       () => {
         this.subscribeToStreamEvents();
-        onSuccess();
+        this.client.join(
+          null, // tokenOrKey: Token or Channel Key
+          CHANNEL_NAME, // channelId
+          uid, // User specific ID. Type: Number or string, must be the same type for all users
+          (id) => {
+            console.log('JOINED CHANNEL with', id);
+          },
+          onError
+        );
       },
       () => console.log('failed to initialize')
     );
   }
 
-  removeStream(uid) {
+  async removeStream(uid) {
+    getCurrentMainScreen(
+      (currentMainScreen) => currentMainScreen === uid && this.handlers.setLocalMainScreen(null)
+    );
     this.streams.map((stream, index) => {
       if (stream.streamId === uid) {
         stream.close();
@@ -59,7 +52,7 @@ export default class Rtc {
 
   publishAndStartStream(uid, role) {
     const stream = this.createStream(uid, role);
-
+    // Toast für cant access media, you need to allow camera, mic
     stream.init(() => {
       this.client.publish(stream, onError);
       this.streams = [...this.streams, stream];
@@ -75,13 +68,14 @@ export default class Rtc {
       audio: false,
       video: false,
       screen,
+      screenAudio: screen,
     };
 
     switch (attendeeMode) {
       case HOST:
       case SUPERHOST:
         defaultConfig.video = true;
-        defaultConfig.audio = true;
+        defaultConfig.audio = false; // TURN TRUE
         break;
       default:
       case AUDIENCE:
@@ -89,6 +83,11 @@ export default class Rtc {
     }
     this.localstream = AgoraRTC.createStream(defaultConfig);
     return this.localstream;
+  }
+
+  async setMainScreen(uid) {
+    setCurrentMainScreen(uid);
+    this.handlers.setLocalMainScreen(uid);
   }
 
   subscribeToStreamEvents() {
@@ -103,17 +102,12 @@ export default class Rtc {
 
     // Here we are receiving the remote stream
     this.client.on('stream-subscribed', (event) => {
-      fetch('https://agora.service-sample.de/api/test/init/test').then((response) =>
-        response.json().then((data) => {
-          const mainScreenId = data[0].currentMainScreen.toString();
-          this.handlers.setMainScreenId(mainScreenId);
-          const { stream } = event;
-          this.streams = [...this.streams, stream];
-          this.handlers.setStreams(this.streams);
-          const streamId = stream.getId(); // Same value as uid. Turning into string because ID of DOM elements can only be strings.
-          stream.play(`video-${streamId}`);
-        })
-      );
+      getCurrentMainScreen(this.handlers.setLocalMainScreen);
+      const { stream } = event;
+      this.streams = [...this.streams, stream];
+      this.handlers.setStreams(this.streams);
+      const streamId = stream.getId(); // Same value as uid. Turning into string because ID of DOM elements can only be strings.
+      stream.play(`video-${streamId}`);
     });
 
     this.client.on('stream-removed', ({ stream }) => {

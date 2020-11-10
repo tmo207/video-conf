@@ -1,10 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import styled from 'styled-components/macro';
 import { ToastContainer, toast } from 'react-toastify';
 
 import { Modal, Hosts, UserList, ControlMenu } from './components';
 
-import { CHANNEL_NAME, ROLES, CONTENT_MARGIN_TOP, STAGE, MESSAGES } from './utils';
+import { UserContext } from './state';
+import {
+  CHANNEL_NAME,
+  CONTENT_MARGIN_TOP,
+  MESSAGES,
+  ROLES,
+  STAGE,
+  getCurrentMainScreen,
+} from './utils';
 
 const { AUDIENCE, HOST, MODERATOR, SUPERHOST } = ROLES;
 const {
@@ -12,9 +20,9 @@ const {
   HOST_INVITE_ACCEPTED,
   HOST_INVITE_DECLINED,
   STAGE_INVITE,
-  STAGE_INVITE_ACCEPTED,
   REMOVE_AS_HOST,
   CHANNEL_OPENED,
+  MAIN_SCREEN_UPDATED,
 } = MESSAGES;
 
 const LayoutGrid = styled.div`
@@ -27,12 +35,12 @@ const LayoutGrid = styled.div`
 `;
 
 const App = ({ rtc, rtm }) => {
-  const [userId, setUid] = useState();
+  const { userId, setUid } = useContext(UserContext);
   const [users, setUsers] = useState([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [modalIsOpen, setIsOpen] = useState(false);
   const [superhostId, setSuperhostId] = useState();
-  const [currentMainId, setMainScreenId] = useState(); // Serverseitig
+  const [currentMainId, setLocalMainScreen] = useState(null);
   const [streams, setStreams] = useState([]);
   const [userRole, setRole] = useState();
   const [isWaitingRoom, setIsWaitingRoom] = useState(true); // Serverseitig
@@ -41,7 +49,7 @@ const App = ({ rtc, rtm }) => {
 
   const onMessage = (message) => {
     const msg = JSON.parse(message);
-    if (!msg || !msg.subject || !msg.issuer) {
+    if (!msg || !msg.subject || !(msg.issuer || msg.receiver)) {
       return false;
     }
     switch (msg.subject) {
@@ -69,15 +77,14 @@ const App = ({ rtc, rtm }) => {
         setIsOpen(true);
         setSuperhostId(msg.issuer);
         break;
-      case STAGE_INVITE_ACCEPTED:
-        setMainScreenId(msg.issuer);
+      case MAIN_SCREEN_UPDATED:
+        setLocalMainScreen(msg.issuer);
         break;
       case REMOVE_AS_HOST:
         rtc.client.setClientRole(AUDIENCE, (error) => {
           if (!error) {
             rtc.removeStream(msg.issuer);
             rtc.client.unpublish(rtc.localstream);
-            console.log('remove host success');
           } else {
             console.log('removeHost error', error);
           }
@@ -85,7 +92,6 @@ const App = ({ rtc, rtm }) => {
         break;
       case CHANNEL_OPENED:
         setIsWaitingRoom(false);
-        rtc.join(userId, userRole);
         break;
       default:
         break;
@@ -102,16 +108,19 @@ const App = ({ rtc, rtm }) => {
   }, [currentMainId]);
 
   useEffect(() => {
+    getCurrentMainScreen(setLocalMainScreen);
+    streams.map((stream) => stream.play(`video-${stream.streamId}`));
+  }, [isWaitingRoom]);
+
+  useEffect(() => {
     fetch('https://agora.service-sample.de/api/test/init/test').then((response) =>
       response.json().then((data) => {
         setUsers(data);
-        const currentMainScreen = data[0].currentMainScreen.toString();
-        setMainScreenId(currentMainScreen);
+        getCurrentMainScreen(setLocalMainScreen);
       })
     );
 
     return () => {
-      rtc.removeStream(rtc.localstream);
       rtm.leaveChannel();
     };
   }, []);
@@ -135,20 +144,14 @@ const App = ({ rtc, rtm }) => {
     }
   };
 
-  const startRtc = ({ uid, role }) => {
+  const startRtc = ({ uid }) => {
     const rtcHandlers = {
-      setMainScreenId,
+      setLocalMainScreen,
       setIsPlaying,
       setStreams,
     };
-
-    const onInitSuccess = () => {
-      if (!isWaitingRoom || role === SUPERHOST) rtc.join(uid, role);
-    };
-
     rtc.createClient();
-    rtc.init(rtcHandlers, onInitSuccess);
-
+    rtc.init(rtcHandlers, uid);
     rtmLogin(uid);
   };
 
@@ -172,10 +175,7 @@ const App = ({ rtc, rtm }) => {
               const currentUid = currentUser.id.toString();
               setUid(currentUid);
               setRole(currentUser.role);
-              startRtc({ role: currentUser.role, uid: currentUid });
-              if (currentUser.role === SUPERHOST) {
-                setMainScreenId(currentUid);
-              }
+              startRtc({ uid: currentUid });
             }}
           >
             {currentUser.role}
@@ -219,28 +219,36 @@ const App = ({ rtc, rtm }) => {
               rtm,
               setIsOpen,
               setIsPlaying,
-              setMainScreenId,
+              setIsWaitingRoom,
               superhostId,
               userId,
             }}
           />
           {hasAdminRights && (
             <>
-              <button type="button" onClick={openChannel}>
-                Channel öffnen
-              </button>
+              {isWaitingRoom && (
+                <button type="button" onClick={openChannel}>
+                  Channel öffnen
+                </button>
+              )}
               <UserList
-                currentMainId={currentMainId}
-                setMainScreenId={setMainScreenId}
-                rtm={rtm}
-                uid={userId}
-                streams={streams}
+                {...{
+                  currentMainId,
+                  rtc,
+                  rtm,
+                  streams,
+                  uid: userId,
+                }}
               />
             </>
           )}
-          <LayoutGrid>
-            <Hosts streams={streams} currentMainId={currentMainId} />
-          </LayoutGrid>
+          {!isWaitingRoom || hasAdminRights ? (
+            <LayoutGrid>
+              <Hosts streams={streams} currentMainId={currentMainId} />
+            </LayoutGrid>
+          ) : (
+            <h1>Das Event beginnt in Kürze.</h1>
+          )}
         </>
       )}
     </>
