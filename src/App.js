@@ -55,24 +55,24 @@ const App = ({ rtc, rtm }) => {
 
   const onMessage = (message) => {
     const msg = JSON.parse(message);
-    if (!msg || !msg.subject || !(msg.issuer || msg.receiver)) {
+    if (!msg || !msg.subject || !msg.userId) {
       return false;
     }
     switch (msg.subject) {
       case HOST_INVITE:
         setModalType(HOST);
         setIsOpen(true);
-        setAdminId(msg.issuer);
+        setAdminId(msg.userId);
         break;
       case HOST_INVITE_ACCEPTED:
-        toast(`host invitation accepted from: ${msg.issuer}`, {
+        toast(`host invitation accepted from: ${msg.userId}`, {
           autoClose: 8000,
           draggable: true,
           closeOnClick: true,
         });
         break;
       case HOST_INVITE_DECLINED:
-        toast(`host invitation declined from: ${msg.issuer}`, {
+        toast(`host invitation declined from: ${msg.userId}`, {
           autoClose: 8000,
           draggable: true,
           closeOnClick: true,
@@ -81,13 +81,13 @@ const App = ({ rtc, rtm }) => {
       case STAGE_INVITE:
         setModalType(STAGE);
         setIsOpen(true);
-        setAdminId(msg.issuer);
+        setAdminId(msg.userId);
         break;
       case MAIN_SCREEN_UPDATED:
-        setLocalMainScreen(msg.issuer);
+        setLocalMainScreen(msg.userId);
         break;
       case REMOVE_AS_HOST:
-        rtc.removeStream(msg.issuer);
+        rtc.removeStream(msg.userId);
         rtc.client.unpublish(rtc.localstream);
         break;
       case CHANNEL_OPENED:
