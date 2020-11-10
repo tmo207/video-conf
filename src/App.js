@@ -42,10 +42,16 @@ const App = ({ rtc, rtm }) => {
   const [superhostId, setSuperhostId] = useState();
   const [currentMainId, setLocalMainScreen] = useState(null);
   const [streams, setStreams] = useState([]);
-  const [userRole, setRole] = useState();
+  const [userRole, setRole] = useState(); // Serverseitig
   const [isWaitingRoom, setIsWaitingRoom] = useState(true); // Serverseitig
   // Types: host | stage | hangup
   const [modalType, setModalType] = useState();
+
+  const rtcHandlers = {
+    setLocalMainScreen,
+    setIsPlaying,
+    setStreams,
+  };
 
   const onMessage = (message) => {
     const msg = JSON.parse(message);
@@ -109,7 +115,7 @@ const App = ({ rtc, rtm }) => {
 
   useEffect(() => {
     getCurrentMainScreen(setLocalMainScreen);
-    streams.map((stream) => stream.play(`video-${stream.streamId}`));
+    if (!rtc.loggedIn && rtc.created) rtc.init(rtcHandlers, userId); // CREATED can be removed when waitingroom is coming from backend
   }, [isWaitingRoom]);
 
   useEffect(() => {
@@ -133,7 +139,6 @@ const App = ({ rtc, rtm }) => {
       };
       rtm.init(rtmHandlers);
       rtm.login(uid, null).then(() => {
-        rtm.setLoggedIn(true);
         rtm.joinChannel(CHANNEL_NAME).then(() => {
           rtm.subscribeChannelEvents(() => {});
         });
@@ -144,14 +149,9 @@ const App = ({ rtc, rtm }) => {
     }
   };
 
-  const startRtc = ({ uid }) => {
-    const rtcHandlers = {
-      setLocalMainScreen,
-      setIsPlaying,
-      setStreams,
-    };
+  const startRtc = ({ uid, role }) => {
     rtc.createClient();
-    rtc.init(rtcHandlers, uid);
+    if (!isWaitingRoom || role === SUPERHOST) rtc.init(rtcHandlers, uid);
     rtmLogin(uid);
   };
 
@@ -175,7 +175,7 @@ const App = ({ rtc, rtm }) => {
               const currentUid = currentUser.id.toString();
               setUid(currentUid);
               setRole(currentUser.role);
-              startRtc({ uid: currentUid });
+              startRtc({ uid: currentUid, role: currentUser.role });
             }}
           >
             {currentUser.role}
@@ -200,7 +200,6 @@ const App = ({ rtc, rtm }) => {
               {...{
                 currentMainId,
                 localstream: rtc.localstream,
-                role: userRole,
                 rtc,
                 setIsOpen,
                 setIsPlaying,

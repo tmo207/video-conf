@@ -1,5 +1,12 @@
 import AgoraRTC from 'agora-rtc-sdk';
-import { APP_ID, CHANNEL_NAME, ROLES, getCurrentMainScreen, setCurrentMainScreen } from './utils';
+import {
+  APP_ID,
+  CHANNEL_NAME,
+  ROLES,
+  SCREEN_SHARE,
+  getCurrentMainScreen,
+  setCurrentMainScreen,
+} from './utils';
 
 const { AUDIENCE, HOST, SUPERHOST } = ROLES;
 
@@ -8,10 +15,13 @@ const onError = (error) => console.log('Error:', error);
 export default class Rtc {
   constructor() {
     this.streams = [];
+    this.loggedIn = false;
+    this.created = false;
   }
 
   createClient() {
     this.client = AgoraRTC.createClient({ mode: 'live', codec: 'vp8' });
+    this.created = true;
     return this.client;
   }
 
@@ -27,6 +37,7 @@ export default class Rtc {
           uid, // User specific ID. Type: Number or string, must be the same type for all users
           (id) => {
             console.log('JOINED CHANNEL with', id);
+            this.loggedIn = true;
           },
           onError
         );
@@ -62,16 +73,21 @@ export default class Rtc {
     }, onError);
   }
 
-  createStream(uid, attendeeMode, screen) {
+  createStream(uid, attendeeMode) {
     const defaultConfig = {
       streamID: uid,
       audio: false,
       video: false,
-      screen,
-      screenAudio: screen,
+      screen: false,
+      screenAudio: false,
     };
 
     switch (attendeeMode) {
+      case SCREEN_SHARE:
+        defaultConfig.screen = true;
+        defaultConfig.screenAudio = true;
+        defaultConfig.video = false;
+        break;
       case HOST:
       case SUPERHOST:
         defaultConfig.video = true;

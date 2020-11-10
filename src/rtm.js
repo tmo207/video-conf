@@ -19,11 +19,6 @@ export default class Rtm extends EventEmitter {
   constructor() {
     super();
     this.channels = {};
-    this.loggedIn = false;
-  }
-
-  setLoggedIn(isLoggedIn) {
-    this.loggedIn = isLoggedIn;
   }
 
   init(handlers) {

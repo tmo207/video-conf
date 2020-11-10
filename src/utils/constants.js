@@ -7,6 +7,7 @@ export const ROLES = {
   MODERATOR: 'moderator',
   AUDIENCE: 'audience',
 };
+export const SCREEN_SHARE = 'screen-share';
 
 export const NO_CURRENT_MAIN_ID = '00000';
 
