@@ -1,19 +1,9 @@
 import AgoraRTM from 'agora-rtm-sdk';
 import EventEmitter from 'events';
 
-import { APP_ID, CHANNEL_NAME, ROLES, MESSAGES } from './utils';
+import { APP_ID, CHANNEL_NAME, MESSAGES } from './utils';
 
-const { SUPERHOST } = ROLES;
-
-const {
-  HOST_INVITE,
-  HOST_INVITE_ACCEPTED,
-  HOST_INVITE_DECLINED,
-  STAGE_INVITE,
-  REMOVE_AS_HOST,
-  CHANNEL_OPENED,
-  MAIN_SCREEN_UPDATED,
-} = MESSAGES;
+const { REMOVE_AS_HOST } = MESSAGES;
 
 export default class Rtm extends EventEmitter {
   constructor() {
@@ -61,10 +51,6 @@ export default class Rtm extends EventEmitter {
     return this.client.login({ uid: this.accountName, token });
   }
 
-  async logout() {
-    return this.client.logout();
-  }
-
   async joinChannel(name) {
     const channel = this.client.createChannel(name);
     this.channels[name] = {
@@ -72,16 +58,6 @@ export default class Rtm extends EventEmitter {
       joined: false,
     };
     return channel.join();
-  }
-
-  async leaveChannel(name) {
-    if (!this.channels[name] || (this.channels[name] && !this.channels[name].joined)) return;
-    return this.channels[name].channel.leave();
-  }
-
-  async sendChannelMessage(text) {
-    if (!this.channels[CHANNEL_NAME] || !this.channels[CHANNEL_NAME].joined) return;
-    return this.channels[CHANNEL_NAME].channel.sendMessage({ text });
   }
 
   async getMembers() {
@@ -101,32 +77,14 @@ export default class Rtm extends EventEmitter {
     });
   };
 
-  async inviteAudienceToBecomeHost({ peerId, ownId }) {
-    return this.client.sendMessageToPeer(
-      { text: this.generateMessage(ownId, HOST_INVITE) },
-      peerId
-    );
+  async sendChannelMessage(userId, subject) {
+    return this.channels[CHANNEL_NAME].channel.sendMessage({
+      text: this.generateMessage(userId, subject),
+    });
   }
 
-  acceptHostInvitation(uid, remoteUid) {
-    this.client.sendMessageToPeer(
-      { text: this.generateMessage(uid, HOST_INVITE_ACCEPTED) }, // An RtmMessage object.
-      remoteUid // The user ID of the remote user.
-    );
-  }
-
-  declineHostInvitation(uid, remoteUid) {
-    this.client.sendMessageToPeer(
-      { text: this.generateMessage(uid, HOST_INVITE_DECLINED) }, // An RtmMessage object.
-      remoteUid // The user ID of the remote user.
-    );
-  }
-
-  async inviteHostToBecomeStage({ hostId, ownId }) {
-    return this.client.sendMessageToPeer(
-      { text: this.generateMessage(ownId, STAGE_INVITE) },
-      hostId
-    );
+  async sendPeerMessage(peerId, remoteId, subject) {
+    return this.client.sendMessageToPeer({ text: this.generateMessage(remoteId, subject) }, peerId);
   }
 
   removeHost(hostId) {
@@ -134,17 +92,5 @@ export default class Rtm extends EventEmitter {
       { text: this.generateMessage(hostId, REMOVE_AS_HOST) },
       hostId
     );
-  }
-
-  updateMainScreen(uid) {
-    this.channels[CHANNEL_NAME].channel.sendMessage({
-      text: this.generateMessage(uid, MAIN_SCREEN_UPDATED),
-    });
-  }
-
-  openChannel() {
-    this.channels[CHANNEL_NAME].channel.sendMessage({
-      text: this.generateMessage(SUPERHOST, CHANNEL_OPENED),
-    });
   }
 }

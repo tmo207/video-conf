@@ -14,7 +14,7 @@ import {
   getCurrentMainScreen,
 } from './utils';
 
-const { AUDIENCE, HOST, MODERATOR, SUPERHOST } = ROLES;
+const { HOST, MODERATOR, SUPERHOST } = ROLES;
 const {
   HOST_INVITE,
   HOST_INVITE_ACCEPTED,
@@ -118,10 +118,6 @@ const App = ({ rtc, rtm }) => {
         getCurrentMainScreen(setLocalMainScreen);
       })
     );
-
-    return () => {
-      rtm.leaveChannel();
-    };
   }, []);
 
   const rtmLogin = (uid) => {
@@ -156,7 +152,7 @@ const App = ({ rtc, rtm }) => {
 
   const openChannel = () => {
     setIsWaitingRoom(false);
-    rtm.openChannel();
+    rtm.sendChannelMessage(SUPERHOST, CHANNEL_OPENED);
   };
 
   const hasAdminRights = userRole === SUPERHOST || userRole === MODERATOR;
