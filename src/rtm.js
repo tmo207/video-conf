@@ -31,11 +31,8 @@ export default class Rtm extends EventEmitter {
   }
 
   subscribeClientEvents() {
-    const clientEvents = ['ConnectionStateChanged'];
-    clientEvents.forEach((eventName) => {
-      this.client.on(eventName, (...args) => {
-        this.emit(eventName, ...args);
-      });
+    this.client.on('ConnectionStateChanged', (...args) => {
+      this.emit('ConnectionStateChanged', ...args);
     });
 
     this.client.on('MessageFromPeer', (message) => {
@@ -174,8 +171,8 @@ export default class Rtm extends EventEmitter {
     );
   }
 
-  async inviteHostToBecomeStage({ peerId, ownId }) {
-    return this.client.sendMessageToPeer({ text: this.generateStageInvitation(ownId) }, peerId);
+  async inviteHostToBecomeStage({ hostId, ownId }) {
+    return this.client.sendMessageToPeer({ text: this.generateStageInvitation(ownId) }, hostId);
   }
 
   removeHost(hostId) {

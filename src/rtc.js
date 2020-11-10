@@ -15,13 +15,10 @@ const onError = (error) => console.log('Error:', error);
 export default class Rtc {
   constructor() {
     this.streams = [];
-    this.loggedIn = false;
-    this.created = false;
   }
 
   createClient() {
     this.client = AgoraRTC.createClient({ mode: 'live', codec: 'vp8' });
-    this.created = true;
     return this.client;
   }
 
@@ -37,7 +34,6 @@ export default class Rtc {
           uid, // User specific ID. Type: Number or string, must be the same type for all users
           (id) => {
             console.log('JOINED CHANNEL with', id);
-            this.loggedIn = true;
           },
           onError
         );
@@ -91,7 +87,7 @@ export default class Rtc {
       case HOST:
       case SUPERHOST:
         defaultConfig.video = true;
-        defaultConfig.audio = false; // TURN TRUE
+        defaultConfig.audio = true;
         break;
       default:
       case AUDIENCE:

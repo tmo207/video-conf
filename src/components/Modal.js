@@ -1,5 +1,8 @@
+import { useContext } from 'react';
 import ReactModal from 'react-modal';
 import styled from 'styled-components/macro';
+
+import { UserContext } from '../state';
 
 import {
   ControlItem,
@@ -52,6 +55,7 @@ const modalStyle = {
 };
 
 export const Modal = ({
+  adminId,
   currentMainId,
   isOpen,
   isWaitingRoom,
@@ -61,17 +65,13 @@ export const Modal = ({
   setIsOpen,
   setIsPlaying,
   setIsWaitingRoom,
-  superhostId,
-  userId,
 }) => {
+  const { userId } = useContext(UserContext);
+
   const acceptHostInvitation = () => {
-    rtm.acceptHostInvitation(userId, superhostId);
-    rtc.client.setClientRole(HOST, (error) => {
-      if (!error) {
-        if (isWaitingRoom) setIsWaitingRoom(false);
-        rtc.publishAndStartStream(userId, HOST);
-      } else console.log('setHost error', error);
-    });
+    if (isWaitingRoom) setIsWaitingRoom(false);
+    rtc.publishAndStartStream(userId, HOST);
+    rtm.acceptHostInvitation(userId, adminId);
   };
 
   const acceptStageInvitation = () => {
@@ -109,7 +109,7 @@ export const Modal = ({
             text:
               'Der Host dieser Konferenz hat dich dazu eingeladen der Konferenz beizutreten. Hierfür werden Mikrofon und deine Kamera aktiviert. Möchtest du beitreten?',
             onAccept: acceptHostInvitation,
-            onDecline: () => rtm.declineHostInvitation(userId, superhostId),
+            onDecline: () => rtm.declineHostInvitation(userId, adminId),
             setIsOpen,
           }}
         />
@@ -121,7 +121,7 @@ export const Modal = ({
             text:
               'Der Host dieser Konferenz hat dich dazu eingeladen die Bühne zu betreten. Möchtest du das?',
             onAccept: acceptStageInvitation,
-            onDecline: () => rtm.declineHostInvitation(userId, superhostId),
+            onDecline: () => rtm.declineHostInvitation(userId, adminId),
             setIsOpen,
           }}
         />
