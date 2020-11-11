@@ -230,6 +230,7 @@ const App = ({ rtc, rtm }) => {
                   rtc,
                   rtm,
                   streams,
+                  users,
                 }}
               />
             </>

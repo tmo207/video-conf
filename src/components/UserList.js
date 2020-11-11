@@ -108,19 +108,20 @@ const UserActionItem = styled.button`
   }
 `;
 
-export const UserList = ({ rtc, rtm, streams, currentMainId }) => {
+export const UserList = ({ currentMainId, rtc, rtm, streams, users }) => {
   const { userId } = useContext(UserContext);
 
   // showUsersWithRole types = audience | host;
   const [showUsersWithRole, setShowUsersWithRole] = useState(AUDIENCE);
   const [searchValue, setSearchValue] = useState('');
-  const [users, setUsers] = useState([]);
+  const [usersInList, setUsersInList] = useState([]);
   const [show, setShow] = useState(false);
   const [hosts, setHosts] = useState([]);
 
   useEffect(() => {
-    const currentHosts = streams.map((stream) => stream.streamId);
-    setHosts(currentHosts);
+    const currentHostIds = streams.map((stream) => stream.streamId);
+    const hostsWithName = users.filter((user) => currentHostIds.includes(user.id.toString()));
+    setHosts(hostsWithName);
   }, [streams]);
 
   const promoteUserToHost = (peerId) => {
@@ -162,14 +163,16 @@ export const UserList = ({ rtc, rtm, streams, currentMainId }) => {
 
   const getMembers = () => {
     rtm.getMembers().then((members) => {
-      setUsers(members);
+      const usersWithName = users.filter((user) => members.includes(user.id.toString()));
+      setUsersInList(usersWithName);
     });
   };
 
   const toggleList = () => {
     rtm.subscribeChannelEvents(getMembers);
     rtm.getMembers().then((members) => {
-      setUsers(members);
+      const usersWithName = users.filter((user) => members.includes(user.id.toString()));
+      setUsersInList(usersWithName);
       setShow((prevShow) => !prevShow);
     });
   };
@@ -206,14 +209,16 @@ export const UserList = ({ rtc, rtm, streams, currentMainId }) => {
             </ListTypeContainer>
             <UserSearchInput type="text" placeholder="Suchen..." onChange={onChange} />
             {showAudience &&
-              users.map((user, index) => {
+              usersInList.map((user, index) => {
+                const uid = user.id.toString();
+                const { username } = user;
                 const isAudience = !hosts.includes(user);
-                if (isAudience && inSearchResults(user)) {
+                if (isAudience && inSearchResults(username)) {
                   return (
-                    <UserContainer index={index} key={user}>
-                      <UserName>{user}</UserName>
+                    <UserContainer index={index} key={uid}>
+                      <UserName>{username}</UserName>
                       <UserActionContainer>
-                        <UserActionItem type="button" onClick={() => promoteUserToHost(user)}>
+                        <UserActionItem type="button" onClick={() => promoteUserToHost(uid)}>
                           {PlusIcon}
                         </UserActionItem>
                       </UserActionContainer>
@@ -222,25 +227,26 @@ export const UserList = ({ rtc, rtm, streams, currentMainId }) => {
                 }
               })}
             {showHosts &&
-              hosts.map((user, index) => {
-                const isCurrentMain = user === currentMainId;
-                const isYourself = user === userId;
-                if (inSearchResults(user)) {
+              hosts.map((host, index) => {
+                const hostId = host.id.toString();
+                const isCurrentMain = hostId === currentMainId;
+                const isYourself = hostId === userId;
+                if (inSearchResults(host.username)) {
                   return (
-                    <UserContainer index={index} key={user}>
-                      <UserName>{user}</UserName>
+                    <UserContainer index={index} key={hostId}>
+                      <UserName>{host.username}</UserName>
                       <UserActionContainer>
                         <UserActionItem
                           type="button"
                           onClick={() => {
                             if (isCurrentMain) degradeMainToHost();
-                            else promoteHostOnStage(user);
+                            else promoteHostOnStage(hostId);
                           }}
                         >
                           <StageIcon isActive={isCurrentMain} />
                         </UserActionItem>
                         {!isYourself && (
-                          <UserActionItem type="button" onClick={() => removeHost(user)}>
+                          <UserActionItem type="button" onClick={() => removeHost(hostId)}>
                             {MinusIcon}
                           </UserActionItem>
                         )}
