@@ -118,9 +118,12 @@ export const UserList = ({ currentMainId, rtc, rtm, streams, users }) => {
   const [show, setShow] = useState(false);
   const [hosts, setHosts] = useState([]);
 
+  const getFullUserDetails = (userIds) =>
+    users.filter((user) => userIds.includes(user.id.toString()));
+
   useEffect(() => {
     const currentHostIds = streams.map((stream) => stream.streamId);
-    const hostsWithName = users.filter((user) => currentHostIds.includes(user.id.toString()));
+    const hostsWithName = getFullUserDetails(currentHostIds);
     setHosts(hostsWithName);
   }, [streams]);
 
@@ -163,7 +166,7 @@ export const UserList = ({ currentMainId, rtc, rtm, streams, users }) => {
 
   const getMembers = () => {
     rtm.getMembers().then((members) => {
-      const usersWithName = users.filter((user) => members.includes(user.id.toString()));
+      const usersWithName = getFullUserDetails(members);
       setUsersInList(usersWithName);
     });
   };
@@ -171,7 +174,7 @@ export const UserList = ({ currentMainId, rtc, rtm, streams, users }) => {
   const toggleList = () => {
     rtm.subscribeChannelEvents(getMembers);
     rtm.getMembers().then((members) => {
-      const usersWithName = users.filter((user) => members.includes(user.id.toString()));
+      const usersWithName = getFullUserDetails(members);
       setUsersInList(usersWithName);
       setShow((prevShow) => !prevShow);
     });
@@ -212,11 +215,15 @@ export const UserList = ({ currentMainId, rtc, rtm, streams, users }) => {
               usersInList.map((user, index) => {
                 const uid = user.id.toString();
                 const { username } = user;
+                const isYourself = uid === userId;
                 const isAudience = !hosts.includes(user);
                 if (isAudience && inSearchResults(username)) {
                   return (
                     <UserContainer index={index} key={uid}>
-                      <UserName>{username}</UserName>
+                      <UserName>
+                        {username}
+                        {isYourself && ' (du)'}
+                      </UserName>
                       <UserActionContainer>
                         <UserActionItem type="button" onClick={() => promoteUserToHost(uid)}>
                           {PlusIcon}
@@ -234,7 +241,10 @@ export const UserList = ({ currentMainId, rtc, rtm, streams, users }) => {
                 if (inSearchResults(host.username)) {
                   return (
                     <UserContainer index={index} key={hostId}>
-                      <UserName>{host.username}</UserName>
+                      <UserName>
+                        {host.username}
+                        {isYourself && ' (du)'}
+                      </UserName>
                       <UserActionContainer>
                         <UserActionItem
                           type="button"

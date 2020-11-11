@@ -81,7 +81,7 @@ export default class Rtc {
     switch (attendeeMode) {
       case SCREEN_SHARE:
         defaultConfig.screen = true;
-        defaultConfig.screenAudio = true;
+        // defaultConfig.screenAudio = true;
         defaultConfig.video = false;
         break;
       case HOST:
