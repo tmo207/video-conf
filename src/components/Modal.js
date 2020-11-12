@@ -38,7 +38,9 @@ const ModalButton = styled.button`
   }
 `;
 
-const ModalIcon = styled(ControlItem)`
+const ModalIcon = styled(ControlItem).attrs((props) => ({
+  className: props.isActive ? 'active' : '',
+}))`
   margin: 0 auto;
 `;
 

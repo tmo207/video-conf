@@ -56,7 +56,9 @@ const ListTypeContainer = styled.div`
   justify-content: space-around;
 `;
 
-const ListType = styled.p`
+const ListType = styled.p.attrs((props) => ({
+  className: props.isActive ? 'active' : '',
+}))`
   color: ${(props) => (props.isActive ? GREEN : BLACK)};
 
   &:hover {

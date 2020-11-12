@@ -30,6 +30,7 @@ const HostsContainer = styled.div`
 `;
 
 export const Hosts = ({ streams, currentMainId }) => {
+  console.log({ streams });
   useEffect(() => {
     moveToMain(currentMainId);
     streams.map((stream) => {

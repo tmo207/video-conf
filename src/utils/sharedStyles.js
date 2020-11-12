@@ -13,7 +13,9 @@ export const GridItemSmall = styled.div`
   width: 20%;
 `;
 
-export const ControlItem = styled.button`
+export const ControlItem = styled.button.attrs((props) => ({
+  className: props.isActive ? 'active' : '',
+}))`
   width: 60px;
   height: 60px;
   background-color: white;
