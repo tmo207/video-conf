@@ -130,7 +130,6 @@ const App = ({ rtc, rtm }) => {
         onMessage,
         setIsPlaying,
       };
-      console.error('RTM LOGIN');
       rtm.init(rtmHandlers);
       rtm.login(uid, null).then(() => {
         rtm.joinChannel(CHANNEL_NAME).then(() => {

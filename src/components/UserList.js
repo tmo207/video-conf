@@ -6,6 +6,7 @@ import { UserContext } from '../state';
 import {
   BLACK,
   CONTENT_MARGIN_TOP,
+  CloseIcon,
   ControlItem,
   GREEN,
   GridItemSmall,
@@ -197,7 +198,7 @@ export const UserList = ({ currentMainId, rtc, rtm, streams, users }) => {
     <UserListContainer>
       <Wrapper>
         <MenuToggle isActive type="button" onClick={toggleList}>
-          {MenuIcon}
+          {show ? CloseIcon : MenuIcon}
         </MenuToggle>
         {show && (
           <Content>
