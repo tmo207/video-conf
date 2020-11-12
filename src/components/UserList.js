@@ -101,7 +101,9 @@ const UserActionContainer = styled.div`
   margin-right: 10px;
 `;
 
-const UserActionItem = styled.button`
+const UserActionItem = styled.button.attrs((props) => ({
+  className: props.isActive ? 'active' : '',
+}))`
   border: none;
   background-color: transparent;
 
@@ -227,7 +229,11 @@ export const UserList = ({ currentMainId, rtc, rtm, streams, users }) => {
                         {isYourself && ' (du)'}
                       </UserName>
                       <UserActionContainer>
-                        <UserActionItem type="button" onClick={() => promoteUserToHost(uid)}>
+                        <UserActionItem
+                          className="promoteUser"
+                          type="button"
+                          onClick={() => promoteUserToHost(uid)}
+                        >
                           {PlusIcon}
                         </UserActionItem>
                       </UserActionContainer>
@@ -249,6 +255,8 @@ export const UserList = ({ currentMainId, rtc, rtm, streams, users }) => {
                       </UserName>
                       <UserActionContainer>
                         <UserActionItem
+                          className="onStage"
+                          isActive={isCurrentMain}
                           type="button"
                           onClick={() => {
                             if (isCurrentMain) degradeMainToHost();
@@ -258,7 +266,11 @@ export const UserList = ({ currentMainId, rtc, rtm, streams, users }) => {
                           <StageIcon isActive={isCurrentMain} />
                         </UserActionItem>
                         {!isYourself && (
-                          <UserActionItem type="button" onClick={() => removeHost(hostId)}>
+                          <UserActionItem
+                            className="removeHost"
+                            type="button"
+                            onClick={() => removeHost(hostId)}
+                          >
                             {MinusIcon}
                           </UserActionItem>
                         )}

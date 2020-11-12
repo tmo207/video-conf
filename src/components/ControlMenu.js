@@ -87,17 +87,17 @@ export const ControlMenu = ({
 
   return (
     <ControlMenuContainer>
-      <ControlItem red onClick={onHangUp}>
+      <ControlItem className="hangup" red onClick={onHangUp}>
         {HangUpIcon}
       </ControlItem>
-      <ControlItem onClick={onVideo} isActive={hasVideo}>
+      <ControlItem className="video" onClick={onVideo} isActive={hasVideo}>
         {VideoIcon}
       </ControlItem>
-      <ControlItem onClick={onAudio} isActive={hasAudio}>
+      <ControlItem className="audio" onClick={onAudio} isActive={hasAudio}>
         {AudioIcon}
       </ControlItem>
       {isMainScreen && (
-        <ControlItem onClick={onScreen} isActive={hasScreen}>
+        <ControlItem className="screen" onClick={onScreen} isActive={hasScreen}>
           {ScreenIcon}
         </ControlItem>
       )}

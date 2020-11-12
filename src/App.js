@@ -38,6 +38,10 @@ const WaitingRoomNotice = styled.h1`
   color: white;
 `;
 
+const OpenChannel = styled.button`
+  padding: 1rem;
+`;
+
 const App = ({ rtc, rtm }) => {
   // Host/Admin states
   const [users, setUsers] = useState([]);
@@ -221,9 +225,9 @@ const App = ({ rtc, rtm }) => {
           {hasAdminRights && (
             <>
               {isWaitingRoom && (
-                <button type="button" onClick={openChannel}>
+                <OpenChannel type="button" onClick={openChannel}>
                   Channel öffnen
-                </button>
+                </OpenChannel>
               )}
               <UserList
                 {...{

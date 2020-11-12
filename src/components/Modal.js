@@ -25,7 +25,9 @@ const ButtonContainer = styled.div`
   justify-content: center;
 `;
 
-const ModalButton = styled.button`
+const ModalButton = styled.button.attrs((props) => ({
+  className: props.accept ? 'accept' : 'decline',
+}))`
   background-color: ${(props) => (props.accept ? GREEN : RED)};
   border: none;
   border-radius: 20px;
