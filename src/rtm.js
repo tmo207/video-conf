@@ -22,6 +22,7 @@ export default class Rtm extends EventEmitter {
 
   subscribeClientEvents() {
     this.client.on('ConnectionStateChanged', (...args) => {
+      if (args.includes('LOGIN_SUCCESS')) this.handlers.setRtmLoggedIn(true);
       this.emit('ConnectionStateChanged', ...args);
     });
 

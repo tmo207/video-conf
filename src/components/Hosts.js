@@ -25,8 +25,8 @@ const Host = styled.div`
 const HostsContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
-  width: 80%;
-  max-width: 58vw;
+  width: 100%;
+  max-width: 100vh;
 `;
 
 export const Hosts = ({ streams, currentMainId }) => {

@@ -7,7 +7,7 @@ import { Modal, Hosts, UserList, ControlMenu } from './components';
 import { UserContext } from './state';
 import {
   CHANNEL_NAME,
-  CONTENT_MARGIN_TOP,
+  CONTENT_MARGIN,
   MESSAGES,
   ROLES,
   STAGE,
@@ -31,7 +31,7 @@ const LayoutGrid = styled.div`
   align-items: start;
   height: 100%;
   width: 100%;
-  margin-top: ${CONTENT_MARGIN_TOP};
+  margin: ${CONTENT_MARGIN} 0;
 `;
 
 const WaitingRoomNotice = styled.h1`
@@ -49,6 +49,7 @@ const App = ({ rtc, rtm }) => {
   const [adminId, setAdminId] = useState();
   const [modalIsOpen, setIsOpen] = useState(false);
   const [modalType, setModalType] = useState(); // Types: host | stage | hangup
+  const [rtmLoggedIn, setRtmLoggedIn] = useState(false);
 
   // Common states
   const { userId, setUid } = useContext(UserContext);
@@ -129,6 +130,7 @@ const App = ({ rtc, rtm }) => {
       const rtmHandlers = {
         onMessage,
         setIsPlaying,
+        setRtmLoggedIn,
       };
       rtm.init(rtmHandlers);
       rtm.login(uid, null).then(() => {
@@ -223,20 +225,24 @@ const App = ({ rtc, rtm }) => {
           />
           {hasAdminRights && (
             <>
-              {isWaitingRoom && (
-                <OpenChannel type="button" onClick={openChannel}>
-                  Channel öffnen
-                </OpenChannel>
+              {rtmLoggedIn && (
+                <>
+                  {isWaitingRoom && (
+                    <OpenChannel type="button" onClick={openChannel}>
+                      Channel öffnen
+                    </OpenChannel>
+                  )}
+                  <UserList
+                    {...{
+                      currentMainId,
+                      rtc,
+                      rtm,
+                      streams,
+                      users,
+                    }}
+                  />
+                </>
               )}
-              <UserList
-                {...{
-                  currentMainId,
-                  rtc,
-                  rtm,
-                  streams,
-                  users,
-                }}
-              />
             </>
           )}
           <LayoutGrid>

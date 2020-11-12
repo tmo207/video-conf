@@ -5,7 +5,7 @@ export const RED = '#ab0000';
 export const BLACK = '#000000';
 export const BORDER_RADIUS = 'border-radius: 20px;';
 export const BORDER = `border: 2px solid ${GREEN};`;
-export const CONTENT_MARGIN_TOP = '200px';
+export const CONTENT_MARGIN = '160px';
 export const HOST_VIDEO_WIDTH = '18%';
 
 export const GridItemSmall = styled.div`

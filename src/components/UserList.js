@@ -5,7 +5,7 @@ import { UserContext } from '../state';
 
 import {
   BLACK,
-  CONTENT_MARGIN_TOP,
+  CONTENT_MARGIN,
   CloseIcon,
   ControlItem,
   GREEN,
@@ -28,7 +28,7 @@ const { AUDIENCE, HOST, SUPERHOST } = ROLES;
 const UserListContainer = styled(GridItemSmall)`
   position: fixed;
   z-index: 1;
-  top: ${CONTENT_MARGIN_TOP};
+  top: ${CONTENT_MARGIN};
 `;
 
 const Wrapper = styled.div`
@@ -45,9 +45,8 @@ const Content = styled.div`
   position: absolute;
   background-color: white;
   border-radius: 10px;
-  height: calc(100vh - ${CONTENT_MARGIN_TOP});
+  height: calc(100vh - ${CONTENT_MARGIN});
   z-index: 1;
-  width: 20vw;
 `;
 
 const ListTypeContainer = styled.div`
@@ -61,6 +60,7 @@ const ListType = styled.p.attrs((props) => ({
   className: props.isActive ? 'active' : '',
 }))`
   color: ${(props) => (props.isActive ? GREEN : BLACK)};
+  margin: 1rem 2rem;
 
   &:hover {
     cursor: pointer;
