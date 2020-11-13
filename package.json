@@ -1,6 +1,7 @@
 {
   "name": "video-conf",
   "version": "0.1.0",
+  "homepage": "/wp-content/plugins/xircus-agora/react-app/build",
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^4.2.4",
@@ -10,6 +11,8 @@
     "agora-rtc-sdk": "^3.2.1",
     "agora-rtm-sdk": "^1.4.0",
     "babel-plugin-macros": "^2.8.0",
+    "basic-ftp": "^4.6.3",
+    "dotenv": "^8.2.0",
     "prop-types": "^15.7.2",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
@@ -22,7 +25,8 @@
     "start": "HTTPS=true react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "deploy": "node -r dotenv/config deploy.js"
   },
   "eslintConfig": {
     "extends": "react-app"

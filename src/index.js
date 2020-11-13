@@ -25,10 +25,6 @@ const GlobalStyle = createGlobalStyle`
     font-size: 14px;
     line-height: 16px;
   }
-
-  html {
-    background-image: url(/background.jpg);
-  }
 `;
 
 const rtc = new Rtc();
