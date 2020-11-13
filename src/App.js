@@ -11,10 +11,15 @@ import {
   MESSAGES,
   ROLES,
   STAGE,
-  getCurrentMainScreen,
+  USER_TOKEN,
+  getIsWaitingRoom,
+  getMainScreen,
+  initUser,
+  setIsWaitingRoom,
+  setMainScreen,
 } from './utils';
 
-const { HOST, MODERATOR, SUPERHOST } = ROLES;
+const { AUDIENCE, HOST, SUPERHOST } = ROLES;
 const {
   HOST_INVITE,
   HOST_INVITE_ACCEPTED,
@@ -50,13 +55,17 @@ const App = ({ rtc, rtm }) => {
   const [modalIsOpen, setIsOpen] = useState(false);
   const [modalType, setModalType] = useState(); // Types: host | stage | hangup
   const [rtmLoggedIn, setRtmLoggedIn] = useState(false);
+  const [rtcLoggedIn, setRtcLoggedIn] = useState(false);
 
   // Common states
   const { userId, setUid } = useContext(UserContext);
   const [currentMainId, setLocalMainScreen] = useState(null);
   const [streams, setStreams] = useState([]);
   const [userRole, setRole] = useState(); // Serverseitig
-  const [isWaitingRoom, setIsWaitingRoom] = useState(true); // Serverseitig
+  const [isWaitingRoom, setLocalWaitingRoom] = useState(true); // Serverseitig
+
+  const hasAdminRights = userRole === SUPERHOST;
+  const isHost = userRole === SUPERHOST || userRole === HOST;
 
   const onMessage = (message) => {
     const msg = JSON.parse(message);
@@ -96,7 +105,7 @@ const App = ({ rtc, rtm }) => {
         rtc.client.unpublish(rtc.localstream);
         break;
       case CHANNEL_OPENED:
-        setIsWaitingRoom(false);
+        setLocalWaitingRoom((waitingroom) => !waitingroom);
         break;
       default:
         break;
@@ -113,14 +122,20 @@ const App = ({ rtc, rtm }) => {
   }, [currentMainId]);
 
   useEffect(() => {
-    streams.map((stream) => stream.play(`video-${stream.streamId}`));
+    if (!isHost) {
+      if (!isWaitingRoom) streams.map((stream) => stream.play(`video-${stream.streamId}`));
+      else streams.map((stream) => stream.stop());
+    }
   }, [isWaitingRoom]);
 
   useEffect(() => {
     fetch('https://agora.service-sample.de/api/test/init/test').then((response) =>
       response.json().then((data) => {
         setUsers(data);
-        getCurrentMainScreen(setLocalMainScreen);
+        initUser(USER_TOKEN);
+        getMainScreen({ token: USER_TOKEN, callback: setLocalMainScreen });
+        getIsWaitingRoom({ token: USER_TOKEN, callback: setLocalWaitingRoom });
+        rtc.setUserToken(USER_TOKEN);
       })
     );
   }, []);
@@ -144,24 +159,36 @@ const App = ({ rtc, rtm }) => {
     }
   };
 
-  const startRtc = ({ uid }) => {
+  const startRtc = ({ uid, role }) => {
     const rtcHandlers = {
-      setLocalMainScreen,
       setIsPlaying,
+      setLocalMainScreen,
+      setRole,
+      setRtcLoggedIn,
       setStreams,
     };
 
     rtc.createClient();
-    rtc.init(rtcHandlers, uid);
+    if (!currentMainId && role === SUPERHOST)
+      setMainScreen(uid).then(() => setLocalMainScreen(uid));
+    rtc.init(rtcHandlers, () => rtc.join(uid));
     rtmLogin(uid);
   };
 
-  const openChannel = () => {
-    setIsWaitingRoom(false);
-    rtm.sendChannelMessage(SUPERHOST, CHANNEL_OPENED);
-  };
+  useEffect(() => {
+    if (isHost) rtc.publishAndStartStream(userId, userRole);
+  }, [rtcLoggedIn]);
 
-  const hasAdminRights = userRole === SUPERHOST || userRole === MODERATOR;
+  useEffect(() => {
+    if (userRole === AUDIENCE && currentMainId === userId) setLocalMainScreen(null);
+  }, [userRole]);
+
+  const toggleChannelOpen = () => {
+    setIsWaitingRoom(!isWaitingRoom).then(() => {
+      setLocalWaitingRoom((waitingroom) => !waitingroom);
+      rtm.sendChannelMessage(SUPERHOST, CHANNEL_OPENED);
+    });
+  };
 
   return (
     <>
@@ -176,7 +203,7 @@ const App = ({ rtc, rtm }) => {
               const currentUid = currentUser.id.toString();
               setUid(currentUid);
               setRole(currentUser.role);
-              startRtc({ uid: currentUid });
+              startRtc({ uid: currentUid, role: currentUser.role });
             }}
           >
             {currentUser.role}
@@ -211,6 +238,7 @@ const App = ({ rtc, rtm }) => {
           )}
           <Modal
             {...{
+              adminId,
               currentMainId,
               isOpen: modalIsOpen,
               isWaitingRoom,
@@ -219,19 +247,17 @@ const App = ({ rtc, rtm }) => {
               rtm,
               setIsOpen,
               setIsPlaying,
-              setIsWaitingRoom,
-              adminId,
+              setLocalWaitingRoom,
+              setRole,
             }}
           />
           {hasAdminRights && (
             <>
               {rtmLoggedIn && (
                 <>
-                  {isWaitingRoom && (
-                    <OpenChannel type="button" onClick={openChannel}>
-                      Channel öffnen
-                    </OpenChannel>
-                  )}
+                  <OpenChannel type="button" onClick={toggleChannelOpen}>
+                    {isWaitingRoom ? 'Channel öffnen' : 'Channel schließen'}
+                  </OpenChannel>
                   <UserList
                     {...{
                       currentMainId,
@@ -246,7 +272,7 @@ const App = ({ rtc, rtm }) => {
             </>
           )}
           <LayoutGrid>
-            {isWaitingRoom && !hasAdminRights ? (
+            {isWaitingRoom && !isHost ? (
               <WaitingRoomNotice>Das Event beginnt in Kürze.</WaitingRoomNotice>
             ) : (
               <Hosts {...{ streams, users, currentMainId }} />

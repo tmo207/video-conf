@@ -9,7 +9,6 @@ import {
   GREEN,
   HANGUP,
   MESSAGES,
-  NO_CURRENT_MAIN_ID,
   RED,
   ROLES,
   STAGE,
@@ -70,12 +69,14 @@ export const Modal = ({
   rtm,
   setIsOpen,
   setIsPlaying,
-  setIsWaitingRoom,
+  setLocalWaitingRoom,
+  setRole,
 }) => {
   const { userId } = useContext(UserContext);
 
   const acceptHostInvitation = () => {
-    if (isWaitingRoom) setIsWaitingRoom(false);
+    if (isWaitingRoom) setLocalWaitingRoom(false);
+    setRole(HOST);
     rtc.publishAndStartStream(userId, HOST);
     rtm.sendPeerMessage(userId, adminId, HOST_INVITE_ACCEPTED);
   };
@@ -87,8 +88,8 @@ export const Modal = ({
 
   const acceptHangUp = () => {
     if (userId === currentMainId) {
-      rtc.setMainScreen(NO_CURRENT_MAIN_ID).then(() => rtc.removeStream(userId));
-      rtm.sendChannelMessage(NO_CURRENT_MAIN_ID, MAIN_SCREEN_UPDATED);
+      rtc.setMainScreen(null).then(() => rtc.removeStream(userId));
+      rtm.sendChannelMessage(null, MAIN_SCREEN_UPDATED);
     } else {
       rtc.removeStream(userId);
     }

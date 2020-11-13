@@ -10,15 +10,15 @@ import {
   ControlItem,
   GREEN,
   GridItemSmall,
+  HOST_TOKEN,
   MESSAGES,
   MenuIcon,
   MinusIcon,
-  NO_CURRENT_MAIN_ID,
   PlusIcon,
   ROLES,
   StageIcon,
-  getCurrentMainScreen,
   getFullUserDetails,
+  getMainScreen,
 } from '../utils';
 
 const { HOST_INVITE, STAGE_INVITE, MAIN_SCREEN_UPDATED } = MESSAGES;
@@ -134,14 +134,14 @@ export const UserList = ({ currentMainId, rtc, rtm, streams, users }) => {
   const promoteUserToHost = (peerId) => {
     const isYourself = peerId === userId;
     const promoteYourselfToHost = (currentMainScreen) => {
-      if (currentMainScreen === NO_CURRENT_MAIN_ID) {
+      if (!currentMainScreen) {
         rtc.setMainScreen(userId);
         rtm.sendChannelMessage(userId, MAIN_SCREEN_UPDATED);
       }
       rtc.publishAndStartStream(userId, SUPERHOST);
     };
 
-    if (isYourself) getCurrentMainScreen({ callback: promoteYourselfToHost });
+    if (isYourself) getMainScreen({ callback: promoteYourselfToHost, token: HOST_TOKEN });
     else rtm.sendPeerMessage(peerId, userId, HOST_INVITE);
   };
 
@@ -156,15 +156,15 @@ export const UserList = ({ currentMainId, rtc, rtm, streams, users }) => {
   };
 
   const degradeMainToHost = () => {
-    rtc.setMainScreen(NO_CURRENT_MAIN_ID);
-    rtm.sendChannelMessage(NO_CURRENT_MAIN_ID, MAIN_SCREEN_UPDATED);
+    rtc.setMainScreen(null);
+    rtm.sendChannelMessage(null, MAIN_SCREEN_UPDATED);
   };
 
   const removeHost = (hostId) => {
     rtm.removeHost(hostId);
     if (currentMainId === hostId) {
-      rtc.setMainScreen(NO_CURRENT_MAIN_ID);
-      rtm.sendChannelMessage(NO_CURRENT_MAIN_ID, MAIN_SCREEN_UPDATED);
+      rtc.setMainScreen(null);
+      rtm.sendChannelMessage(null, MAIN_SCREEN_UPDATED);
     }
   };
 

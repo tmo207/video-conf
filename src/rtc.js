@@ -1,12 +1,5 @@
 import AgoraRTC from 'agora-rtc-sdk';
-import {
-  APP_ID,
-  CHANNEL_NAME,
-  ROLES,
-  SCREEN_SHARE,
-  getCurrentMainScreen,
-  setCurrentMainScreen,
-} from './utils';
+import { APP_ID, CHANNEL_NAME, ROLES, SCREEN_SHARE, getMainScreen, setMainScreen } from './utils';
 
 const { AUDIENCE, HOST, SUPERHOST } = ROLES;
 
@@ -15,6 +8,11 @@ const onError = (error) => console.log('Error:', error);
 export default class Rtc {
   constructor() {
     this.streams = [];
+    this.token = '';
+  }
+
+  setUserToken(userToken) {
+    this.token = userToken;
   }
 
   createClient() {
@@ -22,30 +20,37 @@ export default class Rtc {
     return this.client;
   }
 
-  init(handlers, uid) {
+  init(handlers, callback) {
     this.handlers = handlers;
     this.client.init(
       APP_ID,
       () => {
         this.subscribeToStreamEvents();
-        this.client.join(
-          null, // tokenOrKey: Token or Channel Key
-          CHANNEL_NAME, // channelId
-          uid, // User specific ID. Type: Number or string, must be the same type for all users
-          (id) => {
-            console.log('JOINED CHANNEL with', id);
-          },
-          onError
-        );
+        if (callback) callback();
       },
       () => console.log('failed to initialize')
     );
   }
 
-  async removeStream(uid) {
-    getCurrentMainScreen(
-      (currentMainScreen) => currentMainScreen === uid && this.handlers.setLocalMainScreen(null)
+  join(uid) {
+    this.client.join(
+      null, // tokenOrKey: Token or Channel Key
+      CHANNEL_NAME, // channelId
+      uid, // User specific ID. Type: Number or string, must be the same type for all users
+      (id) => {
+        this.handlers.setRtcLoggedIn(true);
+        console.log('JOINED CHANNEL with', id);
+      },
+      onError
     );
+  }
+
+  async removeStream(uid) {
+    getMainScreen({
+      token: this.token,
+      callback: (currentMainScreen) =>
+        currentMainScreen === uid && this.handlers.setLocalMainScreen(null),
+    });
     this.streams.map((stream, index) => {
       if (stream.streamId === uid) {
         stream.close();
@@ -98,13 +103,17 @@ export default class Rtc {
   }
 
   async setMainScreen(uid) {
-    setCurrentMainScreen(uid);
+    setMainScreen(uid);
     this.handlers.setLocalMainScreen(uid);
   }
 
   subscribeToStreamEvents() {
     this.client.on('stream-published', (event) => {
       console.log('stream-published');
+    });
+
+    this.client.on('client-role-changed', (event) => {
+      if (event.role === AUDIENCE) this.handlers.setRole(AUDIENCE);
     });
 
     this.client.on('stream-added', (event) => {
@@ -114,7 +123,7 @@ export default class Rtc {
 
     // Here we are receiving the remote stream
     this.client.on('stream-subscribed', (event) => {
-      getCurrentMainScreen(this.handlers.setLocalMainScreen);
+      getMainScreen({ callback: this.handlers.setLocalMainScreen, token: this.token });
       const { stream } = event;
       this.streams = [...this.streams, stream];
       this.handlers.setStreams(this.streams);
