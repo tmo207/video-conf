@@ -249,7 +249,7 @@ const App = ({ rtc, rtm }) => {
             {isWaitingRoom && !hasAdminRights ? (
               <WaitingRoomNotice>Das Event beginnt in Kürze.</WaitingRoomNotice>
             ) : (
-              <Hosts streams={streams} currentMainId={currentMainId} />
+              <Hosts {...{ streams, users, currentMainId }} />
             )}
           </LayoutGrid>
         </>

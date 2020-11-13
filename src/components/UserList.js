@@ -18,6 +18,7 @@ import {
   ROLES,
   StageIcon,
   getCurrentMainScreen,
+  getFullUserDetails,
 } from '../utils';
 
 const { HOST_INVITE, STAGE_INVITE, MAIN_SCREEN_UPDATED } = MESSAGES;
@@ -27,7 +28,7 @@ const { AUDIENCE, HOST, SUPERHOST } = ROLES;
 
 const UserListContainer = styled(GridItemSmall)`
   position: fixed;
-  z-index: 1;
+  z-index: 10;
   top: ${CONTENT_MARGIN};
 `;
 
@@ -123,12 +124,9 @@ export const UserList = ({ currentMainId, rtc, rtm, streams, users }) => {
   const [show, setShow] = useState(false);
   const [hosts, setHosts] = useState([]);
 
-  const getFullUserDetails = (userIds) =>
-    users.filter((user) => userIds.includes(user.id.toString()));
-
   useEffect(() => {
     const currentHostIds = streams.map((stream) => stream.streamId);
-    const hostsWithName = getFullUserDetails(currentHostIds);
+    const hostsWithName = getFullUserDetails({ ids: currentHostIds, users });
     setHosts(hostsWithName);
   }, [streams]);
 
@@ -171,7 +169,7 @@ export const UserList = ({ currentMainId, rtc, rtm, streams, users }) => {
 
   const getMembers = () => {
     rtm.getMembers().then((members) => {
-      const usersWithName = getFullUserDetails(members);
+      const usersWithName = getFullUserDetails({ ids: members, users });
       setUsersInList(usersWithName);
     });
   };
@@ -179,7 +177,7 @@ export const UserList = ({ currentMainId, rtc, rtm, streams, users }) => {
   const toggleList = () => {
     rtm.subscribeChannelEvents(getMembers);
     rtm.getMembers().then((members) => {
-      const usersWithName = getFullUserDetails(members);
+      const usersWithName = getFullUserDetails({ ids: members, users });
       setUsersInList(usersWithName);
       setShow((prevShow) => !prevShow);
     });

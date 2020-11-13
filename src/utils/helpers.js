@@ -1,5 +1,8 @@
 import { CHANNEL_NAME } from './constants';
 
+export const getFullUserDetails = ({ ids, users }) =>
+  users.filter((user) => ids.includes(user.id.toString()));
+
 export const getCurrentMainScreen = async (callback) => {
   await fetch(`https://agora.service-sample.de/api/test/${CHANNEL_NAME}/mainscreen`).then(
     (response) =>

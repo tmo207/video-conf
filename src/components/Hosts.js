@@ -2,7 +2,14 @@ import { useEffect } from 'react';
 import styled from 'styled-components/macro';
 import PropTypes from 'prop-types';
 
-import { BORDER_RADIUS, HOST_VIDEO_WIDTH, moveToHost, moveToMain, withBorder } from '../utils';
+import {
+  BORDER_RADIUS,
+  HOST_VIDEO_WIDTH,
+  getFullUserDetails,
+  moveToHost,
+  moveToMain,
+  withBorder,
+} from '../utils';
 
 const Host = styled.div`
   ${withBorder}
@@ -29,7 +36,24 @@ const HostsContainer = styled.div`
   max-width: 100vh;
 `;
 
-export const Hosts = ({ streams, currentMainId }) => {
+const HostName = styled.span`
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  padding: 0.4rem 1rem;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1;
+  min-width: 50%;
+  ${BORDER_RADIUS}
+  max-width: 85%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+export const Hosts = ({ streams, currentMainId, users }) => {
   useEffect(() => {
     moveToMain(currentMainId);
     streams.map((stream) => {
@@ -43,7 +67,12 @@ export const Hosts = ({ streams, currentMainId }) => {
     <HostsContainer>
       {streams.map((stream) => {
         const { streamId } = stream;
-        return <Host key={streamId} id={`video-${streamId}`} />;
+        const name = getFullUserDetails({ ids: [streamId], users })[0].username;
+        return (
+          <Host key={streamId} id={`video-${streamId}`}>
+            <HostName>{name}</HostName>
+          </Host>
+        );
       })}
     </HostsContainer>
   );
