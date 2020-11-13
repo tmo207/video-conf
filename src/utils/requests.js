@@ -74,3 +74,45 @@ export const setIsWaitingRoom = async (waitingroom) => {
     body,
   });
 };
+
+export const getReferents = async ({ callback, token }) => {
+  const url = `${baseUrl}/api/referent/${EVENT_ID}/${CHANNEL_NAME}`;
+  await fetch(url, {
+    method: 'GET',
+    headers: new Headers({
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    }),
+  }).then((response) =>
+    response.json().then(({ referents }) => {
+      if (callback) callback(referents);
+      return referents;
+    })
+  );
+};
+
+export const addReferent = async (id) => {
+  const url = `${baseUrl}/api/addReferent/${EVENT_ID}/${CHANNEL_NAME}`;
+  const body = JSON.stringify({ id });
+  fetch(url, {
+    method: 'POST',
+    headers: new Headers({
+      Authorization: `Bearer ${HOST_TOKEN}`,
+      'Content-Type': 'application/json',
+    }),
+    body,
+  });
+};
+
+export const removeReferent = async (id) => {
+  const url = `${baseUrl}/api/removeReferent/${EVENT_ID}/${CHANNEL_NAME}`;
+  const body = JSON.stringify({ id });
+  fetch(url, {
+    method: 'POST',
+    headers: new Headers({
+      Authorization: `Bearer ${HOST_TOKEN}`,
+      'Content-Type': 'application/json',
+    }),
+    body,
+  });
+};

@@ -13,12 +13,10 @@ import {
 
 const Host = styled.div`
   ${withBorder}
-  background: grey;
   margin: 0 5px;
   text-align: center;
   width: ${HOST_VIDEO_WIDTH};
   position: relative;
-  order: 2;
 
   & > div {
     ${BORDER_RADIUS}
@@ -32,8 +30,9 @@ const Host = styled.div`
 const HostsContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   width: 100%;
-  max-width: 100vh;
+  max-width: calc(133vh - 400px);
 `;
 
 const HostName = styled.span`
@@ -47,10 +46,25 @@ const HostName = styled.span`
   z-index: 1;
   min-width: 50%;
   ${BORDER_RADIUS}
-  max-width: 85%;
+  max-width: ${(props) => (props.isMain ? '85%' : '60%')};
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+
+  @media (max-width: 350px), (max-height: 900px) {
+    ${(props) => !props.isMain && 'display: none'};
+  }
+`;
+
+const Container = styled.div`
+  width: 100%;
+  order: 2;
+  display: flex;
+  justify-content: center;
+
+  & > div {
+    width: 100%;
+  }
 `;
 
 export const Hosts = ({ streams, currentMainId, users }) => {
@@ -68,10 +82,13 @@ export const Hosts = ({ streams, currentMainId, users }) => {
       {streams.map((stream) => {
         const { streamId } = stream;
         const name = getFullUserDetails({ ids: [streamId], users })[0].username;
+        const isMain = currentMainId === streamId;
         return (
-          <Host key={streamId} id={`video-${streamId}`}>
-            <HostName>{name}</HostName>
-          </Host>
+          <Container key={streamId} id={`container-${streamId}`}>
+            <Host id={`video-${streamId}`}>
+              <HostName isMain={isMain}>{name}</HostName>
+            </Host>
+          </Container>
         );
       })}
     </HostsContainer>

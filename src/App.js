@@ -8,6 +8,7 @@ import { UserContext } from './state';
 import {
   CHANNEL_NAME,
   CONTENT_MARGIN,
+  HexagonIcon,
   MESSAGES,
   ROLES,
   STAGE,
@@ -15,6 +16,7 @@ import {
   getIsWaitingRoom,
   getMainScreen,
   initUser,
+  moveToMain,
   setIsWaitingRoom,
   setMainScreen,
 } from './utils';
@@ -43,8 +45,16 @@ const WaitingRoomNotice = styled.h1`
   color: white;
 `;
 
-const OpenChannel = styled.button`
+const OpenChannel = styled.button.attrs((props) => ({
+  className: props.isActive ? 'active' : '',
+}))`
   padding: 1rem;
+  display: flex;
+  align-items: center;
+`;
+
+const OpenChannelText = styled.p`
+  margin-left: 0.5rem;
 `;
 
 const App = ({ rtc, rtm }) => {
@@ -113,12 +123,7 @@ const App = ({ rtc, rtm }) => {
   };
 
   useEffect(() => {
-    const video = document.getElementById(`video-${currentMainId}`);
-    if (video) {
-      video.style.maxWidth = '100%';
-      video.style.width = '100%';
-      video.style.order = 1;
-    }
+    moveToMain(currentMainId);
   }, [currentMainId]);
 
   useEffect(() => {
@@ -255,8 +260,11 @@ const App = ({ rtc, rtm }) => {
             <>
               {rtmLoggedIn && (
                 <>
-                  <OpenChannel type="button" onClick={toggleChannelOpen}>
-                    {isWaitingRoom ? 'Channel öffnen' : 'Channel schließen'}
+                  <OpenChannel isActive={!isWaitingRoom} type="button" onClick={toggleChannelOpen}>
+                    {HexagonIcon}
+                    <OpenChannelText>
+                      {isWaitingRoom ? 'Channel öffnen' : 'Channel schließen'}
+                    </OpenChannelText>
                   </OpenChannel>
                   <UserList
                     {...{

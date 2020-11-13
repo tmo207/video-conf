@@ -1,11 +1,13 @@
-export const APP_ID = 'faf886e398cb4bfdbd38868cfdf11f29';
-export const CHANNEL_NAME = 'react-test';
+// export const APP_ID = 'faf886e398cb4bfdbd38868cfdf11f29';
+// export const CHANNEL_NAME = 'react-test';
+export const APP_ID = 'eb8e2114337f4422b490c61bdb758a98'; // dev
+export const CHANNEL_NAME = 'react-dev'; // dev
 export const EVENT_ID = 'lr5PUQf9VbRUYXIoiZHJ';
 
 export const USER_TOKEN =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6InVzZXIgbm9ybWFsLiIsImlhdCI6MTUxNjIzOTAyMiwiZXhwIjoxNTk5OTk5OTk5MCwidWlkIjoiMTkiLCJpc3MiOiJYQ0lSQ1VTIn0.d2_6BoLRVN71XBtCb_IJ-TPPi0h1BlLA336QaESrqio';
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ4aXJjdXMiLCJpYXQiOjE2MDUyODQ4MjQsImV4cCI6MTYwNTMwMDcxMjI0LCJ1aWQiOiIxOCIsIm5hbWUiOiJtYXhNdXN0ZXIiLCJyb2xlcyI6WyJCZXN1Y2hlciJdfQ.sV5DNJ_zXMSsunI8fI2ytAaQufgYGjt24NG1AIu1jVg';
 export const HOST_TOKEN =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6Im1heCBtdXN0ZXIiLCJpYXQiOjE1MTYyMzkwMjIsImV4cCI6MTU5OTk5OTk5OTAsInVpZCI6IjEzIiwiaXNzIjoiWENJUkNVUyJ9.m9yq9CsRpKykGjF_NmV8vf-YSANOwS3a5LK4OMG7tqM';
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ4aXJjdXMiLCJpYXQiOjE2MDUyODI5NTQsImV4cCI6MTYwNTMwMDY5MzU0LCJ1aWQiOiIxMyIsIm5hbWUiOiJEYXZpZEtvZXJudGdlbiIsInJvbGVzIjpbImFkbWluaXN0cmF0b3IiXX0.ev5zO5hoaIYf7ptRWpPqE3bqDm3qJQ_UWOUXZZ8ieos';
 
 export const ROLES = {
   SUPERHOST: 'superhost', // TODO: change to superuser

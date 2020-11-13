@@ -45,18 +45,20 @@ export const withBorder = css`
 
 export const moveToHost = (id) => {
   const el = document.getElementById(`video-${id}`);
-  if (el) {
-    el.style.width = HOST_VIDEO_WIDTH;
-    el.style.order = 2;
+  const container = document.getElementById(`container-${id}`);
+  if (el && container) {
     el.style.marginBottom = 0;
+    container.style.width = HOST_VIDEO_WIDTH;
+    container.style.order = 2;
   }
 };
 
 export const moveToMain = (id) => {
   const el = document.getElementById(`video-${id}`);
-  if (el) {
-    el.style.width = '100%';
-    el.style.order = 1;
-    el.style.marginBottom = '20px';
+  const container = document.getElementById(`container-${id}`);
+  if (el && container) {
+    el.style.marginBottom = '5px';
+    container.style.width = '100%';
+    container.style.order = 1;
   }
 };
