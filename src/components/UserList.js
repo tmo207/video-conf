@@ -48,6 +48,7 @@ const Content = styled.div`
   border-radius: 10px;
   height: calc(100vh - ${CONTENT_MARGIN});
   z-index: 1;
+  max-width: 100vw;
 `;
 
 const ListTypeContainer = styled.div`
@@ -140,7 +141,7 @@ export const UserList = ({ currentMainId, rtc, rtm, streams, users }) => {
       rtc.publishAndStartStream(userId, SUPERHOST);
     };
 
-    if (isYourself) getCurrentMainScreen(promoteYourselfToHost);
+    if (isYourself) getCurrentMainScreen({ callback: promoteYourselfToHost });
     else rtm.sendPeerMessage(peerId, userId, HOST_INVITE);
   };
 
