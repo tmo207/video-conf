@@ -1,4 +1,4 @@
-import ftp from 'basic-ftp';
+const ftp = require('basic-ftp');
 
 const deploy = async () => {
   const client = new ftp.Client();
