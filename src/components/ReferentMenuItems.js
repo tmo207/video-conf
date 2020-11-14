@@ -1,4 +1,6 @@
 import { useContext, useState } from 'react';
+import styled from 'styled-components';
+import Switch from '@material-ui/core/Switch';
 
 import { UserContext } from '../state';
 
@@ -13,7 +15,27 @@ import {
   VideoIcon,
 } from '../utils';
 
-export const ReferentMenuItems = ({ currentMainId, localstream, rtc, setModalType, setIsOpen }) => {
+const { SUPERHOST } = ROLES;
+
+const OpenChannel = styled(ControlItem)`
+  width: fit-content;
+`;
+
+const OpenChannelText = styled.p`
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  min-width: 3rem;
+`;
+
+export const ReferentMenuItems = ({
+  currentMainId,
+  isWaitingRoom,
+  localstream,
+  rtc,
+  setIsOpen,
+  setModalType,
+  toggleChannelOpen,
+}) => {
   const { userId } = useContext(UserContext);
   const [hasVideo, setHasVideo] = useState(localstream.hasVideo());
   const [hasAudio, setHasAudio] = useState(localstream.hasAudio());
@@ -48,7 +70,7 @@ export const ReferentMenuItems = ({ currentMainId, localstream, rtc, setModalTyp
 
   const onScreen = () => {
     if (hasScreen) {
-      const newStream = rtc.createStream(userId, ROLES.SUPERHOST);
+      const newStream = rtc.createStream(userId, SUPERHOST);
       newStream.init(() => {
         const newVideoTrack = newStream.getVideoTrack();
         localstream.replaceTrack(newVideoTrack);
@@ -63,6 +85,7 @@ export const ReferentMenuItems = ({ currentMainId, localstream, rtc, setModalTyp
       });
     }
   };
+
   return (
     <>
       <ControlItem className="hangup" red onClick={onHangUp}>
@@ -79,6 +102,10 @@ export const ReferentMenuItems = ({ currentMainId, localstream, rtc, setModalTyp
           {ScreenIcon}
         </ControlItem>
       )}
+      <OpenChannel isActive={!isWaitingRoom} onClick={toggleChannelOpen}>
+        <Switch checked={!isWaitingRoom} color="primary" />
+        <OpenChannelText>{isWaitingRoom ? 'Privat' : 'Live'}</OpenChannelText>
+      </OpenChannel>
     </>
   );
 };

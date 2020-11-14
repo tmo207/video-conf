@@ -8,7 +8,6 @@ import { UserContext } from './state';
 import {
   CHANNEL_NAME,
   CONTENT_MARGIN,
-  HexagonIcon,
   MESSAGES,
   ROLES,
   USER_TOKEN,
@@ -40,18 +39,6 @@ const LayoutGrid = styled.div`
 
 const WaitingRoomNotice = styled.h1`
   color: white;
-`;
-
-const OpenChannel = styled.button.attrs((props) => ({
-  className: props.isActive ? 'active' : '',
-}))`
-  padding: 1rem;
-  display: flex;
-  align-items: center;
-`;
-
-const OpenChannelText = styled.p`
-  margin-left: 0.5rem;
 `;
 
 const App = ({ rtc, rtm }) => {
@@ -221,11 +208,13 @@ const App = ({ rtc, rtm }) => {
               {...{
                 currentMainId,
                 isPlaying,
+                isWaitingRoom,
                 localstream: rtc.localstream,
                 rtc,
                 setIsOpen,
                 setIsPlaying,
                 setModalType,
+                toggleChannelOpen,
               }}
             />
           )}
@@ -247,23 +236,15 @@ const App = ({ rtc, rtm }) => {
           {hasAdminRights && (
             <>
               {rtmLoggedIn && (
-                <>
-                  <OpenChannel isActive={!isWaitingRoom} type="button" onClick={toggleChannelOpen}>
-                    {HexagonIcon}
-                    <OpenChannelText>
-                      {isWaitingRoom ? 'Channel öffnen' : 'Channel schließen'}
-                    </OpenChannelText>
-                  </OpenChannel>
-                  <UserList
-                    {...{
-                      currentMainId,
-                      rtc,
-                      rtm,
-                      streams,
-                      users,
-                    }}
-                  />
-                </>
+                <UserList
+                  {...{
+                    currentMainId,
+                    rtc,
+                    rtm,
+                    streams,
+                    users,
+                  }}
+                />
               )}
             </>
           )}

@@ -20,15 +20,27 @@ const ControlMenuContainer = styled.div`
 export const ControlMenu = ({
   currentMainId,
   isPlaying,
+  isWaitingRoom,
   localstream,
   rtc,
-  setModalType,
   setIsOpen,
+  setModalType,
+  toggleChannelOpen,
 }) => {
   return (
     <ControlMenuContainer>
       {isPlaying && (
-        <ReferentMenuItems {...{ currentMainId, localstream, rtc, setModalType, setIsOpen }} />
+        <ReferentMenuItems
+          {...{
+            currentMainId,
+            isWaitingRoom,
+            localstream,
+            rtc,
+            setIsOpen,
+            setModalType,
+            toggleChannelOpen,
+          }}
+        />
       )}
       {/* <ControlItem className="muteAudio" onClick={onMutePageAudio}>
         {MuteAudioIcon}
