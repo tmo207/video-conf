@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from 'react';
 import styled from 'styled-components/macro';
-import { ToastContainer, toast } from 'react-toastify';
+// import { ToastContainer, toast } from 'react-toastify';
 
 import { Modal, Hosts, UserList, ControlMenu } from './components';
 
@@ -23,8 +23,8 @@ import {
 const { AUDIENCE, HOST, SUPERHOST } = ROLES;
 const {
   HOST_INVITE,
-  HOST_INVITE_ACCEPTED,
-  HOST_INVITE_DECLINED,
+  // HOST_INVITE_ACCEPTED,
+  // HOST_INVITE_DECLINED,
   STAGE_INVITE,
   REMOVE_AS_HOST,
   CHANNEL_OPENED,
@@ -87,7 +87,7 @@ const App = ({ rtc, rtm }) => {
         setIsOpen(true);
         setAdminId(msg.userId);
         break;
-      case HOST_INVITE_ACCEPTED:
+      /*  case HOST_INVITE_ACCEPTED:
         toast(`host invitation accepted from: ${msg.userId}`, {
           autoClose: 8000,
           draggable: true,
@@ -100,7 +100,7 @@ const App = ({ rtc, rtm }) => {
           draggable: true,
           closeOnClick: true,
         });
-        break;
+        break; */
       case STAGE_INVITE:
         setModalType(STAGE);
         setIsOpen(true);
@@ -211,7 +211,7 @@ const App = ({ rtc, rtm }) => {
         ))}
       {userId && (
         <>
-          <ToastContainer
+          {/* <ToastContainer
             position="top-right"
             autoClose={5000}
             hideProgressBar={false}
@@ -222,20 +222,19 @@ const App = ({ rtc, rtm }) => {
             pauseOnHover
             closeButton={false}
             draggable={false}
+          /> */}
+          <ControlMenu
+            {...{
+              currentMainId,
+              isPlaying,
+              localstream: rtc.localstream,
+              rtc,
+              setIsOpen,
+              setIsPlaying,
+              setModalType,
+            }}
           />
-          {isPlaying && (
-            <ControlMenu
-              {...{
-                currentMainId,
-                localstream: rtc.localstream,
-                rtc,
-                setIsOpen,
-                setIsPlaying,
-                setModalType,
-                userId,
-              }}
-            />
-          )}
+
           <Modal
             {...{
               adminId,
