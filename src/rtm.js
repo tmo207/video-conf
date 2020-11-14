@@ -36,7 +36,7 @@ export default class Rtm extends EventEmitter {
     memberEvents.forEach((eventName) => {
       this.channels[CHANNEL_NAME].channel.on(eventName, (...args) => {
         this.getMembers();
-        handler();
+        if (handler) handler();
         this.emit(eventName, { CHANNEL_NAME, args });
       });
     });
@@ -84,8 +84,8 @@ export default class Rtm extends EventEmitter {
     });
   }
 
-  async sendPeerMessage(peerId, remoteId, subject) {
-    return this.client.sendMessageToPeer({ text: this.generateMessage(remoteId, subject) }, peerId);
+  async sendPeerMessage({ to, from, subject }) {
+    return this.client.sendMessageToPeer({ text: this.generateMessage(from, subject) }, to);
   }
 
   removeHost(hostId) {

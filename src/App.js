@@ -20,12 +20,15 @@ import {
 
 const { AUDIENCE, HOST, SUPERHOST } = ROLES;
 const {
+  ASK_STAGE_ACCESS,
   HOST_INVITE,
   // HOST_INVITE_ACCEPTED,
   // HOST_INVITE_DECLINED,
   REMOVE_AS_HOST,
   CHANNEL_OPENED,
   MAIN_SCREEN_UPDATED,
+  HOST_REQUEST_ACCEPTED,
+  HOST_REQUEST_DECLINED,
 } = MESSAGES;
 
 const LayoutGrid = styled.div`
@@ -46,6 +49,7 @@ const App = ({ rtc, rtm }) => {
   const [users, setUsers] = useState([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [adminId, setAdminId] = useState();
+  const [referentRequests, setReferentRequests] = useState([]);
   const [modalIsOpen, setIsOpen] = useState(false);
   const [modalType, setModalType] = useState(); // Types: host | stage | hangup
   const [rtmLoggedIn, setRtmLoggedIn] = useState(false);
@@ -57,6 +61,7 @@ const App = ({ rtc, rtm }) => {
   const [streams, setStreams] = useState([]);
   const [userRole, setRole] = useState(); // Serverseitig
   const [isWaitingRoom, setLocalWaitingRoom] = useState(true); // Serverseitig
+  const [referentRightsRequested, setReferentRightsRequested] = useState(false);
 
   const hasAdminRights = userRole === SUPERHOST;
   const isHost = userRole === SUPERHOST || userRole === HOST;
@@ -86,15 +91,28 @@ const App = ({ rtc, rtm }) => {
           closeOnClick: true,
         });
         break; */
+      case HOST_REQUEST_ACCEPTED:
+        if (isWaitingRoom) setLocalWaitingRoom(false);
+        setRole(HOST);
+        rtc.publishAndStartStream(userId, HOST);
+        setReferentRightsRequested(false);
+        break;
+      case HOST_REQUEST_DECLINED:
+        setReferentRightsRequested(false);
+        break;
       case MAIN_SCREEN_UPDATED:
         setLocalMainScreen(msg.userId);
         break;
       case REMOVE_AS_HOST:
         rtc.removeStream(msg.userId);
         rtc.client.unpublish(rtc.localstream);
+        setIsPlaying(false);
         break;
       case CHANNEL_OPENED:
         setLocalWaitingRoom((waitingroom) => !waitingroom);
+        break;
+      case ASK_STAGE_ACCESS:
+        setReferentRequests((referents) => [...referents, msg.userId]);
         break;
       default:
         break;
@@ -130,7 +148,7 @@ const App = ({ rtc, rtm }) => {
       rtm.init(rtmHandlers);
       rtm.login(uid, null).then(() => {
         rtm.joinChannel(CHANNEL_NAME).then(() => {
-          rtm.subscribeChannelEvents(() => {});
+          rtm.subscribeChannelEvents();
         });
       });
       rtm.subscribeClientEvents();
@@ -170,6 +188,11 @@ const App = ({ rtc, rtm }) => {
     });
   };
 
+  const onRequestReferentRights = () => {
+    setReferentRightsRequested((rights) => !rights);
+    rtm.sendPeerMessage({ to: adminId, from: userId, subject: MESSAGES.ASK_STAGE_ACCESS });
+  };
+
   return (
     <>
       {users.length &&
@@ -203,21 +226,23 @@ const App = ({ rtc, rtm }) => {
             closeButton={false}
             draggable={false}
           /> */}
-          {isPlaying && (
-            <ControlMenu
-              {...{
-                currentMainId,
-                isPlaying,
-                isWaitingRoom,
-                localstream: rtc.localstream,
-                rtc,
-                setIsOpen,
-                setIsPlaying,
-                setModalType,
-                toggleChannelOpen,
-              }}
-            />
-          )}
+          <ControlMenu
+            {...{
+              adminId,
+              currentMainId,
+              isPlaying,
+              isWaitingRoom,
+              localstream: rtc.localstream,
+              onRequestReferentRights,
+              referentRightsRequested,
+              rtc,
+              rtm,
+              setIsOpen,
+              setIsPlaying,
+              setModalType,
+              toggleChannelOpen,
+            }}
+          />
           <Modal
             {...{
               adminId,
@@ -239,8 +264,10 @@ const App = ({ rtc, rtm }) => {
                 <UserList
                   {...{
                     currentMainId,
+                    referentRequests,
                     rtc,
                     rtm,
+                    setReferentRequests,
                     streams,
                     users,
                   }}

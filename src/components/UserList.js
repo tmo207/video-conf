@@ -21,7 +21,13 @@ import {
   getMainScreen,
 } from '../utils';
 
-const { HOST_INVITE, NO_MAIN_SCREEN, MAIN_SCREEN_UPDATED } = MESSAGES;
+const {
+  HOST_INVITE,
+  NO_MAIN_SCREEN,
+  MAIN_SCREEN_UPDATED,
+  HOST_REQUEST_ACCEPTED,
+  HOST_REQUEST_DECLINED,
+} = MESSAGES;
 
 const isOdd = (num) => num % 2 === 1;
 const { AUDIENCE, HOST, SUPERHOST } = ROLES;
@@ -115,7 +121,15 @@ const UserActionItem = styled.button.attrs((props) => ({
   }
 `;
 
-export const UserList = ({ currentMainId, rtc, rtm, streams, users }) => {
+export const UserList = ({
+  currentMainId,
+  referentRequests,
+  rtc,
+  rtm,
+  setReferentRequests,
+  streams,
+  users,
+}) => {
   const { userId } = useContext(UserContext);
 
   // showUsersWithRole types = audience | host;
@@ -142,7 +156,7 @@ export const UserList = ({ currentMainId, rtc, rtm, streams, users }) => {
     };
 
     if (isYourself) getMainScreen({ callback: promoteYourselfToHost, token: HOST_TOKEN });
-    else rtm.sendPeerMessage(peerId, userId, HOST_INVITE);
+    else rtm.sendPeerMessage({ to: peerId, from: userId, subject: HOST_INVITE });
   };
 
   const promoteHostOnStage = (hostId) => {
@@ -236,44 +250,92 @@ export const UserList = ({ currentMainId, rtc, rtm, streams, users }) => {
                   );
                 }
               })}
-            {showHosts &&
-              hosts.map((host, index) => {
-                const hostId = host.id.toString();
-                const isCurrentMain = hostId === currentMainId;
-                const isYourself = hostId === userId;
-                if (inSearchResults(host.username)) {
+            {showHosts && (
+              <>
+                {hosts.map((host, index) => {
+                  const hostId = host.id.toString();
+                  const isCurrentMain = hostId === currentMainId;
+                  const isYourself = hostId === userId;
+                  if (inSearchResults(host.username)) {
+                    return (
+                      <UserContainer index={index} key={hostId}>
+                        <UserName>
+                          {host.username}
+                          {isYourself && ' (du)'}
+                        </UserName>
+                        <UserActionContainer>
+                          <UserActionItem
+                            className="onStage"
+                            isActive={isCurrentMain}
+                            type="button"
+                            onClick={() => {
+                              if (isCurrentMain) degradeMainToHost();
+                              else promoteHostOnStage(hostId);
+                            }}
+                          >
+                            <StageIcon isActive={isCurrentMain} />
+                          </UserActionItem>
+                          {!isYourself && (
+                            <UserActionItem
+                              className="removeHost"
+                              type="button"
+                              onClick={() => removeHost(hostId)}
+                            >
+                              {MinusIcon}
+                            </UserActionItem>
+                          )}
+                        </UserActionContainer>
+                      </UserContainer>
+                    );
+                  }
+                })}
+                {!!referentRequests.length && <h2>Referent-Anfragen</h2>}
+                {referentRequests.map((user, index) => {
+                  const { username } = getFullUserDetails({ ids: [user], users })[0];
                   return (
-                    <UserContainer index={index} key={hostId}>
-                      <UserName>
-                        {host.username}
-                        {isYourself && ' (du)'}
-                      </UserName>
+                    <UserContainer index={index} key={user}>
+                      <UserName>{username}</UserName>
                       <UserActionContainer>
                         <UserActionItem
-                          className="onStage"
-                          isActive={isCurrentMain}
+                          className="acceptRequest"
                           type="button"
                           onClick={() => {
-                            if (isCurrentMain) degradeMainToHost();
-                            else promoteHostOnStage(hostId);
+                            const newRefs = referentRequests.filter(
+                              (referent) => referent !== user
+                            );
+                            setReferentRequests(newRefs);
+                            rtm.sendPeerMessage({
+                              to: user,
+                              from: userId,
+                              subject: HOST_REQUEST_ACCEPTED,
+                            });
                           }}
                         >
-                          <StageIcon isActive={isCurrentMain} />
+                          {PlusIcon}
                         </UserActionItem>
-                        {!isYourself && (
-                          <UserActionItem
-                            className="removeHost"
-                            type="button"
-                            onClick={() => removeHost(hostId)}
-                          >
-                            {MinusIcon}
-                          </UserActionItem>
-                        )}
+                        <UserActionItem
+                          className="declineRequest"
+                          type="button"
+                          onClick={() => {
+                            const newRefs = referentRequests.filter(
+                              (referent) => referent !== user
+                            );
+                            setReferentRequests(newRefs);
+                            rtm.sendPeerMessage({
+                              to: user,
+                              from: userId,
+                              subject: HOST_REQUEST_DECLINED,
+                            });
+                          }}
+                        >
+                          {MinusIcon}
+                        </UserActionItem>
                       </UserActionContainer>
                     </UserContainer>
                   );
-                }
-              })}
+                })}
+              </>
+            )}
           </Content>
         )}
       </Wrapper>

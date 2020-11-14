@@ -41,6 +41,9 @@ const ModalIcon = styled(ControlItem).attrs((props) => ({
 `;
 
 const modalStyle = {
+  overlay: {
+    zIndex: 20,
+  },
   content: {
     color: 'BLACK',
     textAlign: 'center',
@@ -73,7 +76,7 @@ export const Modal = ({
     if (isWaitingRoom) setLocalWaitingRoom(false);
     setRole(HOST);
     rtc.publishAndStartStream(userId, HOST);
-    rtm.sendPeerMessage(userId, adminId, HOST_INVITE_ACCEPTED);
+    rtm.sendPeerMessage({ to: adminId, from: userId, subject: HOST_INVITE_ACCEPTED });
   };
 
   const acceptHangUp = () => {
@@ -105,7 +108,8 @@ export const Modal = ({
             text:
               'Der Host dieser Konferenz hat dich dazu eingeladen der Konferenz beizutreten. Hierfür werden Mikrofon und deine Kamera aktiviert. Möchtest du beitreten?',
             onAccept: acceptHostInvitation,
-            onDecline: () => rtm.sendPeerMessage(userId, adminId, HOST_INVITE_DECLINED),
+            onDecline: () =>
+              rtm.sendPeerMessage({ from: userId, to: adminId, subjectt: HOST_INVITE_DECLINED }),
             setIsOpen,
           }}
         />

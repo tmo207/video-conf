@@ -28,6 +28,7 @@ const OpenChannelText = styled.p`
 `;
 
 export const ReferentMenuItems = ({
+  adminId,
   currentMainId,
   isWaitingRoom,
   localstream,
@@ -102,10 +103,12 @@ export const ReferentMenuItems = ({
           {ScreenIcon}
         </ControlItem>
       )}
-      <OpenChannel isActive={!isWaitingRoom} onClick={toggleChannelOpen}>
-        <Switch checked={!isWaitingRoom} color="primary" />
-        <OpenChannelText>{isWaitingRoom ? 'Privat' : 'Live'}</OpenChannelText>
-      </OpenChannel>
+      {adminId === userId && (
+        <OpenChannel isActive={!isWaitingRoom} onClick={toggleChannelOpen}>
+          <Switch checked={!isWaitingRoom} color="primary" />
+          <OpenChannelText>{isWaitingRoom ? 'Privat' : 'Live'}</OpenChannelText>
+        </OpenChannel>
+      )}
     </>
   );
 };

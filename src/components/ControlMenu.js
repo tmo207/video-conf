@@ -1,6 +1,9 @@
 import styled from 'styled-components/macro';
+import Switch from '@material-ui/core/Switch';
 
 import { ReferentMenuItems } from './ReferentMenuItems';
+
+import { ControlItem } from '../utils';
 
 const ControlMenuContainer = styled.div`
   z-index: 1000;
@@ -17,11 +20,24 @@ const ControlMenuContainer = styled.div`
   border-radius: 10px;
 `;
 
+const RequestReferentRights = styled(ControlItem)`
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  width: fit-content;
+`;
+
+const RequestRightsText = styled.p`
+  margin-right: 0.5rem;
+`;
+
 export const ControlMenu = ({
+  adminId,
   currentMainId,
   isPlaying,
   isWaitingRoom,
   localstream,
+  onRequestReferentRights,
+  referentRightsRequested,
   rtc,
   setIsOpen,
   setModalType,
@@ -32,6 +48,7 @@ export const ControlMenu = ({
       {isPlaying && (
         <ReferentMenuItems
           {...{
+            adminId,
             currentMainId,
             isWaitingRoom,
             localstream,
@@ -42,9 +59,16 @@ export const ControlMenu = ({
           }}
         />
       )}
-      {/* <ControlItem className="muteAudio" onClick={onMutePageAudio}>
-        {MuteAudioIcon}
-      </ControlItem> */}
+      {!isPlaying && (
+        <RequestReferentRights
+          onClick={() => !referentRightsRequested && onRequestReferentRights()}
+        >
+          <Switch checked={referentRightsRequested} color="primary" />
+          <RequestRightsText>
+            {referentRightsRequested ? 'Teilnahme angefragt' : 'Teilnahme anfragen'}
+          </RequestRightsText>
+        </RequestReferentRights>
+      )}
     </ControlMenuContainer>
   );
 };
