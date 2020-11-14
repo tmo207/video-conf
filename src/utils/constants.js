@@ -16,15 +16,14 @@ export const ROLES = {
 };
 export const SCREEN_SHARE = 'screen-share';
 
-export const STAGE = 'stage';
 export const HANGUP = 'hangup';
 
 export const MESSAGES = {
   HOST_INVITE: 'host-invitation',
   HOST_INVITE_ACCEPTED: 'host-invitation-accepted',
   HOST_INVITE_DECLINED: 'host-invitation-declined',
-  STAGE_INVITE: 'stage-invitation',
   REMOVE_AS_HOST: 'remove-you-as-host',
+  NO_MAIN_SCREEN: 'null',
   CHANNEL_OPENED: 'channel-opened',
   MAIN_SCREEN_UPDATED: 'main-screen-updated',
 };

@@ -11,7 +11,6 @@ import {
   HexagonIcon,
   MESSAGES,
   ROLES,
-  STAGE,
   USER_TOKEN,
   getIsWaitingRoom,
   getMainScreen,
@@ -25,7 +24,6 @@ const {
   HOST_INVITE,
   // HOST_INVITE_ACCEPTED,
   // HOST_INVITE_DECLINED,
-  STAGE_INVITE,
   REMOVE_AS_HOST,
   CHANNEL_OPENED,
   MAIN_SCREEN_UPDATED,
@@ -101,11 +99,6 @@ const App = ({ rtc, rtm }) => {
           closeOnClick: true,
         });
         break; */
-      case STAGE_INVITE:
-        setModalType(STAGE);
-        setIsOpen(true);
-        setAdminId(msg.userId);
-        break;
       case MAIN_SCREEN_UPDATED:
         setLocalMainScreen(msg.userId);
         break;
@@ -223,18 +216,19 @@ const App = ({ rtc, rtm }) => {
             closeButton={false}
             draggable={false}
           /> */}
-          <ControlMenu
-            {...{
-              currentMainId,
-              isPlaying,
-              localstream: rtc.localstream,
-              rtc,
-              setIsOpen,
-              setIsPlaying,
-              setModalType,
-            }}
-          />
-
+          {isPlaying && (
+            <ControlMenu
+              {...{
+                currentMainId,
+                isPlaying,
+                localstream: rtc.localstream,
+                rtc,
+                setIsOpen,
+                setIsPlaying,
+                setModalType,
+              }}
+            />
+          )}
           <Modal
             {...{
               adminId,

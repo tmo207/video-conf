@@ -4,20 +4,15 @@ import styled from 'styled-components/macro';
 
 import { UserContext } from '../state';
 
-import {
-  ControlItem,
-  GREEN,
-  HANGUP,
-  MESSAGES,
-  RED,
-  ROLES,
-  STAGE,
-  HangUpIcon,
-  VideoIcon,
-} from '../utils';
+import { ControlItem, GREEN, HANGUP, MESSAGES, RED, ROLES, HangUpIcon, VideoIcon } from '../utils';
 
 const { HOST } = ROLES;
-const { HOST_INVITE_ACCEPTED, HOST_INVITE_DECLINED, MAIN_SCREEN_UPDATED } = MESSAGES;
+const {
+  HOST_INVITE_ACCEPTED,
+  HOST_INVITE_DECLINED,
+  MAIN_SCREEN_UPDATED,
+  NO_MAIN_SCREEN,
+} = MESSAGES;
 
 const ButtonContainer = styled.div`
   display: flex;
@@ -81,15 +76,10 @@ export const Modal = ({
     rtm.sendPeerMessage(userId, adminId, HOST_INVITE_ACCEPTED);
   };
 
-  const acceptStageInvitation = () => {
-    rtc.setMainScreen(userId);
-    rtm.sendChannelMessage(userId, MAIN_SCREEN_UPDATED);
-  };
-
   const acceptHangUp = () => {
     if (userId === currentMainId) {
       rtc.setMainScreen(null).then(() => rtc.removeStream(userId));
-      rtm.sendChannelMessage(null, MAIN_SCREEN_UPDATED);
+      rtm.sendChannelMessage(NO_MAIN_SCREEN, MAIN_SCREEN_UPDATED);
     } else {
       rtc.removeStream(userId);
     }
@@ -98,7 +88,6 @@ export const Modal = ({
   };
 
   const isHostInvitation = modalType === HOST;
-  const isStageInvitation = modalType === STAGE;
   const isHangUp = modalType === HANGUP;
 
   return (
@@ -116,18 +105,6 @@ export const Modal = ({
             text:
               'Der Host dieser Konferenz hat dich dazu eingeladen der Konferenz beizutreten. Hierfür werden Mikrofon und deine Kamera aktiviert. Möchtest du beitreten?',
             onAccept: acceptHostInvitation,
-            onDecline: () => rtm.sendPeerMessage(userId, adminId, HOST_INVITE_DECLINED),
-            setIsOpen,
-          }}
-        />
-      )}
-      {isStageInvitation && (
-        <ModalContent
-          {...{
-            headline: 'Bühne betreten?',
-            text:
-              'Der Host dieser Konferenz hat dich dazu eingeladen die Bühne zu betreten. Möchtest du das?',
-            onAccept: acceptStageInvitation,
             onDecline: () => rtm.sendPeerMessage(userId, adminId, HOST_INVITE_DECLINED),
             setIsOpen,
           }}

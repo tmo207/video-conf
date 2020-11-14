@@ -21,7 +21,7 @@ import {
   getMainScreen,
 } from '../utils';
 
-const { HOST_INVITE, STAGE_INVITE, MAIN_SCREEN_UPDATED } = MESSAGES;
+const { HOST_INVITE, NO_MAIN_SCREEN, MAIN_SCREEN_UPDATED } = MESSAGES;
 
 const isOdd = (num) => num % 2 === 1;
 const { AUDIENCE, HOST, SUPERHOST } = ROLES;
@@ -146,25 +146,20 @@ export const UserList = ({ currentMainId, rtc, rtm, streams, users }) => {
   };
 
   const promoteHostOnStage = (hostId) => {
-    const isYourself = hostId === userId;
-    if (isYourself) {
-      rtc.setMainScreen(userId);
-      rtm.sendChannelMessage(userId, MAIN_SCREEN_UPDATED);
-    } else {
-      rtm.sendPeerMessage(hostId, userId, STAGE_INVITE);
-    }
+    rtc.setMainScreen(hostId);
+    rtm.sendChannelMessage(hostId, MAIN_SCREEN_UPDATED);
   };
 
   const degradeMainToHost = () => {
     rtc.setMainScreen(null);
-    rtm.sendChannelMessage(null, MAIN_SCREEN_UPDATED);
+    rtm.sendChannelMessage(NO_MAIN_SCREEN, MAIN_SCREEN_UPDATED);
   };
 
   const removeHost = (hostId) => {
     rtm.removeHost(hostId);
     if (currentMainId === hostId) {
       rtc.setMainScreen(null);
-      rtm.sendChannelMessage(null, MAIN_SCREEN_UPDATED);
+      rtm.sendChannelMessage(NO_MAIN_SCREEN, MAIN_SCREEN_UPDATED);
     }
   };
 
