@@ -42,23 +42,3 @@ export const withBorder = css`
   ${BORDER_RADIUS}
   ${BORDER}
 `;
-
-export const moveToHost = (id) => {
-  const el = document.getElementById(`video-${id}`);
-  const container = document.getElementById(`container-${id}`);
-  if (el && container) {
-    el.style.marginBottom = 0;
-    container.style.width = HOST_VIDEO_WIDTH;
-    container.style.order = 2;
-  }
-};
-
-export const moveToMain = (id) => {
-  const el = document.getElementById(`video-${id}`);
-  const container = document.getElementById(`container-${id}`);
-  if (el && container) {
-    el.style.marginBottom = '5px';
-    container.style.width = '100%';
-    container.style.order = 1;
-  }
-};

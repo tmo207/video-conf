@@ -16,7 +16,6 @@ import {
   getIsWaitingRoom,
   getMainScreen,
   initUser,
-  moveToMain,
   setIsWaitingRoom,
   setMainScreen,
 } from './utils';
@@ -121,10 +120,6 @@ const App = ({ rtc, rtm }) => {
         break;
     }
   };
-
-  useEffect(() => {
-    moveToMain(currentMainId);
-  }, [currentMainId]);
 
   useEffect(() => {
     if (!isHost) {

@@ -1,21 +1,12 @@
-import { useEffect } from 'react';
 import styled from 'styled-components/macro';
 import PropTypes from 'prop-types';
 
-import {
-  BORDER_RADIUS,
-  HOST_VIDEO_WIDTH,
-  getFullUserDetails,
-  moveToHost,
-  moveToMain,
-  withBorder,
-} from '../utils';
+import { BORDER_RADIUS, HOST_VIDEO_WIDTH, getFullUserDetails, withBorder } from '../utils';
 
 const Host = styled.div`
   ${withBorder}
   margin: 0 5px;
   text-align: center;
-  width: ${HOST_VIDEO_WIDTH};
   position: relative;
 
   & > div {
@@ -56,11 +47,15 @@ const HostName = styled.span`
   }
 `;
 
-const Container = styled.div`
-  width: 100%;
-  order: 2;
+const Container = styled.div.attrs((props) => ({
+  className: props.isMain ? 'main' : '',
+}))`
+  width: ${(props) => (props.isMain ? '100%' : HOST_VIDEO_WIDTH)};
+  order: ${(props) => (props.isMain ? 1 : 2)};
+  max-height: ${(props) => (props.isMain ? '55vh' : '15vh')};
   display: flex;
   justify-content: center;
+  margin-bottom: 5px;
 
   & > div {
     width: 100%;
@@ -68,15 +63,6 @@ const Container = styled.div`
 `;
 
 export const Hosts = ({ streams, currentMainId, users }) => {
-  useEffect(() => {
-    moveToMain(currentMainId);
-    streams.map((stream) => {
-      if (stream.streamId !== currentMainId) {
-        moveToHost(stream.streamId);
-      }
-    });
-  });
-
   return (
     <HostsContainer>
       {streams.map((stream) => {
@@ -84,7 +70,7 @@ export const Hosts = ({ streams, currentMainId, users }) => {
         const name = getFullUserDetails({ ids: [streamId], users })[0].username;
         const isMain = currentMainId === streamId;
         return (
-          <Container key={streamId} id={`container-${streamId}`}>
+          <Container key={streamId} isMain={isMain} id={`container-${streamId}`}>
             <Host id={`video-${streamId}`}>
               <HostName isMain={isMain}>{name}</HostName>
             </Host>
