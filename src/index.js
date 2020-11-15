@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import ReactDOM from 'react-dom';
 import { createGlobalStyle } from 'styled-components';
 
@@ -6,8 +6,7 @@ import Rtm from './rtm';
 import Rtc from './rtc';
 import App from './App';
 
-import { useUser, UserContext } from './state';
-import { APP_ID, CHANNEL_NAME } from './utils';
+import { defaultSessionContext, useUser, UserContext, SessionContext } from './state';
 
 const GlobalStyle = createGlobalStyle`
 * {
@@ -27,19 +26,30 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
-const rtc = new Rtc();
-const rtm = new Rtm({ APP_ID, CHANNEL_NAME, uid: '333' });
-
 const Context = ({ children }) => {
   const userId = useUser();
-  return <UserContext.Provider value={userId}>{children}</UserContext.Provider>;
+  return (
+    <SessionContext.Provider value={window.XC_AGORA_DATA || defaultSessionContext}>
+      <UserContext.Provider value={userId}>{children}</UserContext.Provider>
+    </SessionContext.Provider>
+  );
+};
+
+const Agora = () => {
+  const { app_id: APP_ID, channel_id: CHANNEL_ID, event_id: EVENT_ID, token } = useContext(
+    SessionContext
+  );
+
+  const rtc = new Rtc({ APP_ID, CHANNEL_ID, EVENT_ID, USER_TOKEN: token });
+  const rtm = new Rtm({ APP_ID, CHANNEL_ID });
+  return <App rtc={rtc} rtm={rtm} />;
 };
 
 ReactDOM.render(
   <React.StrictMode>
     <GlobalStyle />
     <Context>
-      <App rtc={rtc} rtm={rtm} />
+      <Agora />
     </Context>
   </React.StrictMode>,
   document.getElementById('root')

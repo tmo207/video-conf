@@ -1,9 +1,7 @@
-import { CHANNEL_NAME, EVENT_ID, HOST_TOKEN } from './constants';
-
 const baseUrl = 'https://europe-west3-xircus-7739e.cloudfunctions.net/agoraService';
 
-export const initUser = async (token) => {
-  const url = `${baseUrl}/api/init/${EVENT_ID}/${CHANNEL_NAME}`;
+export const initUser = async ({ callback, token, channelId, eventId }) => {
+  const url = `${baseUrl}/api/init/${eventId}/${channelId}`;
   await fetch(url, {
     method: 'GET',
     headers: new Headers({
@@ -11,14 +9,15 @@ export const initUser = async (token) => {
       'Content-Type': 'application/x-www-form-urlencoded',
     }),
   }).then((response) =>
-    response.json().then(({ user }) => {
-      return user;
+    response.json().then((data) => {
+      if (callback) callback(data);
+      return data;
     })
   );
 };
 
-export const getMainScreen = async ({ callback, token }) => {
-  const url = `${baseUrl}/api/mainscreen/${EVENT_ID}/${CHANNEL_NAME}`;
+export const getMainScreen = async ({ callback, token, channelId, eventId }) => {
+  const url = `${baseUrl}/api/mainscreen/${eventId}/${channelId}`;
   await fetch(url, {
     method: 'GET',
     headers: new Headers({
@@ -33,21 +32,21 @@ export const getMainScreen = async ({ callback, token }) => {
   );
 };
 
-export const setMainScreen = async (mainscreen) => {
-  const url = `${baseUrl}/api/mainscreen/${EVENT_ID}/${CHANNEL_NAME}`;
+export const setMainScreen = async ({ mainscreen, token, channelId, eventId }) => {
+  const url = `${baseUrl}/api/mainscreen/${eventId}/${channelId}`;
   const body = JSON.stringify({ mainscreen });
   fetch(url, {
     method: 'POST',
     headers: new Headers({
-      Authorization: `Bearer ${HOST_TOKEN}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     }),
     body,
   });
 };
 
-export const getIsWaitingRoom = async ({ callback, token }) => {
-  const url = `${baseUrl}/api/waitingroom/${EVENT_ID}/${CHANNEL_NAME}`;
+export const getIsWaitingRoom = async ({ callback, token, channelId, eventId }) => {
+  const url = `${baseUrl}/api/waitingroom/${eventId}/${channelId}`;
   await fetch(url, {
     method: 'GET',
     headers: new Headers({
@@ -62,21 +61,55 @@ export const getIsWaitingRoom = async ({ callback, token }) => {
   );
 };
 
-export const setIsWaitingRoom = async (waitingroom) => {
-  const url = `${baseUrl}/api/waitingroom/${EVENT_ID}/${CHANNEL_NAME}`;
+export const setIsWaitingRoom = async ({ waitingroom, channelId, eventId, token }) => {
+  const url = `${baseUrl}/api/waitingroom/${eventId}/${channelId}`;
   const body = JSON.stringify({ waitingroom });
   fetch(url, {
     method: 'POST',
     headers: new Headers({
-      Authorization: `Bearer ${HOST_TOKEN}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     }),
     body,
   });
 };
 
-export const getReferents = async ({ callback, token }) => {
-  const url = `${baseUrl}/api/referent/${EVENT_ID}/${CHANNEL_NAME}`;
+export const getUserDetails = async ({ ids, channelId, eventId, token, callback }) => {
+  const url = `${baseUrl}/api/users/${eventId}/${channelId}`;
+  const body = JSON.stringify({ ids: [...ids] });
+  await fetch(url, {
+    method: 'POST',
+    headers: new Headers({
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    }),
+    body,
+  }).then((response) =>
+    response.json().then((details) => {
+      if (callback) callback(details);
+      return details;
+    })
+  );
+};
+
+export const getSuperhostId = async ({ callback, token, channelId, eventId }) => {
+  const url = `${baseUrl}/api/superhost/${eventId}/${channelId}`;
+  await fetch(url, {
+    method: 'GET',
+    headers: new Headers({
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    }),
+  }).then((response) =>
+    response.json().then(({ superhost }) => {
+      if (callback) callback(superhost);
+      return superhost;
+    })
+  );
+};
+
+export const getReferents = async ({ callback, token, channelId, eventId }) => {
+  const url = `${baseUrl}/api/referent/${eventId}/${channelId}`;
   await fetch(url, {
     method: 'GET',
     headers: new Headers({
@@ -91,26 +124,26 @@ export const getReferents = async ({ callback, token }) => {
   );
 };
 
-export const addReferent = async (id) => {
-  const url = `${baseUrl}/api/addReferent/${EVENT_ID}/${CHANNEL_NAME}`;
+export const addReferent = async ({ id, channelId, eventId, token }) => {
+  const url = `${baseUrl}/api/addReferent/${eventId}/${channelId}`;
   const body = JSON.stringify({ id });
   fetch(url, {
     method: 'POST',
     headers: new Headers({
-      Authorization: `Bearer ${HOST_TOKEN}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     }),
     body,
   });
 };
 
-export const removeReferent = async (id) => {
-  const url = `${baseUrl}/api/removeReferent/${EVENT_ID}/${CHANNEL_NAME}`;
+export const removeReferent = async ({ id, channelId, eventId, token }) => {
+  const url = `${baseUrl}/api/removeReferent/${eventId}/${channelId}`;
   const body = JSON.stringify({ id });
   fetch(url, {
     method: 'POST',
     headers: new Headers({
-      Authorization: `Bearer ${HOST_TOKEN}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     }),
     body,

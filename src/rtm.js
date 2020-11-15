@@ -1,19 +1,25 @@
 import AgoraRTM from 'agora-rtm-sdk';
 import EventEmitter from 'events';
 
-import { APP_ID, CHANNEL_NAME, MESSAGES } from './utils';
+import { MESSAGES } from './utils';
 
 const { REMOVE_AS_HOST } = MESSAGES;
 
 export default class Rtm extends EventEmitter {
-  constructor() {
+  constructor({ APP_ID, CHANNEL_ID }) {
     super();
     this.channels = {};
+    this.APP_ID = APP_ID;
+    this.CHANNEL_ID = CHANNEL_ID;
   }
 
   init(handlers) {
     this.handlers = handlers;
-    this.client = AgoraRTM.createInstance(APP_ID);
+    this.client = AgoraRTM.createInstance(this.APP_ID);
+  }
+
+  async setRtmToken(token) {
+    this.rtmToken = token;
   }
 
   async renewToken(token) {
@@ -34,22 +40,22 @@ export default class Rtm extends EventEmitter {
   subscribeChannelEvents(handler) {
     const memberEvents = ['MemberJoined', 'MemberLeft'];
     memberEvents.forEach((eventName) => {
-      this.channels[CHANNEL_NAME].channel.on(eventName, (...args) => {
+      this.channels[this.CHANNEL_ID].channel.on(eventName, (...args) => {
         this.getMembers();
         if (handler) handler();
-        this.emit(eventName, { CHANNEL_NAME, args });
+        this.emit(eventName, { CHANNEL_ID: this.CHANNEL_ID, args });
       });
     });
 
-    this.channels[CHANNEL_NAME].channel.on('ChannelMessage', (...args) => {
+    this.channels[this.CHANNEL_ID].channel.on('ChannelMessage', (...args) => {
       const message = args.filter((arg) => arg.text)[0];
       this.handlers.onMessage(message.text);
     });
   }
 
-  async login(accountName, token) {
+  async login(accountName) {
     this.accountName = accountName.toString();
-    return this.client.login({ uid: this.accountName, token });
+    return this.client.login({ uid: this.accountName, token: this.rtmToken });
   }
 
   async joinChannel(name) {
@@ -62,7 +68,7 @@ export default class Rtm extends EventEmitter {
   }
 
   async getMembers() {
-    return this.channels[CHANNEL_NAME].channel.getMembers().then((userList) => {
+    return this.channels[this.CHANNEL_ID].channel.getMembers().then((userList) => {
       if (userList !== this.users) {
         return userList;
       }
@@ -73,13 +79,12 @@ export default class Rtm extends EventEmitter {
     return JSON.stringify({
       subject,
       userId,
-      token:
-        '00609055eb4141f4ab4809ff8a2302254e9IAD8tvnQu5r8hAlgFGLlmZ8Cre6tU1VvEdKs/WvGmuFU4uAbzEcAAAAAEADOpjO6dw9yXwEAAQB2D3Jf',
+      token: this.rtmToken,
     });
   };
 
   async sendChannelMessage(userId, subject) {
-    return this.channels[CHANNEL_NAME].channel.sendMessage({
+    return this.channels[this.CHANNEL_ID].channel.sendMessage({
       text: this.generateMessage(userId, subject),
     });
   }

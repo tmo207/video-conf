@@ -4,15 +4,13 @@ import styled from 'styled-components/macro';
 
 import { Modal, Hosts, UserList, ControlMenu } from './components';
 
-import { UserContext } from './state';
+import { UserContext, SessionContext } from './state';
 import {
-  CHANNEL_NAME,
   CONTENT_MARGIN,
   MESSAGES,
   ROLES,
-  USER_TOKEN,
-  getIsWaitingRoom,
-  getMainScreen,
+  getUserDetails,
+  getSuperhostId,
   initUser,
   setIsWaitingRoom,
   setMainScreen,
@@ -46,7 +44,7 @@ const WaitingRoomNotice = styled.h1`
 
 const App = ({ rtc, rtm }) => {
   // Host/Admin states
-  const [users, setUsers] = useState([]);
+  const [hosts, setHosts] = useState([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [adminId, setAdminId] = useState();
   const [referentRequests, setReferentRequests] = useState([]);
@@ -56,6 +54,7 @@ const App = ({ rtc, rtm }) => {
   const [rtcLoggedIn, setRtcLoggedIn] = useState(false);
 
   // Common states
+  const { channel_id: channelId, event_id: eventId, token } = useContext(SessionContext);
   const { userId, setUid } = useContext(UserContext);
   const [currentMainId, setLocalMainScreen] = useState(null);
   const [streams, setStreams] = useState([]);
@@ -112,7 +111,14 @@ const App = ({ rtc, rtm }) => {
         setLocalWaitingRoom((waitingroom) => !waitingroom);
         break;
       case ASK_STAGE_ACCESS:
-        setReferentRequests((referents) => [...referents, msg.userId]);
+        getUserDetails({
+          ids: [msg.userId],
+          channelId,
+          eventId,
+          token,
+          callback: (newReferentDetails) =>
+            setReferentRequests((referents) => [...referents, newReferentDetails[0]]),
+        });
         break;
       default:
         break;
@@ -127,16 +133,12 @@ const App = ({ rtc, rtm }) => {
   }, [isWaitingRoom]);
 
   useEffect(() => {
-    fetch('https://agora.service-sample.de/api/test/init/test').then((response) =>
-      response.json().then((data) => {
-        setUsers(data);
-        initUser(USER_TOKEN);
-        getMainScreen({ token: USER_TOKEN, callback: setLocalMainScreen });
-        getIsWaitingRoom({ token: USER_TOKEN, callback: setLocalWaitingRoom });
-        rtc.setUserToken(USER_TOKEN);
-      })
-    );
-  }, []);
+    if (isHost) rtc.publishAndStartStream(userId, userRole);
+  }, [rtcLoggedIn]);
+
+  useEffect(() => {
+    if (userRole === AUDIENCE && currentMainId === userId) setLocalMainScreen(null);
+  }, [userRole]);
 
   const rtmLogin = (uid) => {
     try {
@@ -146,8 +148,8 @@ const App = ({ rtc, rtm }) => {
         setRtmLoggedIn,
       };
       rtm.init(rtmHandlers);
-      rtm.login(uid, null).then(() => {
-        rtm.joinChannel(CHANNEL_NAME).then(() => {
+      rtm.login(uid).then(() => {
+        rtm.joinChannel(channelId).then(() => {
           rtm.subscribeChannelEvents();
         });
       });
@@ -157,7 +159,7 @@ const App = ({ rtc, rtm }) => {
     }
   };
 
-  const startRtc = ({ uid, role }) => {
+  const startRtc = async ({ uid, role }) => {
     const rtcHandlers = {
       setIsPlaying,
       setLocalMainScreen,
@@ -168,21 +170,38 @@ const App = ({ rtc, rtm }) => {
 
     rtc.createClient();
     if (!currentMainId && role === SUPERHOST)
-      setMainScreen(uid).then(() => setLocalMainScreen(uid));
+      setMainScreen({ mainscreen: uid, token, channelId, eventId }).then(() =>
+        setLocalMainScreen(uid)
+      );
     rtc.init(rtcHandlers, () => rtc.join(uid));
-    rtmLogin(uid);
+    if (role === SUPERHOST) rtc.setIsSuperhost(true);
   };
 
   useEffect(() => {
-    if (isHost) rtc.publishAndStartStream(userId, userRole);
-  }, [rtcLoggedIn]);
+    const currentHostIds = streams.map((stream) => stream.streamId);
+    getUserDetails({ ids: currentHostIds, channelId, eventId, token, callback: setHosts });
+  }, [streams]);
 
   useEffect(() => {
-    if (userRole === AUDIENCE && currentMainId === userId) setLocalMainScreen(null);
-  }, [userRole]);
+    const setSessionData = (res) => {
+      setRole(res.user.role);
+      setUid(res.user.id);
+      setLocalWaitingRoom(res.waitingroom);
+      setLocalMainScreen(res.mainscreen);
+      rtc
+        .setRtcToken(res.rtcToken)
+        .then(() => startRtc({ uid: res.user.id, role: res.user.role }))
+        .then(() => {
+          rtm.setRtmToken(null).then(() => rtmLogin(res.user.id)); // TODO use real token
+        });
+    };
+
+    getSuperhostId({ callback: setAdminId, token, channelId, eventId });
+    initUser({ token, callback: setSessionData, channelId, eventId });
+  }, []);
 
   const toggleChannelOpen = () => {
-    setIsWaitingRoom(!isWaitingRoom).then(() => {
+    setIsWaitingRoom({ waitingroom: !isWaitingRoom, channelId, eventId, token }).then(() => {
       setLocalWaitingRoom((waitingroom) => !waitingroom);
       rtm.sendChannelMessage(SUPERHOST, CHANNEL_OPENED);
     });
@@ -195,23 +214,6 @@ const App = ({ rtc, rtm }) => {
 
   return (
     <>
-      {users.length &&
-        !userId &&
-        users.map((currentUser) => (
-          <button
-            key={currentUser.id}
-            style={{ width: '100%', height: 150, margin: '300 40', fontSize: 40 }}
-            type="button"
-            onClick={() => {
-              const currentUid = currentUser.id.toString();
-              setUid(currentUid);
-              setRole(currentUser.role);
-              startRtc({ uid: currentUid, role: currentUser.role });
-            }}
-          >
-            {currentUser.role}
-          </button>
-        ))}
       {userId && (
         <>
           {/* <ToastContainer
@@ -237,6 +239,7 @@ const App = ({ rtc, rtm }) => {
               referentRightsRequested,
               rtc,
               rtm,
+              role: userRole,
               setIsOpen,
               setIsPlaying,
               setModalType,
@@ -258,28 +261,23 @@ const App = ({ rtc, rtm }) => {
               setRole,
             }}
           />
-          {hasAdminRights && (
-            <>
-              {rtmLoggedIn && (
-                <UserList
-                  {...{
-                    currentMainId,
-                    referentRequests,
-                    rtc,
-                    rtm,
-                    setReferentRequests,
-                    streams,
-                    users,
-                  }}
-                />
-              )}
-            </>
+          {hasAdminRights && rtmLoggedIn && (
+            <UserList
+              {...{
+                currentMainId,
+                hosts,
+                referentRequests,
+                rtc,
+                rtm,
+                setReferentRequests,
+              }}
+            />
           )}
           <LayoutGrid>
             {isWaitingRoom && !isHost ? (
               <WaitingRoomNotice>Das Event beginnt in Kürze.</WaitingRoomNotice>
             ) : (
-              <Hosts {...{ streams, users, currentMainId }} />
+              <Hosts {...{ streams, currentMainId }} />
             )}
           </LayoutGrid>
         </>
