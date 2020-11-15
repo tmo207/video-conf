@@ -12,6 +12,7 @@ import {
   initUser,
   setIsWaitingRoom,
   setMainScreen,
+  getUserDetails,
 } from './utils';
 
 const { AUDIENCE, HOST, SUPERHOST } = ROLES;
@@ -181,6 +182,11 @@ const App = ({ rtc, rtm }) => {
   }, []); */
 
   useEffect(() => {
+    const currentHostIds = streams.map((stream) => stream.streamId);
+    getUserDetails({ ids: currentHostIds, channelId, eventId, token, callback: setUsers });
+  }, [streams]);
+
+  useEffect(() => {
     const setSessionData = (res) => {
       setRole(res.user.role);
       setUid(res.user.id);
@@ -276,22 +282,18 @@ const App = ({ rtc, rtm }) => {
               setRole,
             }}
           />
-          {hasAdminRights && (
-            <>
-              {rtmLoggedIn && (
-                <UserList
-                  {...{
-                    currentMainId,
-                    referentRequests,
-                    rtc,
-                    rtm,
-                    setReferentRequests,
-                    streams,
-                    users,
-                  }}
-                />
-              )}
-            </>
+          {hasAdminRights && rtmLoggedIn && (
+            <UserList
+              {...{
+                currentMainId,
+                referentRequests,
+                rtc,
+                rtm,
+                setReferentRequests,
+                streams,
+                users,
+              }}
+            />
           )}
           <LayoutGrid>
             {isWaitingRoom && !isHost ? (

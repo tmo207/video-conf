@@ -142,7 +142,7 @@ export default class Rtc {
       const { stream } = event;
       this.streams = [...this.streams, stream];
       this.handlers.setStreams(this.streams);
-      const streamId = stream.getId(); // Same value as uid. Turning into string because ID of DOM elements can only be strings.
+      const streamId = stream.getId();
       stream.play(`video-${streamId}`);
     });
 

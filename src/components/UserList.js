@@ -139,11 +139,13 @@ export const UserList = ({
   const [show, setShow] = useState(false);
   const [hosts, setHosts] = useState([]);
 
+  const hasUsers = (users && !!users.length) || false;
+
   useEffect(() => {
     const currentHostIds = streams.map((stream) => stream.streamId);
-    const hostsWithName = getFullUserDetails({ ids: currentHostIds, users });
+    const hostsWithName = hasUsers && getFullUserDetails({ ids: currentHostIds, users });
     setHosts(hostsWithName);
-  }, [streams]);
+  }, [streams, users]);
 
   const promoteUserToHost = (peerId) => {
     const isYourself = peerId === userId;
@@ -179,7 +181,7 @@ export const UserList = ({
 
   const getMembers = () => {
     rtm.getMembers().then((members) => {
-      const usersWithName = getFullUserDetails({ ids: members, users });
+      const usersWithName = hasUsers && getFullUserDetails({ ids: members, users });
       setUsersInList(usersWithName);
     });
   };
@@ -187,7 +189,7 @@ export const UserList = ({
   const toggleList = () => {
     rtm.subscribeChannelEvents(getMembers);
     rtm.getMembers().then((members) => {
-      const usersWithName = getFullUserDetails({ ids: members, users });
+      const usersWithName = hasUsers && getFullUserDetails({ ids: members, users });
       setUsersInList(usersWithName);
       setShow((prevShow) => !prevShow);
     });
@@ -256,11 +258,11 @@ export const UserList = ({
                   const hostId = host.id.toString();
                   const isCurrentMain = hostId === currentMainId;
                   const isYourself = hostId === userId;
-                  if (inSearchResults(host.username)) {
+                  if (inSearchResults(host.name)) {
                     return (
                       <UserContainer index={index} key={hostId}>
                         <UserName>
-                          {host.username}
+                          {host.name}
                           {isYourself && ' (du)'}
                         </UserName>
                         <UserActionContainer>
@@ -289,9 +291,12 @@ export const UserList = ({
                     );
                   }
                 })}
-                {!!referentRequests.length && <h2>Referent-Anfragen</h2>}
+                {!!referentRequests.length && (
+                  <h2 className="RequestsHeadline">Referent-Anfragen</h2>
+                )}
                 {referentRequests.map((user, index) => {
-                  const { username } = getFullUserDetails({ ids: [user], users })[0];
+                  const { name: username } =
+                    hasUsers && getFullUserDetails({ ids: [user], users })[0];
                   return (
                     <UserContainer index={index} key={user}>
                       <UserName>{username}</UserName>

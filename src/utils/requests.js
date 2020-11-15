@@ -74,6 +74,24 @@ export const setIsWaitingRoom = async ({ waitingroom, channelId, eventId, token 
   });
 };
 
+export const getUserDetails = async ({ ids, channelId, eventId, token, callback }) => {
+  const url = `${baseUrl}/api/users/${eventId}/${channelId}`;
+  const body = JSON.stringify({ ids: [...ids] });
+  await fetch(url, {
+    method: 'POST',
+    headers: new Headers({
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    }),
+    body,
+  }).then((response) =>
+    response.json().then((details) => {
+      callback(details);
+      return details;
+    })
+  );
+};
+
 export const getReferents = async ({ callback, token, channelId, eventId }) => {
   const url = `${baseUrl}/api/referent/${eventId}/${channelId}`;
   await fetch(url, {
