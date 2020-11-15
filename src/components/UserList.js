@@ -149,8 +149,8 @@ export const UserList = ({
 
   const promoteUserToHost = (peerId) => {
     const isYourself = peerId === userId;
-    const promoteYourselfToHost = (currentMainScreen) => {
-      if (!currentMainScreen) {
+    const promoteYourselfToHost = ({ mainscreen }) => {
+      if (!mainscreen) {
         rtc.setMainScreen(userId);
         rtm.sendChannelMessage(userId, MAIN_SCREEN_UPDATED);
       }
