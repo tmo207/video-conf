@@ -170,19 +170,6 @@ const App = ({ rtc, rtm }) => {
     if (role === SUPERHOST) rtc.setIsSuperhost(true);
   };
 
-  /* useEffect(() => {
-    fetch('https://agora.service-sample.de/api/test/init/test').then((response) =>
-      response.json().then((data) => {
-        setUsers(data);
-        initUser(USER_TOKEN);
-        getMainScreen({ token: USER_TOKEN, callback: setLocalMainScreen });
-        getIsWaitingRoom({ token: USER_TOKEN, callback: setLocalWaitingRoom });
-        rtc.setUserToken(USER_TOKEN);
-       
-      })
-    );
-  }, []); */
-
   useEffect(() => {
     const currentHostIds = streams.map((stream) => stream.streamId);
     getUserDetails({ ids: currentHostIds, channelId, eventId, token, callback: setUsers });
@@ -220,23 +207,6 @@ const App = ({ rtc, rtm }) => {
 
   return (
     <>
-      {/* {users.length &&
-        !userId &&
-        users.map((currentUser) => (
-          <button
-            key={currentUser.id}
-            style={{ width: '100%', height: 150, margin: '300 40', fontSize: 40 }}
-            type="button"
-            onClick={() => {
-              const currentUid = currentUser.id.toString();
-              setUid(currentUid);
-              setRole(currentUser.role);
-              startRtc({ uid: currentUid, role: currentUser.role });
-            }}
-          >
-            {currentUser.role}
-          </button>
-        ))} */}
       {userId && (
         <>
           {/* <ToastContainer
