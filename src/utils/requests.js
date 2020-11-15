@@ -86,7 +86,7 @@ export const getUserDetails = async ({ ids, channelId, eventId, token, callback 
     body,
   }).then((response) =>
     response.json().then((details) => {
-      callback(details);
+      if (callback) callback(details);
       return details;
     })
   );

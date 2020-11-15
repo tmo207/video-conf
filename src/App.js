@@ -44,7 +44,7 @@ const WaitingRoomNotice = styled.h1`
 
 const App = ({ rtc, rtm }) => {
   // Host/Admin states
-  const [users, setUsers] = useState([]);
+  const [hosts, setHosts] = useState([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [adminId, setAdminId] = useState();
   const [referentRequests, setReferentRequests] = useState([]);
@@ -111,7 +111,14 @@ const App = ({ rtc, rtm }) => {
         setLocalWaitingRoom((waitingroom) => !waitingroom);
         break;
       case ASK_STAGE_ACCESS:
-        setReferentRequests((referents) => [...referents, msg.userId]);
+        getUserDetails({
+          ids: [msg.userId],
+          channelId,
+          eventId,
+          token,
+          callback: (newReferentDetails) =>
+            setReferentRequests((referents) => [...referents, newReferentDetails[0]]),
+        });
         break;
       default:
         break;
@@ -172,7 +179,7 @@ const App = ({ rtc, rtm }) => {
 
   useEffect(() => {
     const currentHostIds = streams.map((stream) => stream.streamId);
-    getUserDetails({ ids: currentHostIds, channelId, eventId, token, callback: setUsers });
+    getUserDetails({ ids: currentHostIds, channelId, eventId, token, callback: setHosts });
   }, [streams]);
 
   useEffect(() => {
@@ -258,12 +265,11 @@ const App = ({ rtc, rtm }) => {
             <UserList
               {...{
                 currentMainId,
+                hosts,
                 referentRequests,
                 rtc,
                 rtm,
                 setReferentRequests,
-                streams,
-                users,
               }}
             />
           )}
@@ -271,7 +277,7 @@ const App = ({ rtc, rtm }) => {
             {isWaitingRoom && !isHost ? (
               <WaitingRoomNotice>Das Event beginnt in Kürze.</WaitingRoomNotice>
             ) : (
-              <Hosts {...{ streams, users, currentMainId }} />
+              <Hosts {...{ streams, currentMainId }} />
             )}
           </LayoutGrid>
         </>

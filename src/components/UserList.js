@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useContext } from 'react';
 import styled from 'styled-components/macro';
 
 import { UserContext, SessionContext } from '../state';
@@ -16,8 +16,8 @@ import {
   PlusIcon,
   ROLES,
   StageIcon,
-  getFullUserDetails,
   getMainScreen,
+  getUserDetails,
 } from '../utils';
 
 const {
@@ -122,12 +122,11 @@ const UserActionItem = styled.button.attrs((props) => ({
 
 export const UserList = ({
   currentMainId,
+  hosts,
   referentRequests,
   rtc,
   rtm,
   setReferentRequests,
-  streams,
-  users,
 }) => {
   const { channel_id: channelId, event_id: eventId, token } = useContext(SessionContext);
   const { userId } = useContext(UserContext);
@@ -137,15 +136,6 @@ export const UserList = ({
   const [searchValue, setSearchValue] = useState('');
   const [usersInList, setUsersInList] = useState([]);
   const [show, setShow] = useState(false);
-  const [hosts, setHosts] = useState([]);
-
-  const hasUsers = (users && !!users.length) || false;
-
-  useEffect(() => {
-    const currentHostIds = streams.map((stream) => stream.streamId);
-    const hostsWithName = hasUsers && getFullUserDetails({ ids: currentHostIds, users });
-    setHosts(hostsWithName);
-  }, [streams, users]);
 
   const promoteUserToHost = (peerId) => {
     const isYourself = peerId === userId;
@@ -181,16 +171,14 @@ export const UserList = ({
 
   const getMembers = () => {
     rtm.getMembers().then((members) => {
-      const usersWithName = hasUsers && getFullUserDetails({ ids: members, users });
-      setUsersInList(usersWithName);
+      getUserDetails({ ids: members, channelId, eventId, token, callback: setUsersInList });
     });
   };
 
   const toggleList = () => {
     rtm.subscribeChannelEvents(getMembers);
     rtm.getMembers().then((members) => {
-      const usersWithName = hasUsers && getFullUserDetails({ ids: members, users });
-      setUsersInList(usersWithName);
+      getUserDetails({ ids: members, channelId, eventId, token, callback: setUsersInList });
       setShow((prevShow) => !prevShow);
     });
   };
@@ -296,10 +284,9 @@ export const UserList = ({
                   <>
                     <h2 className="RequestsHeadline">Referent-Anfragen</h2>
                     {referentRequests.map((user, index) => {
-                      const details = hasUsers && getFullUserDetails({ ids: [user], users })[0];
-                      const name = details && details.name;
+                      const { name, id } = user;
                       return (
-                        <UserContainer index={index} key={user}>
+                        <UserContainer index={index} key={id}>
                           <UserName>{name}</UserName>
                           <UserActionContainer>
                             <UserActionItem
@@ -311,7 +298,7 @@ export const UserList = ({
                                 );
                                 setReferentRequests(newRefs);
                                 rtm.sendPeerMessage({
-                                  to: user,
+                                  to: id,
                                   from: userId,
                                   subject: HOST_REQUEST_ACCEPTED,
                                 });
@@ -328,7 +315,7 @@ export const UserList = ({
                                 );
                                 setReferentRequests(newRefs);
                                 rtm.sendPeerMessage({
-                                  to: user,
+                                  to: id,
                                   from: userId,
                                   subject: HOST_REQUEST_DECLINED,
                                 });
