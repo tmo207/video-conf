@@ -107,14 +107,14 @@ export default class Rtc {
     return this.localstream;
   }
 
-  async setMainScreen(uid) {
+  async setMainScreen(mainscreen) {
     setMainScreen({
-      mainscreen: uid,
+      mainscreen,
       token: this.userToken,
       channelId: this.channelId,
       eventId: this.eventId,
     });
-    this.handlers.setLocalMainScreen(uid);
+    this.handlers.setLocalMainScreen(mainscreen);
   }
 
   subscribeToStreamEvents() {

@@ -92,6 +92,22 @@ export const getUserDetails = async ({ ids, channelId, eventId, token, callback 
   );
 };
 
+export const getSuperhostId = async ({ callback, token, channelId, eventId }) => {
+  const url = `${baseUrl}/api/superhost/${eventId}/${channelId}`;
+  await fetch(url, {
+    method: 'GET',
+    headers: new Headers({
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    }),
+  }).then((response) =>
+    response.json().then(({ superhost }) => {
+      if (callback) callback(superhost);
+      return superhost;
+    })
+  );
+};
+
 export const getReferents = async ({ callback, token, channelId, eventId }) => {
   const url = `${baseUrl}/api/referent/${eventId}/${channelId}`;
   await fetch(url, {

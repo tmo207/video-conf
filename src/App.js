@@ -9,10 +9,11 @@ import {
   CONTENT_MARGIN,
   MESSAGES,
   ROLES,
+  getUserDetails,
+  getSuperhostId,
   initUser,
   setIsWaitingRoom,
   setMainScreen,
-  getUserDetails,
 } from './utils';
 
 const { AUDIENCE, HOST, SUPERHOST } = ROLES;
@@ -200,7 +201,7 @@ const App = ({ rtc, rtm }) => {
         });
     };
 
-    // setUsers(data);
+    getSuperhostId({ callback: setAdminId, token, channelId, eventId });
     initUser({ token, callback: setSessionData, channelId, eventId });
   }, []);
 

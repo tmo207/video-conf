@@ -151,7 +151,7 @@ export const UserList = ({
     const isYourself = peerId === userId;
     const promoteYourselfToHost = (currentMainScreen) => {
       if (!currentMainScreen) {
-        rtc.setMainScreen({ mainscreen: userId, channelId, eventId, token });
+        rtc.setMainScreen(userId);
         rtm.sendChannelMessage(userId, MAIN_SCREEN_UPDATED);
       }
       rtc.publishAndStartStream(userId, SUPERHOST);
@@ -162,19 +162,19 @@ export const UserList = ({
   };
 
   const promoteHostOnStage = (hostId) => {
-    rtc.setMainScreen({ mainscreen: hostId, channelId, eventId, token });
+    rtc.setMainScreen(hostId);
     rtm.sendChannelMessage(hostId, MAIN_SCREEN_UPDATED);
   };
 
   const degradeMainToHost = () => {
-    rtc.setMainScreen({ mainscreen: null, channelId, eventId, token });
+    rtc.setMainScreen(null);
     rtm.sendChannelMessage(NO_MAIN_SCREEN, MAIN_SCREEN_UPDATED);
   };
 
   const removeHost = (hostId) => {
     rtm.removeHost(hostId);
     if (currentMainId === hostId) {
-      rtc.setMainScreen({ mainscreen: null, channelId, eventId, token });
+      rtc.setMainScreen(null);
       rtm.sendChannelMessage(NO_MAIN_SCREEN, MAIN_SCREEN_UPDATED);
     }
   };
