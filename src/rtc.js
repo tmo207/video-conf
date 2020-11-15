@@ -1,18 +1,21 @@
 import AgoraRTC from 'agora-rtc-sdk';
-import { APP_ID, CHANNEL_NAME, ROLES, SCREEN_SHARE, getMainScreen, setMainScreen } from './utils';
+import { ROLES, SCREEN_SHARE, getMainScreen, setMainScreen } from './utils';
 
 const { AUDIENCE, HOST, SUPERHOST } = ROLES;
 
 const onError = (error) => console.log('Error:', error);
 
 export default class Rtc {
-  constructor() {
+  constructor({ APP_ID, CHANNEL_ID, EVENT_ID, USER_TOKEN }) {
+    this.appId = APP_ID;
+    this.channelId = CHANNEL_ID;
+    this.eventId = EVENT_ID;
     this.streams = [];
-    this.token = '';
+    this.userToken = USER_TOKEN;
   }
 
-  setUserToken(userToken) {
-    this.token = userToken;
+  async setRtcToken(rtcToken) {
+    this.rtcToken = rtcToken;
   }
 
   createClient() {
@@ -23,7 +26,7 @@ export default class Rtc {
   init(handlers, callback) {
     this.handlers = handlers;
     this.client.init(
-      APP_ID,
+      this.appId,
       () => {
         this.subscribeToStreamEvents();
         if (callback) callback();
@@ -34,8 +37,8 @@ export default class Rtc {
 
   join(uid) {
     this.client.join(
-      null, // tokenOrKey: Token or Channel Key
-      CHANNEL_NAME, // channelId
+      this.rtcToken, // tokenOrKey: Token or Channel Key
+      this.channelId, // channelId
       uid, // User specific ID. Type: Number or string, must be the same type for all users
       (id) => {
         this.handlers.setRtcLoggedIn(true);
@@ -47,7 +50,9 @@ export default class Rtc {
 
   async removeStream(uid) {
     getMainScreen({
-      token: this.token,
+      eventId: this.eventId,
+      channelId: this.channelId,
+      token: this.userToken,
       callback: (currentMainScreen) =>
         currentMainScreen === uid && this.handlers.setLocalMainScreen(null),
     });
@@ -92,7 +97,7 @@ export default class Rtc {
       case HOST:
       case SUPERHOST:
         defaultConfig.video = true;
-        defaultConfig.audio = true;
+        defaultConfig.audio = false; // TURN TRUE TODO
         break;
       default:
       case AUDIENCE:
@@ -103,7 +108,12 @@ export default class Rtc {
   }
 
   async setMainScreen(uid) {
-    setMainScreen(uid);
+    setMainScreen({
+      mainscreen: uid,
+      token: this.userToken,
+      channelId: this.channelId,
+      eventId: this.eventId,
+    });
     this.handlers.setLocalMainScreen(uid);
   }
 
@@ -123,7 +133,12 @@ export default class Rtc {
 
     // Here we are receiving the remote stream
     this.client.on('stream-subscribed', (event) => {
-      getMainScreen({ callback: this.handlers.setLocalMainScreen, token: this.token });
+      getMainScreen({
+        callback: this.handlers.setLocalMainScreen,
+        token: this.userToken,
+        eventId: this.eventId,
+        channelId: this.channelId,
+      });
       const { stream } = event;
       this.streams = [...this.streams, stream];
       this.handlers.setStreams(this.streams);

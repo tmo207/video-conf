@@ -31,13 +31,13 @@ const RequestRightsText = styled.p`
 `;
 
 export const ControlMenu = ({
-  adminId,
   currentMainId,
   isPlaying,
   isWaitingRoom,
   localstream,
   onRequestReferentRights,
   referentRightsRequested,
+  role,
   rtc,
   setIsOpen,
   setModalType,
@@ -48,10 +48,10 @@ export const ControlMenu = ({
       {isPlaying && (
         <ReferentMenuItems
           {...{
-            adminId,
             currentMainId,
             isWaitingRoom,
             localstream,
+            role,
             rtc,
             setIsOpen,
             setModalType,

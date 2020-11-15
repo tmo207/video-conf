@@ -2,7 +2,7 @@ import { useContext } from 'react';
 import ReactModal from 'react-modal';
 import styled from 'styled-components/macro';
 
-import { UserContext } from '../state';
+import { UserContext, SessionContext } from '../state';
 
 import { ControlItem, GREEN, HANGUP, MESSAGES, RED, ROLES, HangUpIcon, VideoIcon } from '../utils';
 
@@ -70,6 +70,7 @@ export const Modal = ({
   setLocalWaitingRoom,
   setRole,
 }) => {
+  const { channel_id: channelId, event_id: eventId, token } = useContext(SessionContext);
   const { userId } = useContext(UserContext);
 
   const acceptHostInvitation = () => {
@@ -81,7 +82,9 @@ export const Modal = ({
 
   const acceptHangUp = () => {
     if (userId === currentMainId) {
-      rtc.setMainScreen(null).then(() => rtc.removeStream(userId));
+      rtc
+        .setMainScreen({ mainscreen: null, channelId, eventId, token })
+        .then(() => rtc.removeStream(userId));
       rtm.sendChannelMessage(NO_MAIN_SCREEN, MAIN_SCREEN_UPDATED);
     } else {
       rtc.removeStream(userId);

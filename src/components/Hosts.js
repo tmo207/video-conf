@@ -1,7 +1,7 @@
 import styled from 'styled-components/macro';
 import PropTypes from 'prop-types';
 
-import { BORDER_RADIUS, HOST_VIDEO_WIDTH, getFullUserDetails, withBorder } from '../utils';
+import { BORDER_RADIUS, HOST_VIDEO_WIDTH, withBorder } from '../utils';
 
 const Host = styled.div`
   ${withBorder}
@@ -67,12 +67,12 @@ export const Hosts = ({ streams, currentMainId, users }) => {
     <HostsContainer>
       {streams.map((stream) => {
         const { streamId } = stream;
-        const name = getFullUserDetails({ ids: [streamId], users })[0].username;
+        // const name = getFullUserDetails({ ids: [streamId], users })[0].username;
         const isMain = currentMainId === streamId;
         return (
           <Container key={streamId} isMain={isMain} id={`container-${streamId}`}>
             <Host id={`video-${streamId}`}>
-              <HostName isMain={isMain}>{name}</HostName>
+              {/* <HostName isMain={isMain}>{name}</HostName> */}
             </Host>
           </Container>
         );

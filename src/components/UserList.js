@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import styled from 'styled-components/macro';
 
-import { UserContext } from '../state';
+import { UserContext, SessionContext } from '../state';
 
 import {
   BLACK,
@@ -10,7 +10,6 @@ import {
   ControlItem,
   GREEN,
   GridItemSmall,
-  HOST_TOKEN,
   MESSAGES,
   MenuIcon,
   MinusIcon,
@@ -130,6 +129,7 @@ export const UserList = ({
   streams,
   users,
 }) => {
+  const { channel_id: channelId, event_id: eventId, token } = useContext(SessionContext);
   const { userId } = useContext(UserContext);
 
   // showUsersWithRole types = audience | host;
@@ -149,30 +149,30 @@ export const UserList = ({
     const isYourself = peerId === userId;
     const promoteYourselfToHost = (currentMainScreen) => {
       if (!currentMainScreen) {
-        rtc.setMainScreen(userId);
+        rtc.setMainScreen({ mainscreen: userId, channelId, eventId, token });
         rtm.sendChannelMessage(userId, MAIN_SCREEN_UPDATED);
       }
       rtc.publishAndStartStream(userId, SUPERHOST);
     };
 
-    if (isYourself) getMainScreen({ callback: promoteYourselfToHost, token: HOST_TOKEN });
+    if (isYourself) getMainScreen({ callback: promoteYourselfToHost, token, channelId, eventId });
     else rtm.sendPeerMessage({ to: peerId, from: userId, subject: HOST_INVITE });
   };
 
   const promoteHostOnStage = (hostId) => {
-    rtc.setMainScreen(hostId);
+    rtc.setMainScreen({ mainscreen: hostId, channelId, eventId, token });
     rtm.sendChannelMessage(hostId, MAIN_SCREEN_UPDATED);
   };
 
   const degradeMainToHost = () => {
-    rtc.setMainScreen(null);
+    rtc.setMainScreen({ mainscreen: null, channelId, eventId, token });
     rtm.sendChannelMessage(NO_MAIN_SCREEN, MAIN_SCREEN_UPDATED);
   };
 
   const removeHost = (hostId) => {
     rtm.removeHost(hostId);
     if (currentMainId === hostId) {
-      rtc.setMainScreen(null);
+      rtc.setMainScreen({ mainscreen: null, channelId, eventId, token });
       rtm.sendChannelMessage(NO_MAIN_SCREEN, MAIN_SCREEN_UPDATED);
     }
   };
