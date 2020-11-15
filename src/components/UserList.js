@@ -227,23 +227,23 @@ export const UserList = ({
             </ListTypeContainer>
             <UserSearchInput type="text" placeholder="Suchen..." onChange={onChange} />
             {showAudience &&
+              usersInList &&
               usersInList.map((user, index) => {
-                const uid = user.id.toString();
-                const { username } = user;
-                const isYourself = uid === userId;
-                const isAudience = !hosts.includes(user);
-                if (isAudience && inSearchResults(username)) {
+                const { name, id } = user;
+                const isYourself = id === userId;
+                const isAudience = !hosts || (hosts && !hosts.some((host) => host.id === id));
+                if (isAudience && inSearchResults(name)) {
                   return (
-                    <UserContainer index={index} key={uid}>
+                    <UserContainer index={index} key={id}>
                       <UserName>
-                        {username}
+                        {name}
                         {isYourself && ' (du)'}
                       </UserName>
                       <UserActionContainer>
                         <UserActionItem
                           className="promoteUser"
                           type="button"
-                          onClick={() => promoteUserToHost(uid)}
+                          onClick={() => promoteUserToHost(id)}
                         >
                           {PlusIcon}
                         </UserActionItem>
@@ -254,91 +254,94 @@ export const UserList = ({
               })}
             {showHosts && (
               <>
-                {hosts.map((host, index) => {
-                  const hostId = host.id.toString();
-                  const isCurrentMain = hostId === currentMainId;
-                  const isYourself = hostId === userId;
-                  if (inSearchResults(host.name)) {
-                    return (
-                      <UserContainer index={index} key={hostId}>
-                        <UserName>
-                          {host.name}
-                          {isYourself && ' (du)'}
-                        </UserName>
-                        <UserActionContainer>
-                          <UserActionItem
-                            className="onStage"
-                            isActive={isCurrentMain}
-                            type="button"
-                            onClick={() => {
-                              if (isCurrentMain) degradeMainToHost();
-                              else promoteHostOnStage(hostId);
-                            }}
-                          >
-                            <StageIcon isActive={isCurrentMain} />
-                          </UserActionItem>
-                          {!isYourself && (
+                {hosts &&
+                  hosts.map((host, index) => {
+                    const { name, id } = host;
+                    const isCurrentMain = id === currentMainId;
+                    const isYourself = id === userId;
+                    if (inSearchResults(name)) {
+                      return (
+                        <UserContainer index={index} key={id}>
+                          <UserName>
+                            {name}
+                            {isYourself && ' (du)'}
+                          </UserName>
+                          <UserActionContainer>
                             <UserActionItem
-                              className="removeHost"
+                              className="onStage"
+                              isActive={isCurrentMain}
                               type="button"
-                              onClick={() => removeHost(hostId)}
+                              onClick={() => {
+                                if (isCurrentMain) degradeMainToHost();
+                                else promoteHostOnStage(id);
+                              }}
+                            >
+                              <StageIcon isActive={isCurrentMain} />
+                            </UserActionItem>
+                            {!isYourself && (
+                              <UserActionItem
+                                className="removeHost"
+                                type="button"
+                                onClick={() => removeHost(id)}
+                              >
+                                {MinusIcon}
+                              </UserActionItem>
+                            )}
+                          </UserActionContainer>
+                        </UserContainer>
+                      );
+                    }
+                  })}
+                {!!referentRequests.length && (
+                  <>
+                    <h2 className="RequestsHeadline">Referent-Anfragen</h2>
+                    {referentRequests.map((user, index) => {
+                      const details = hasUsers && getFullUserDetails({ ids: [user], users })[0];
+                      const name = details && details.name;
+                      return (
+                        <UserContainer index={index} key={user}>
+                          <UserName>{name}</UserName>
+                          <UserActionContainer>
+                            <UserActionItem
+                              className="acceptRequest"
+                              type="button"
+                              onClick={() => {
+                                const newRefs = referentRequests.filter(
+                                  (referent) => referent !== user
+                                );
+                                setReferentRequests(newRefs);
+                                rtm.sendPeerMessage({
+                                  to: user,
+                                  from: userId,
+                                  subject: HOST_REQUEST_ACCEPTED,
+                                });
+                              }}
+                            >
+                              {PlusIcon}
+                            </UserActionItem>
+                            <UserActionItem
+                              className="declineRequest"
+                              type="button"
+                              onClick={() => {
+                                const newRefs = referentRequests.filter(
+                                  (referent) => referent !== user
+                                );
+                                setReferentRequests(newRefs);
+                                rtm.sendPeerMessage({
+                                  to: user,
+                                  from: userId,
+                                  subject: HOST_REQUEST_DECLINED,
+                                });
+                              }}
                             >
                               {MinusIcon}
                             </UserActionItem>
-                          )}
-                        </UserActionContainer>
-                      </UserContainer>
-                    );
-                  }
-                })}
-                {!!referentRequests.length && (
-                  <h2 className="RequestsHeadline">Referent-Anfragen</h2>
+                          </UserActionContainer>
+                        </UserContainer>
+                      );
+                    })}
+                  </>
                 )}
-                {referentRequests.map((user, index) => {
-                  const { name: username } =
-                    hasUsers && getFullUserDetails({ ids: [user], users })[0];
-                  return (
-                    <UserContainer index={index} key={user}>
-                      <UserName>{username}</UserName>
-                      <UserActionContainer>
-                        <UserActionItem
-                          className="acceptRequest"
-                          type="button"
-                          onClick={() => {
-                            const newRefs = referentRequests.filter(
-                              (referent) => referent !== user
-                            );
-                            setReferentRequests(newRefs);
-                            rtm.sendPeerMessage({
-                              to: user,
-                              from: userId,
-                              subject: HOST_REQUEST_ACCEPTED,
-                            });
-                          }}
-                        >
-                          {PlusIcon}
-                        </UserActionItem>
-                        <UserActionItem
-                          className="declineRequest"
-                          type="button"
-                          onClick={() => {
-                            const newRefs = referentRequests.filter(
-                              (referent) => referent !== user
-                            );
-                            setReferentRequests(newRefs);
-                            rtm.sendPeerMessage({
-                              to: user,
-                              from: userId,
-                              subject: HOST_REQUEST_DECLINED,
-                            });
-                          }}
-                        >
-                          {MinusIcon}
-                        </UserActionItem>
-                      </UserActionContainer>
-                    </UserContainer>
-                  );
-                })}
               </>
             )}
           </Content>

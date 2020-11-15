@@ -167,6 +167,7 @@ const App = ({ rtc, rtm }) => {
         setLocalMainScreen(uid)
       );
     rtc.init(rtcHandlers, () => rtc.join(uid));
+    if (role === SUPERHOST) rtc.setIsSuperhost(true);
   };
 
   /* useEffect(() => {

@@ -12,10 +12,15 @@ export default class Rtc {
     this.eventId = EVENT_ID;
     this.streams = [];
     this.userToken = USER_TOKEN;
+    this.isSuperhost = false;
   }
 
   async setRtcToken(rtcToken) {
     this.rtcToken = rtcToken;
+  }
+
+  async setIsSuperhost(isSuperhost) {
+    this.isSuperhost = isSuperhost;
   }
 
   createClient() {
@@ -97,7 +102,7 @@ export default class Rtc {
       case HOST:
       case SUPERHOST:
         defaultConfig.video = true;
-        defaultConfig.audio = false; // TURN TRUE TODO
+        defaultConfig.audio = true;
         break;
       default:
       case AUDIENCE:
@@ -123,7 +128,7 @@ export default class Rtc {
     });
 
     this.client.on('client-role-changed', (event) => {
-      if (event.role === AUDIENCE) this.handlers.setRole(AUDIENCE);
+      if (event.role === AUDIENCE && !this.isSuperhost) this.handlers.setRole(AUDIENCE);
     });
 
     this.client.on('stream-added', (event) => {
