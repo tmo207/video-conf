@@ -69,7 +69,8 @@ export const Hosts = ({ streams, currentMainId, users }) => {
     <HostsContainer>
       {streams.map((stream) => {
         const { streamId } = stream;
-        const name = hasUsers && getFullUserDetails({ ids: [streamId], users })[0].name;
+        const details = hasUsers && getFullUserDetails({ ids: [streamId], users })[0];
+        const name = details && details.name;
         const isMain = currentMainId === streamId;
         return (
           <Container key={streamId} isMain={isMain} id={`container-${streamId}`}>
