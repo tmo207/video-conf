@@ -76,10 +76,10 @@ export default class Rtc {
     const stream = this.createStream(uid, role);
     // Toast für cant access media, you need to allow camera, mic
     stream.init(() => {
-      this.client.publish(stream, onError);
       this.streams = [...this.streams, stream];
       this.handlers.setStreams(this.streams);
       stream.play(`video-${stream.streamId}`);
+      this.client.publish(stream, onError);
       this.handlers.setIsPlaying(true);
     }, onError);
   }
