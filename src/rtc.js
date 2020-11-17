@@ -74,13 +74,13 @@ export default class Rtc {
 
   publishAndStartStream(uid, role) {
     const stream = this.createStream(uid, role);
-    // Toast für cant access media, you need to allow camera, mic
+    // Toast für cant access media, you need to allow camera, mic TODO
     stream.init(() => {
       this.streams = [...this.streams, stream];
       this.handlers.setStreams(this.streams);
+      this.handlers.setIsPlaying(true);
       stream.play(`video-${stream.streamId}`);
       this.client.publish(stream, onError);
-      this.handlers.setIsPlaying(true);
     }, onError);
   }
 

@@ -74,10 +74,10 @@ export const Modal = ({
   const { userId } = useContext(UserContext);
 
   const acceptHostInvitation = () => {
-    if (isWaitingRoom) setLocalWaitingRoom(false);
     setRole(HOST);
     rtc.publishAndStartStream(userId, HOST);
     rtm.sendPeerMessage({ to: adminId, from: userId, subject: HOST_INVITE_ACCEPTED });
+    if (isWaitingRoom) setLocalWaitingRoom(false);
   };
 
   const acceptHangUp = () => {
