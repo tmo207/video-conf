@@ -49,7 +49,7 @@ export default class Rtc {
         this.handlers.setRtcLoggedIn(true);
         console.log('JOINED CHANNEL with', id);
       },
-      onError
+      (error) => console.log('join error:', error)
     );
   }
 
@@ -75,13 +75,16 @@ export default class Rtc {
   publishAndStartStream(uid, role) {
     const stream = this.createStream(uid, role);
     // Toast für cant access media, you need to allow camera, mic TODO
-    stream.init(() => {
-      this.streams = [...this.streams, stream];
-      this.handlers.setStreams(this.streams);
-      this.handlers.setIsPlaying(true);
-      stream.play(`video-${stream.streamId}`);
-      this.client.publish(stream, onError);
-    }, onError);
+    stream.init(
+      () => {
+        this.streams = [...this.streams, stream];
+        this.handlers.setStreams(this.streams);
+        this.handlers.setIsPlaying(true);
+        stream.play(`video-${stream.streamId}`);
+        this.client.publish(stream, (error) => console.log('stream publish Error:', error));
+      },
+      (error) => console.log('stream init Error:', error)
+    );
   }
 
   createStream(uid, attendeeMode) {
@@ -133,7 +136,7 @@ export default class Rtc {
 
     this.client.on('stream-added', (event) => {
       const { stream } = event;
-      this.client.subscribe(stream, onError);
+      this.client.subscribe(stream, (error) => console.log('stream added Error:', error));
     });
 
     // Here we are receiving the remote stream
