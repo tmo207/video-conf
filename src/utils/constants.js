@@ -3,7 +3,9 @@ export const ROLES = {
   HOST: 'referent',
   AUDIENCE: 'audience',
 };
-export const SCREEN_SHARE = 'screen-share';
+
+export const SCREEN_SHARE = 'screenshare';
+export const SCREEN_CLIENT = 'screenclient';
 
 export const HANGUP = 'hangup';
 

@@ -52,7 +52,6 @@ const App = ({ rtc, rtm }) => {
   const [modalIsOpen, setIsOpen] = useState(false);
   const [modalType, setModalType] = useState(); // Types: host | stage | hangup
   const [rtmLoggedIn, setRtmLoggedIn] = useState(false);
-  const [rtcLoggedIn, setRtcLoggedIn] = useState(false);
 
   // Common states
   const { channel_id: channelId, event_id: eventId, token } = useContext(SessionContext);
@@ -102,7 +101,7 @@ const App = ({ rtc, rtm }) => {
         setRole(HOST);
         setReferentRightsRequested(false);
         forceReload();
-        rtc.publishAndStartStream(userId, HOST);
+        rtc.publishAndStartStream({ uid: userId, role: HOST });
         break;
       case HOST_REQUEST_DECLINED:
         setReferentRightsRequested(false);
@@ -112,7 +111,7 @@ const App = ({ rtc, rtm }) => {
         break;
       case REMOVE_AS_HOST:
         rtc.removeStream(msg.userId);
-        rtc.client.unpublish(rtc.localstream);
+        rtc.unpublishAll();
         setIsPlaying(false);
         break;
       case CHANNEL_OPENED:
@@ -157,7 +156,6 @@ const App = ({ rtc, rtm }) => {
       setIsPlaying,
       setLocalMainScreen,
       setRole,
-      setRtcLoggedIn,
       setStreams,
     };
 
@@ -166,7 +164,7 @@ const App = ({ rtc, rtm }) => {
       setMainScreen({ mainscreen: uid, token, channelId, eventId }).then(() =>
         setLocalMainScreen(uid)
       );
-    rtc.init(rtcHandlers, () => rtc.join(uid));
+    rtc.init(rtcHandlers, () => rtc.join(uid, role));
     if (role === SUPERHOST) rtc.setIsSuperhost(true);
   };
 
@@ -191,49 +189,53 @@ const App = ({ rtc, rtm }) => {
     };
 
     getSuperhostId({ callback: setAdminId, token, channelId, eventId });
-    initUser({ token, callback: setSessionData, channelId, eventId });
+    // initUser({ token, callback: setSessionData, channelId, eventId });
 
     // Mocking to choose user role during development
     //
-    // const mockUser = (role) => {
-    //   const roles = {
-    //     s: {
-    //       user: {
-    //         role: SUPERHOST,
-    //         id: '13',
-    //       },
-    //       waitingroom: true,
-    //       mainscreen: getSuperhostId({ token, channelId, eventId }),
-    //       rtcToken: null,
-    //     },
-    //     a: {
-    //       user: {
-    //         role: AUDIENCE,
-    //         id: '99',
-    //       },
-    //       waitingroom: true,
-    //       mainscreen: getSuperhostId({ token, channelId, eventId }),
-    //       rtcToken: null,
-    //     },
-    //     r: {
-    //       user: {
-    //         role: HOST,
-    //         id: '107',
-    //       },
-    //       waitingroom: true,
-    //       mainscreen: getSuperhostId({ token, channelId, eventId }),
-    //       rtcToken: null,
-    //     },
-    //   };
-    //   return roles[role];
-    // };
-    // if (!userRole) setSessionData(mockUser(window.prompt()));
+    const mockUser = (role) => {
+      const roles = {
+        s: {
+          user: {
+            role: SUPERHOST,
+            id: '13',
+          },
+          waitingroom: true,
+          mainscreen: getSuperhostId({ token, channelId, eventId }),
+          rtcToken: null,
+        },
+        a: {
+          user: {
+            role: AUDIENCE,
+            id: '99',
+          },
+          waitingroom: true,
+          mainscreen: getSuperhostId({ token, channelId, eventId }),
+          rtcToken: null,
+        },
+        r: {
+          user: {
+            role: HOST,
+            id: '107',
+          },
+          waitingroom: true,
+          mainscreen: getSuperhostId({ token, channelId, eventId }),
+          rtcToken: null,
+        },
+      };
+      return roles[role];
+    };
+    if (!userRole) setSessionData(mockUser(window.prompt()));
   }, []);
 
   useEffect(() => {
     if (!isHost && isWaitingRoom) streams.map((stream) => stream.stop());
     if (!isWaitingRoom || (isWaitingRoom && isHost)) forceReload();
   }, [isWaitingRoom]);
+
+  useEffect(() => {
+    forceReload();
+  }, [currentMainId]);
 
   useEffect(() => {
     if (!isPlaying) getIsWaitingRoom({ callback: setLocalWaitingRoom, channelId, eventId, token });
@@ -243,10 +245,6 @@ const App = ({ rtc, rtm }) => {
     const currentHostIds = streams.map((stream) => stream.streamId);
     getUserDetails({ ids: currentHostIds, channelId, eventId, token, callback: setHosts });
   }, [streams]);
-
-  useEffect(() => {
-    if (isHost) rtc.publishAndStartStream(userId, userRole);
-  }, [rtcLoggedIn]);
 
   useEffect(() => {
     if (userRole === AUDIENCE && currentMainId === userId) setLocalMainScreen(null);
@@ -288,11 +286,9 @@ const App = ({ rtc, rtm }) => {
               currentMainId,
               isPlaying,
               isWaitingRoom,
-              localstream: rtc.localstream,
               onRequestReferentRights,
               referentRightsRequested,
               rtc,
-              rtm,
               role: userRole,
               setIsOpen,
               setIsPlaying,

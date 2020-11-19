@@ -1,8 +1,8 @@
-import { useContext, useState } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Switch from '@material-ui/core/Switch';
 
-import { UserContext } from '../state';
+import { UserContext, SessionContext } from '../state';
 
 import {
   AudioIcon,
@@ -10,6 +10,7 @@ import {
   HANGUP,
   HangUpIcon,
   ROLES,
+  SCREEN_CLIENT,
   SCREEN_SHARE,
   ScreenIcon,
   VideoIcon,
@@ -30,7 +31,6 @@ const OpenChannelText = styled.p`
 export const ReferentMenuItems = ({
   currentMainId,
   isWaitingRoom,
-  localstream,
   rtc,
   role,
   setIsOpen,
@@ -38,11 +38,21 @@ export const ReferentMenuItems = ({
   toggleChannelOpen,
 }) => {
   const { userId } = useContext(UserContext);
+  const { app_id: APP_ID, channel_id: CHANNEL_ID } = useContext(SessionContext);
+  const { localstream } = rtc;
+
   const [hasVideo, setHasVideo] = useState(localstream.hasVideo());
   const [hasAudio, setHasAudio] = useState(localstream.hasAudio());
   const [hasScreen, setHasScreen] = useState(false);
 
   const isMainScreen = userId === currentMainId;
+
+  useEffect(() => {
+    rtc.createClient(SCREEN_CLIENT);
+    rtc[SCREEN_CLIENT].init(APP_ID, () =>
+      rtc[SCREEN_CLIENT].join(rtc.rtcToken, CHANNEL_ID, SCREEN_SHARE)
+    );
+  }, []);
 
   const onHangUp = () => {
     setModalType(HANGUP);
@@ -71,19 +81,15 @@ export const ReferentMenuItems = ({
 
   const onScreen = () => {
     if (hasScreen) {
-      const newStream = rtc.createStream(userId, SUPERHOST);
-      newStream.init(() => {
-        const newVideoTrack = newStream.getVideoTrack();
-        localstream.replaceTrack(newVideoTrack);
-        setHasScreen(false);
-      });
+      rtc[SCREEN_CLIENT].unpublish(rtc[SCREEN_SHARE]);
+      setHasScreen(false);
     } else {
-      const newStream = rtc.createStream(userId, SCREEN_SHARE);
-      newStream.init(() => {
-        const newVideoTrack = newStream.getVideoTrack();
-        localstream.replaceTrack(newVideoTrack);
-        setHasScreen(true);
+      rtc.publishAndStartStream({
+        uid: SCREEN_SHARE,
+        role: SCREEN_SHARE,
+        clientType: SCREEN_CLIENT,
       });
+      setHasScreen(true);
     }
   };
 

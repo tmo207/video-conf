@@ -1,5 +1,5 @@
 import AgoraRTC from 'agora-rtc-sdk';
-import { ROLES, SCREEN_SHARE, getMainScreen, setMainScreen } from './utils';
+import { ROLES, SCREEN_CLIENT, SCREEN_SHARE, getMainScreen, setMainScreen } from './utils';
 
 const { AUDIENCE, HOST, SUPERHOST } = ROLES;
 
@@ -23,30 +23,32 @@ export default class Rtc {
     this.isSuperhost = isSuperhost;
   }
 
-  createClient() {
-    this.client = AgoraRTC.createClient({ mode: 'live', codec: 'vp8' });
-    return this.client;
+  createClient(clientType) {
+    const client = clientType || 'client';
+    this[client] = AgoraRTC.createClient({ mode: 'live', codec: 'vp8' });
+    return this[client];
   }
 
-  init(handlers, callback) {
-    this.handlers = handlers;
+  init(handlers, onSuccess) {
+    if (handlers) this.handlers = handlers;
     this.client.init(
       this.appId,
       () => {
         this.subscribeToStreamEvents();
-        if (callback) callback();
+        if (onSuccess) onSuccess();
       },
       () => console.log('failed to initialize')
     );
   }
 
-  join(uid) {
+  join(uid, role) {
     this.client.join(
       this.rtcToken, // tokenOrKey: Token or Channel Key
       this.channelId, // channelId
-      uid, // User specific ID. Type: Number or string, must be the same type for all users
+      uid,
       (id) => {
-        this.handlers.setRtcLoggedIn(true);
+        const isHost = role === SUPERHOST || role === HOST;
+        if (isHost) this.publishAndStartStream(id, role);
         console.log('JOINED CHANNEL with', id);
       },
       (error) => console.log('join error:', error)
@@ -72,7 +74,8 @@ export default class Rtc {
     });
   }
 
-  publishAndStartStream(uid, role, cameraId) {
+  publishAndStartStream({ uid, role, clientType, cameraId }) {
+    const client = clientType || 'client';
     const stream = this.createStream(uid, role, cameraId);
     // Toast für cant access media, you need to allow camera, mic TODO
     stream.init(
@@ -81,10 +84,15 @@ export default class Rtc {
         this.handlers.setStreams(this.streams);
         this.handlers.setIsPlaying(true);
         stream.play(`video-${stream.streamId}`);
-        this.client.publish(stream, (error) => console.log('stream publish Error:', error));
+        this[client].publish(stream, (error) => console.log('stream publish Error:', error));
       },
       (error) => console.log('stream init Error:', error)
     );
+  }
+
+  unpublishAll() {
+    this.client.unpublish(this.localstream);
+    if (this[SCREEN_SHARE]) this[SCREEN_CLIENT].unpublish(this[SCREEN_SHARE]);
   }
 
   createStream(uid, attendeeMode, cameraId = '') {
@@ -99,21 +107,26 @@ export default class Rtc {
 
     switch (attendeeMode) {
       case SCREEN_SHARE:
+        defaultConfig.streamID = SCREEN_SHARE;
         defaultConfig.screen = true;
-        // defaultConfig.screenAudio = true;
+        defaultConfig.screenAudio = true;
         defaultConfig.video = false;
+        defaultConfig.audio = false;
         break;
       case HOST:
       case SUPERHOST:
         defaultConfig.video = true;
-        defaultConfig.audio = true;
+        defaultConfig.audio = false; // TODO CHANGE
         break;
       default:
       case AUDIENCE:
         break;
     }
-    this.localstream = AgoraRTC.createStream(defaultConfig);
-    return this.localstream;
+
+    const isScreenShare = attendeeMode === SCREEN_SHARE;
+    const streamType = isScreenShare ? SCREEN_SHARE : 'localstream';
+    this[streamType] = AgoraRTC.createStream(defaultConfig);
+    return this[streamType];
   }
 
   async setMainScreen(mainscreen) {
@@ -137,7 +150,13 @@ export default class Rtc {
 
     this.client.on('stream-added', (event) => {
       const { stream } = event;
-      this.client.subscribe(stream, (error) => console.log('stream added Error:', error));
+      const { streamId } = stream;
+
+      // Prevent subscribing to own streams (https://docs.agora.io/en/Interactive%20Broadcast/screensharing_web?platform=Android#both:~:text=Agora%20recommends%20that%20you%20save%20the,do%20not%20subscribe%20to%20any%20stream.)
+      const localstreamsIds = this.streams.map((localstream) => localstream.streamId);
+      if (!localstreamsIds.includes(streamId)) {
+        this.client.subscribe(stream, (error) => console.log('stream added Error:', error));
+      }
     });
 
     // Here we are receiving the remote stream

@@ -68,7 +68,7 @@ export const Modal = ({
 
   const acceptHostInvitation = () => {
     setRole(HOST);
-    rtc.publishAndStartStream(userId, HOST);
+    rtc.publishAndStartStream({ uid: userId, role: HOST });
     rtm.sendPeerMessage({ to: adminId, from: userId, subject: HOST_INVITE_ACCEPTED });
     if (isWaitingRoom) setLocalWaitingRoom(false);
   };
@@ -83,7 +83,7 @@ export const Modal = ({
       rtc.removeStream(userId);
     }
     setIsPlaying(false);
-    rtc.client.unpublish(rtc.localstream);
+    rtc.unpublishAll();
   };
 
   const isHostInvitation = modalType === HOST;

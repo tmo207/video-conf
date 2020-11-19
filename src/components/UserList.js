@@ -144,7 +144,7 @@ export const UserList = ({
         rtc.setMainScreen(userId);
         rtm.sendChannelMessage(userId, MAIN_SCREEN_UPDATED);
       }
-      rtc.publishAndStartStream(userId, SUPERHOST);
+      rtc.publishAndStartStream({ uid: userId, role: SUPERHOST });
     };
 
     if (isYourself) getMainScreen({ callback: promoteYourselfToHost, token, channelId, eventId });

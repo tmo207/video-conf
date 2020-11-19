@@ -1,16 +1,31 @@
 import { useContext, useState, useEffect } from 'react';
-import styled from 'styled-components/macro';
+import styled, { css } from 'styled-components/macro';
 import PropTypes from 'prop-types';
 
 import { SessionContext } from '../state';
 
-import { BORDER_RADIUS, HOST_VIDEO_WIDTH, getUserDetails, withBorder } from '../utils';
+import {
+  BORDER_RADIUS,
+  HOST_VIDEO_WIDTH,
+  SCREEN_SHARE,
+  getUserDetails,
+  withBorder,
+} from '../utils';
+
+const HostWithScreenShare = css`
+  position: absolute;
+  z-index: 1;
+  bottom: 10px;
+  right: 10px;
+`;
 
 const Host = styled.div`
   ${withBorder}
   margin: 0 5px;
   text-align: center;
   position: relative;
+  width: ${(props) => (props.hasScreenShare ? '15%' : '100%')};
+  ${(props) => props.hasScreenShare && HostWithScreenShare}
 
   & > div {
     ${BORDER_RADIUS}
@@ -54,20 +69,16 @@ const Container = styled.div.attrs((props) => ({
   className: props.isMain ? 'main' : '',
 }))`
   width: ${(props) => (props.isMain ? '100%' : HOST_VIDEO_WIDTH)};
-  order: ${(props) => (props.isMain ? 1 : 2)};
   max-height: ${(props) => (props.isMain ? '55vh' : '15vh')};
+  position: relative;
   display: flex;
   justify-content: center;
   margin-bottom: 5px;
-
-  & > div {
-    width: 100%;
-  }
 `;
 
 const HostName = ({ isMain, id }) => {
   const { channel_id: channelId, event_id: eventId, token } = useContext(SessionContext);
-  const [details, setDetails] = useState('');
+  const [details, setDetails] = useState([]);
 
   useEffect(() => {
     getUserDetails({
@@ -79,23 +90,39 @@ const HostName = ({ isMain, id }) => {
     });
   }, [id]);
 
-  if (details) return <HostNameWrapper isMain={isMain}>{details[0].name}</HostNameWrapper>;
+  if (details && details[0]) {
+    const { name } = details[0];
+    return <HostNameWrapper isMain={isMain}>{name}</HostNameWrapper>;
+  }
   return null;
 };
 
 export const Hosts = ({ streams, currentMainId }) => {
+  const mainStream = streams.filter((stream) => stream.streamId === currentMainId)[0];
+  const screenStream = streams.filter((stream) => stream.streamId.includes(SCREEN_SHARE))[0];
+
   return (
     <HostsContainer>
+      {mainStream && (
+        <Container isMain key={mainStream.streamId} id={`container-${mainStream.streamId}`}>
+          <Host hasScreenShare={!!screenStream} id={`video-${mainStream.streamId}`}>
+            <HostName id={mainStream.streamId} />
+          </Host>
+          {screenStream && <Host id={`video-${screenStream.streamId}`} />}
+        </Container>
+      )}
       {streams.map((stream) => {
         const { streamId } = stream;
-        const isMain = currentMainId === streamId;
-        return (
-          <Container key={streamId} isMain={isMain} id={`container-${streamId}`}>
-            <Host id={`video-${streamId}`}>
-              <HostName isMain={isMain} id={streamId} />
-            </Host>
-          </Container>
-        );
+        const isReferent = currentMainId !== streamId && streamId !== SCREEN_SHARE;
+        if (isReferent) {
+          return (
+            <Container key={streamId} id={`container-${streamId}`}>
+              <Host id={`video-${streamId}`}>
+                <HostName id={streamId} />
+              </Host>
+            </Container>
+          );
+        }
       })}
     </HostsContainer>
   );

@@ -34,7 +34,6 @@ export const ControlMenu = ({
   currentMainId,
   isPlaying,
   isWaitingRoom,
-  localstream,
   onRequestReferentRights,
   referentRightsRequested,
   role,
@@ -50,7 +49,6 @@ export const ControlMenu = ({
           {...{
             currentMainId,
             isWaitingRoom,
-            localstream,
             role,
             rtc,
             setIsOpen,
