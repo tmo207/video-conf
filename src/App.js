@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import styled from 'styled-components/macro';
 // import { ToastContainer, toast } from 'react-toastify';
 
-import { Modal, Hosts, UserList, ControlMenu } from './components';
+import { Modal, Hosts, UserList, ControlMenu, ChangeCamera } from './components';
 
 import { UserContext, SessionContext } from './state';
 import {
@@ -281,6 +281,7 @@ const App = ({ rtc, rtm }) => {
             closeButton={false}
             draggable={false}
           /> */}
+          {isPlaying && <ChangeCamera {...{ role: userRole, rtc }} />}
           <ControlMenu
             {...{
               adminId,
