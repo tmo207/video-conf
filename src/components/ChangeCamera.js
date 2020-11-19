@@ -3,9 +3,10 @@ import styled from 'styled-components';
 import AgoraRTC from 'agora-rtc-sdk';
 
 const Container = styled.div`
+  position: absolute;
   display: flex;
   flex-direction: column;
-  margin: 5rem 0;
+  top: 5rem;
   width: fit-content;
 `;
 
