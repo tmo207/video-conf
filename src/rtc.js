@@ -1,5 +1,7 @@
 import AgoraRTC from 'agora-rtc-sdk';
-import { ROLES, SCREEN_CLIENT, SCREEN_SHARE, getMainScreen, setMainScreen } from './utils';
+
+import { ROLES, SCREEN_CLIENT, SCREEN_SHARE } from './utils/constants';
+import { getMainScreen, setMainScreen } from './utils/requests';
 
 const { AUDIENCE, HOST, SUPERHOST } = ROLES;
 

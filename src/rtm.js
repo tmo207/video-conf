@@ -1,7 +1,7 @@
 import AgoraRTM from 'agora-rtm-sdk';
 import EventEmitter from 'events';
 
-import { MESSAGES } from './utils';
+import { MESSAGES } from './utils/constants';
 
 const { REMOVE_AS_HOST } = MESSAGES;
 

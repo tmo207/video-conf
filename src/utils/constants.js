@@ -1,3 +1,5 @@
+export const global = {};
+
 export const ROLES = {
   SUPERHOST: 'superhost',
   HOST: 'referent',

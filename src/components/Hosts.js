@@ -2,14 +2,9 @@ import { useState, useEffect } from 'react';
 import styled, { css } from 'styled-components/macro';
 import PropTypes from 'prop-types';
 
-import {
-  BORDER_RADIUS,
-  HOST_VIDEO_WIDTH,
-  SCREEN_SHARE,
-  getUserDetails,
-  global,
-  withBorder,
-} from '../utils';
+import { global, SCREEN_SHARE } from '../utils/constants';
+import { getUserDetails } from '../utils/requests';
+import { BORDER_RADIUS, HOST_VIDEO_WIDTH, withBorder } from '../utils/styles';
 
 const HostWithScreenShare = css`
   position: absolute;

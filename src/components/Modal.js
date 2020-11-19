@@ -4,17 +4,9 @@ import styled from 'styled-components/macro';
 
 import { UserContext } from '../state';
 
-import {
-  ControlItem,
-  GREEN,
-  HANGUP,
-  MESSAGES,
-  RED,
-  ROLES,
-  HangUpIcon,
-  VideoIcon,
-  modalStyle,
-} from '../utils';
+import { global, HANGUP, MESSAGES, ROLES } from '../utils/constants';
+import { HangUpIcon, VideoIcon } from '../utils/icons';
+import { ControlItem, GREEN, RED, modalStyle } from '../utils/styles';
 
 const { HOST } = ROLES;
 const {

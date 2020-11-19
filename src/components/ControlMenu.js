@@ -3,7 +3,7 @@ import Switch from '@material-ui/core/Switch';
 
 import { ReferentMenuItems } from './ReferentMenuItems';
 
-import { ControlItem } from '../utils';
+import { ControlItem } from '../utils/styles';
 
 const ControlMenuContainer = styled.div`
   z-index: 1000;

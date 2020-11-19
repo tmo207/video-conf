@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import styled from 'styled-components/macro';
 // import { ToastContainer, toast } from 'react-toastify';
 
@@ -6,17 +6,16 @@ import { Modal, Hosts, UserList, ControlMenu, ChangeInput } from './components';
 
 import { UserContext } from './state';
 
+import { MESSAGES, ROLES, global } from './utils/constants';
 import {
-  CONTENT_MARGIN,
-  MESSAGES,
-  ROLES,
   getIsWaitingRoom,
   getSuperhostId,
   getUserDetails,
   initUser,
   setIsWaitingRoom,
   setMainScreen,
-} from './utils';
+} from './utils/requests';
+import { CONTENT_MARGIN } from './utils/styles';
 
 const { AUDIENCE, HOST, SUPERHOST } = ROLES;
 const {

@@ -3,22 +3,10 @@ import styled from 'styled-components/macro';
 
 import { UserContext } from '../state';
 
-import {
-  BLACK,
-  CONTENT_MARGIN,
-  CloseIcon,
-  ControlItem,
-  GREEN,
-  GridItemSmall,
-  MESSAGES,
-  MenuIcon,
-  MinusIcon,
-  PlusIcon,
-  ROLES,
-  StageIcon,
-  getMainScreen,
-  getUserDetails,
-} from '../utils';
+import { MESSAGES, ROLES, global } from '../utils/constants';
+import { CloseIcon, MenuIcon, MinusIcon, PlusIcon, StageIcon } from '../utils/icons';
+import { getMainScreen, getUserDetails } from '../utils/requests';
+import { BLACK, CONTENT_MARGIN, ControlItem, GREEN, GridItemSmall } from '../utils/styles';
 
 const {
   HOST_INVITE,

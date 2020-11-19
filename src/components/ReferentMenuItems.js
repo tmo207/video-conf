@@ -4,17 +4,9 @@ import Switch from '@material-ui/core/Switch';
 
 import { UserContext } from '../state';
 
-import {
-  AudioIcon,
-  ControlItem,
-  HANGUP,
-  HangUpIcon,
-  ROLES,
-  SCREEN_CLIENT,
-  SCREEN_SHARE,
-  ScreenIcon,
-  VideoIcon,
-} from '../utils';
+import { global, HANGUP, ROLES, SCREEN_CLIENT, SCREEN_SHARE } from '../utils/constants';
+import { AudioIcon, HangUpIcon, ScreenIcon, VideoIcon } from '../utils/icons';
+import { ControlItem } from '../utils/styles';
 
 const { SUPERHOST } = ROLES;
 
