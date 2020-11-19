@@ -72,8 +72,8 @@ export default class Rtc {
     });
   }
 
-  publishAndStartStream(uid, role) {
-    const stream = this.createStream(uid, role);
+  publishAndStartStream(uid, role, cameraId) {
+    const stream = this.createStream(uid, role, cameraId);
     // Toast für cant access media, you need to allow camera, mic TODO
     stream.init(
       () => {
@@ -87,13 +87,14 @@ export default class Rtc {
     );
   }
 
-  createStream(uid, attendeeMode) {
+  createStream(uid, attendeeMode, cameraId = '') {
     const defaultConfig = {
       streamID: uid,
       audio: false,
       video: false,
       screen: false,
       screenAudio: false,
+      cameraId,
     };
 
     switch (attendeeMode) {
