@@ -2,7 +2,7 @@ import { useContext } from 'react';
 import ReactModal from 'react-modal';
 import styled from 'styled-components/macro';
 
-import { UserContext, SessionContext } from '../state';
+import { UserContext } from '../state';
 
 import {
   ControlItem,
@@ -63,8 +63,8 @@ export const Modal = ({
   setLocalWaitingRoom,
   setRole,
 }) => {
-  const { channel_id: channelId, event_id: eventId, token } = useContext(SessionContext);
   const { userId } = useContext(UserContext);
+  const { channelId, eventId, token } = global;
 
   const acceptHostInvitation = () => {
     setRole(HOST);

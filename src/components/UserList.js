@@ -1,7 +1,7 @@
-import { useState, useContext } from 'react';
+import { useContext, useState } from 'react';
 import styled from 'styled-components/macro';
 
-import { UserContext, SessionContext } from '../state';
+import { UserContext } from '../state';
 
 import {
   BLACK,
@@ -128,8 +128,8 @@ export const UserList = ({
   rtm,
   setReferentRequests,
 }) => {
-  const { channel_id: channelId, event_id: eventId, token } = useContext(SessionContext);
   const { userId } = useContext(UserContext);
+  const { channelId, eventId, token } = global;
 
   // showUsersWithRole types = audience | host;
   const [showUsersWithRole, setShowUsersWithRole] = useState(AUDIENCE);

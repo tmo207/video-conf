@@ -1,8 +1,8 @@
-import { useContext, useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import styled from 'styled-components';
 import Switch from '@material-ui/core/Switch';
 
-import { UserContext, SessionContext } from '../state';
+import { UserContext } from '../state';
 
 import {
   AudioIcon,
@@ -38,7 +38,7 @@ export const ReferentMenuItems = ({
   toggleChannelOpen,
 }) => {
   const { userId } = useContext(UserContext);
-  const { app_id: APP_ID, channel_id: CHANNEL_ID } = useContext(SessionContext);
+  const { appId, channelId } = global;
   const { localstream } = rtc;
 
   const [hasVideo, setHasVideo] = useState(localstream.hasVideo());
@@ -49,8 +49,8 @@ export const ReferentMenuItems = ({
 
   useEffect(() => {
     rtc.createClient(SCREEN_CLIENT);
-    rtc[SCREEN_CLIENT].init(APP_ID, () =>
-      rtc[SCREEN_CLIENT].join(rtc.rtcToken, CHANNEL_ID, SCREEN_SHARE)
+    rtc[SCREEN_CLIENT].init(appId, () =>
+      rtc[SCREEN_CLIENT].join(rtc.rtcToken, channelId, SCREEN_SHARE)
     );
   }, []);
 

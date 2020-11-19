@@ -6,16 +6,16 @@ import { MESSAGES } from './utils';
 const { REMOVE_AS_HOST } = MESSAGES;
 
 export default class Rtm extends EventEmitter {
-  constructor({ APP_ID, CHANNEL_ID }) {
+  constructor({ appId, channelId }) {
     super();
     this.channels = {};
-    this.APP_ID = APP_ID;
-    this.CHANNEL_ID = CHANNEL_ID;
+    this.appId = appId;
+    this.channelId = channelId;
   }
 
   init(handlers) {
     this.handlers = handlers;
-    this.client = AgoraRTM.createInstance(this.APP_ID);
+    this.client = AgoraRTM.createInstance(this.appId);
   }
 
   async setRtmToken(token) {
@@ -40,14 +40,14 @@ export default class Rtm extends EventEmitter {
   subscribeChannelEvents(handler) {
     const memberEvents = ['MemberJoined', 'MemberLeft'];
     memberEvents.forEach((eventName) => {
-      this.channels[this.CHANNEL_ID].channel.on(eventName, (...args) => {
+      this.channels[this.channelId].channel.on(eventName, (...args) => {
         this.getMembers();
         if (handler) handler();
-        this.emit(eventName, { CHANNEL_ID: this.CHANNEL_ID, args });
+        this.emit(eventName, { CHANNEL_ID: this.channelId, args });
       });
     });
 
-    this.channels[this.CHANNEL_ID].channel.on('ChannelMessage', (...args) => {
+    this.channels[this.channelId].channel.on('ChannelMessage', (...args) => {
       const message = args.filter((arg) => arg.text)[0];
       this.handlers.onMessage(message.text);
     });
@@ -68,7 +68,7 @@ export default class Rtm extends EventEmitter {
   }
 
   async getMembers() {
-    return this.channels[this.CHANNEL_ID].channel.getMembers().then((userList) => {
+    return this.channels[this.channelId].channel.getMembers().then((userList) => {
       if (userList !== this.users) {
         return userList;
       }
@@ -84,7 +84,7 @@ export default class Rtm extends EventEmitter {
   };
 
   async sendChannelMessage(userId, subject) {
-    return this.channels[this.CHANNEL_ID].channel.sendMessage({
+    return this.channels[this.channelId].channel.sendMessage({
       text: this.generateMessage(userId, subject),
     });
   }

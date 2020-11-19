@@ -4,7 +4,8 @@ import styled from 'styled-components/macro';
 
 import { Modal, Hosts, UserList, ControlMenu, ChangeInput } from './components';
 
-import { UserContext, SessionContext } from './state';
+import { UserContext } from './state';
+
 import {
   CONTENT_MARGIN,
   MESSAGES,
@@ -54,7 +55,6 @@ const App = ({ rtc, rtm }) => {
   const [rtmLoggedIn, setRtmLoggedIn] = useState(false);
 
   // Common states
-  const { channel_id: channelId, event_id: eventId, token } = useContext(SessionContext);
   const { userId, setUid } = useContext(UserContext);
   const [currentMainId, setLocalMainScreen] = useState(null);
   const [streams, setStreams] = useState([]);
@@ -62,6 +62,7 @@ const App = ({ rtc, rtm }) => {
   const [isWaitingRoom, setLocalWaitingRoom] = useState(true); // Serverseitig
   const [referentRightsRequested, setReferentRightsRequested] = useState(false);
 
+  const { channelId, eventId, token } = global;
   const hasAdminRights = userRole === SUPERHOST;
   const isHost = userRole === SUPERHOST || userRole === HOST;
 

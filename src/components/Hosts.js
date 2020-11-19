@@ -1,14 +1,13 @@
-import { useContext, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import styled, { css } from 'styled-components/macro';
 import PropTypes from 'prop-types';
-
-import { SessionContext } from '../state';
 
 import {
   BORDER_RADIUS,
   HOST_VIDEO_WIDTH,
   SCREEN_SHARE,
   getUserDetails,
+  global,
   withBorder,
 } from '../utils';
 
@@ -77,7 +76,7 @@ const Container = styled.div.attrs((props) => ({
 `;
 
 const HostName = ({ isMain, id }) => {
-  const { channel_id: channelId, event_id: eventId, token } = useContext(SessionContext);
+  const { channelId, eventId, token } = global;
   const [details, setDetails] = useState([]);
 
   useEffect(() => {

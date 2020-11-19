@@ -1,4 +1,5 @@
-import React, { useContext } from 'react';
+/* eslint-disable camelcase */
+import React from 'react';
 import ReactDOM from 'react-dom';
 import { createGlobalStyle } from 'styled-components';
 
@@ -6,7 +7,8 @@ import Rtm from './rtm';
 import Rtc from './rtc';
 import App from './App';
 
-import { defaultSessionContext, useUser, UserContext, SessionContext } from './state';
+import { useUser, UserContext } from './state';
+import { global, defaultSessionContext } from './utils/constants';
 
 const GlobalStyle = createGlobalStyle`
 * {
@@ -28,20 +30,25 @@ const GlobalStyle = createGlobalStyle`
 
 const Context = ({ children }) => {
   const userId = useUser();
-  return (
-    <SessionContext.Provider value={window.XC_AGORA_DATA || defaultSessionContext}>
-      <UserContext.Provider value={userId}>{children}</UserContext.Provider>
-    </SessionContext.Provider>
-  );
+  return <UserContext.Provider value={userId}>{children}</UserContext.Provider>;
 };
 
 const Agora = () => {
-  const { app_id: APP_ID, channel_id: CHANNEL_ID, event_id: EVENT_ID, token } = useContext(
-    SessionContext
-  );
+  const { app_id, channel_id, channel_typ, event_id, token } =
+    window.XC_AGORA_DATA || defaultSessionContext;
+  global.appId = app_id;
+  global.channelId = channel_id;
+  global.channelType = channel_typ;
+  global.eventId = event_id;
+  global.token = token;
 
-  const rtc = new Rtc({ APP_ID, CHANNEL_ID, EVENT_ID, USER_TOKEN: token });
-  const rtm = new Rtm({ APP_ID, CHANNEL_ID });
+  const rtc = new Rtc({
+    appId: app_id,
+    channelId: channel_id,
+    eventId: event_id,
+    userToken: token,
+  });
+  const rtm = new Rtm({ appId: app_id, channelId: channel_id });
   return <App rtc={rtc} rtm={rtm} />;
 };
 

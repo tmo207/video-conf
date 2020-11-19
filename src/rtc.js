@@ -6,12 +6,12 @@ const { AUDIENCE, HOST, SUPERHOST } = ROLES;
 const onError = (error) => console.log('Error:', error);
 
 export default class Rtc {
-  constructor({ APP_ID, CHANNEL_ID, EVENT_ID, USER_TOKEN }) {
-    this.appId = APP_ID;
-    this.channelId = CHANNEL_ID;
-    this.eventId = EVENT_ID;
+  constructor({ appId, channelId, eventId, userToken }) {
+    this.appId = appId;
+    this.channelId = channelId;
+    this.eventId = eventId;
     this.streams = [];
-    this.userToken = USER_TOKEN;
+    this.userToken = userToken;
     this.isSuperhost = false;
   }
 
@@ -112,6 +112,7 @@ export default class Rtc {
         defaultConfig.screenAudio = true;
         defaultConfig.video = false;
         defaultConfig.audio = false;
+        defaultConfig.optimizationMode = 'motion';
         break;
       case HOST:
       case SUPERHOST:
