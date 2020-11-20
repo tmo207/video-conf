@@ -48,7 +48,7 @@ const Agora = () => {
     eventId: event_id,
     userToken: token,
   });
-  const rtm = new Rtm({ appId: app_id, channelId: channel_id });
+  const rtm = new Rtm({ appId: app_id, channelId: channel_id, eventId: event_id, token });
   return <App rtc={rtc} rtm={rtm} />;
 };
 

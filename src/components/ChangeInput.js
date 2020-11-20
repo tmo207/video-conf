@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import ReactModal from 'react-modal';
 import AgoraRTC from 'agora-rtc-sdk';
 
-import { modalStyle } from '../utils/sharedStyles';
+import { modalStyle } from '../utils/styles';
 
 const Container = styled.div`
   position: absolute;

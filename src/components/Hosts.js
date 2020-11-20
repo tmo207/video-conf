@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { memo, useState, useEffect } from 'react';
 import styled, { css } from 'styled-components/macro';
 import PropTypes from 'prop-types';
 
 import { global, SCREEN_SHARE } from '../utils/constants';
+import { makeCancelable } from '../utils/helpers';
 import { getUserDetails } from '../utils/requests';
 import { BORDER_RADIUS, HOST_VIDEO_WIDTH, withBorder } from '../utils/styles';
 
@@ -39,6 +40,7 @@ const HostsContainer = styled.div`
 `;
 
 const HostNameWrapper = styled.span`
+  text-align: center;
   position: absolute;
   bottom: 0;
   left: 50%;
@@ -75,13 +77,16 @@ const HostName = ({ isMain, id }) => {
   const [details, setDetails] = useState([]);
 
   useEffect(() => {
-    getUserDetails({
-      ids: [id],
-      channelId,
-      eventId,
-      token,
-      callback: setDetails,
-    });
+    const request = makeCancelable(
+      getUserDetails({
+        ids: [id],
+        channelId,
+        eventId,
+        token,
+      }).then((response) => setDetails(response))
+    );
+
+    return () => request.cancel();
   }, [id]);
 
   if (details && details[0]) {
@@ -91,18 +96,28 @@ const HostName = ({ isMain, id }) => {
   return null;
 };
 
-export const Hosts = ({ streams, currentMainId }) => {
-  const mainStream = streams.filter((stream) => stream.streamId === currentMainId)[0];
-  const screenStream = streams.filter((stream) => stream.streamId.includes(SCREEN_SHARE))[0];
+export const Hosts = memo(({ streams, currentMainId }) => {
+  const mainStream = streams.filter((stream) => stream && stream.streamId === currentMainId)[0];
+  const screenStream = streams.filter(
+    (stream) => stream && stream.streamId && stream.streamId.includes(SCREEN_SHARE)
+  )[0];
+
+  const forceReload = () =>
+    streams.map((stream) => {
+      const isScreenShare = stream.streamId === SCREEN_SHARE;
+      stream.stop();
+      stream.play(`video-${stream.streamId}`, { fit: isScreenShare ? 'contain' : 'cover' });
+    });
+
+  useEffect(() => forceReload());
 
   return (
     <HostsContainer>
       {mainStream && (
         <Container isMain key={mainStream.streamId} id={`container-${mainStream.streamId}`}>
-          <Host hasScreenShare={!!screenStream} id={`video-${mainStream.streamId}`}>
-            <HostName id={mainStream.streamId} />
-          </Host>
+          <Host hasScreenShare={!!screenStream} id={`video-${mainStream.streamId}`} />
           {screenStream && <Host id={`video-${screenStream.streamId}`} />}
+          {/* <HostName isMain id={mainStream.streamId} /> */}
         </Container>
       )}
       {streams.map((stream) => {
@@ -111,16 +126,14 @@ export const Hosts = ({ streams, currentMainId }) => {
         if (isReferent) {
           return (
             <Container key={streamId} id={`container-${streamId}`}>
-              <Host id={`video-${streamId}`}>
-                <HostName id={streamId} />
-              </Host>
+              <Host id={`video-${streamId}`}>{/* <HostName id={streamId} /> */}</Host>
             </Container>
           );
         }
       })}
     </HostsContainer>
   );
-};
+});
 
 Hosts.defaultProps = {
   streams: [],

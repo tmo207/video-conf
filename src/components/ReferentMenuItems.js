@@ -1,14 +1,17 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useContext } from 'react';
 import styled from 'styled-components';
 import Switch from '@material-ui/core/Switch';
 
+import { Modal } from './Modal';
+
 import { UserContext } from '../state';
 
-import { global, HANGUP, ROLES, SCREEN_CLIENT, SCREEN_SHARE } from '../utils/constants';
+import { ROLES, SCREEN_CLIENT, SCREEN_SHARE, MESSAGES, global } from '../utils/constants';
 import { AudioIcon, HangUpIcon, ScreenIcon, VideoIcon } from '../utils/icons';
 import { ControlItem } from '../utils/styles';
 
 const { SUPERHOST } = ROLES;
+const { NO_MAIN_SCREEN, MAIN_SCREEN_UPDATED } = MESSAGES;
 
 const OpenChannel = styled(ControlItem)`
   width: fit-content;
@@ -24,32 +27,20 @@ export const ReferentMenuItems = ({
   currentMainId,
   isWaitingRoom,
   rtc,
-  role,
-  setIsOpen,
-  setModalType,
+  rtm,
+  userRole,
   toggleChannelOpen,
 }) => {
   const { userId } = useContext(UserContext);
-  const { appId, channelId } = global;
   const { localstream } = rtc;
+  const { channelId, eventId, token } = global;
 
-  const [hasVideo, setHasVideo] = useState(localstream.hasVideo());
-  const [hasAudio, setHasAudio] = useState(localstream.hasAudio());
+  const [hasVideo, setHasVideo] = useState(localstream && localstream.hasVideo());
+  const [hasAudio, setHasAudio] = useState(localstream && localstream.hasAudio());
   const [hasScreen, setHasScreen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const isMainScreen = userId === currentMainId;
-
-  useEffect(() => {
-    rtc.createClient(SCREEN_CLIENT);
-    rtc[SCREEN_CLIENT].init(appId, () =>
-      rtc[SCREEN_CLIENT].join(rtc.rtcToken, channelId, SCREEN_SHARE)
-    );
-  }, []);
-
-  const onHangUp = () => {
-    setModalType(HANGUP);
-    setIsOpen(true);
-  };
 
   const onVideo = () => {
     if (hasVideo) {
@@ -85,6 +76,23 @@ export const ReferentMenuItems = ({
     }
   };
 
+  const onHangUp = () => {
+    setIsOpen(true);
+  };
+
+  const acceptHangUp = () => {
+    setIsOpen(false);
+    if (userId === currentMainId) {
+      rtc
+        .setMainScreen({ mainscreen: null, channelId, eventId, token })
+        .then(() => rtc.removeStream(userId));
+      rtm.sendChannelMessage(NO_MAIN_SCREEN, MAIN_SCREEN_UPDATED);
+    } else {
+      rtc.removeStream(userId);
+    }
+    rtc.unpublishAll();
+  };
+
   return (
     <>
       <ControlItem className="hangup" red onClick={onHangUp}>
@@ -101,11 +109,24 @@ export const ReferentMenuItems = ({
           {ScreenIcon}
         </ControlItem>
       )}
-      {role === SUPERHOST && (
+      {userRole === SUPERHOST && (
         <OpenChannel isActive={!isWaitingRoom} onClick={toggleChannelOpen}>
           <Switch checked={!isWaitingRoom} color="primary" />
           <OpenChannelText>{isWaitingRoom ? 'Privat' : 'Live'}</OpenChannelText>
         </OpenChannel>
+      )}
+      {isOpen && (
+        <Modal
+          {...{
+            icon: HangUpIcon,
+            headline: 'Bist du dir sicher?',
+            text:
+              'Willst du wirklich aus der Videokonferenz austreten? Dein Platz wird eventuell neu besetzt.',
+            onAccept: acceptHangUp,
+            isOpen,
+            setIsOpen,
+          }}
+        />
       )}
     </>
   );

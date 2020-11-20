@@ -9,8 +9,6 @@ export const ROLES = {
 export const SCREEN_SHARE = 'screenshare';
 export const SCREEN_CLIENT = 'screenclient';
 
-export const HANGUP = 'hangup';
-
 export const MESSAGES = {
   ASK_STAGE_ACCESS: 'ask-stage-access',
   HOST_INVITE: 'host-invitation',

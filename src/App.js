@@ -2,15 +2,15 @@ import { useContext, useState, useEffect } from 'react';
 import styled from 'styled-components/macro';
 // import { ToastContainer, toast } from 'react-toastify';
 
-import { Modal, Hosts, UserList, ControlMenu, ChangeInput } from './components';
+import { RtmModal, Hosts, UserList, ControlMenu, ChangeInput } from './components';
 
 import { UserContext } from './state';
 
-import { MESSAGES, ROLES, global } from './utils/constants';
+import { MESSAGES, ROLES, SCREEN_CLIENT, SCREEN_SHARE, global } from './utils/constants';
+import { VideoIcon } from './utils/icons';
 import {
   getIsWaitingRoom,
   getSuperhostId,
-  getUserDetails,
   initUser,
   setIsWaitingRoom,
   setMainScreen,
@@ -18,17 +18,7 @@ import {
 import { CONTENT_MARGIN } from './utils/styles';
 
 const { AUDIENCE, HOST, SUPERHOST } = ROLES;
-const {
-  ASK_STAGE_ACCESS,
-  HOST_INVITE,
-  // HOST_INVITE_ACCEPTED,
-  // HOST_INVITE_DECLINED,
-  REMOVE_AS_HOST,
-  CHANNEL_OPENED,
-  MAIN_SCREEN_UPDATED,
-  HOST_REQUEST_ACCEPTED,
-  HOST_REQUEST_DECLINED,
-} = MESSAGES;
+const { CHANNEL_OPENED } = MESSAGES;
 
 const LayoutGrid = styled.div`
   display: flex;
@@ -44,100 +34,28 @@ const WaitingRoomNotice = styled.h1`
 `;
 
 const App = ({ rtc, rtm }) => {
+  const { userId, setUid } = useContext(UserContext);
   // Host/Admin states
-  const [hosts, setHosts] = useState([]);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [adminId, setAdminId] = useState();
-  const [referentRequests, setReferentRequests] = useState([]);
-  const [modalIsOpen, setIsOpen] = useState(false);
-  const [modalType, setModalType] = useState(); // Types: host | stage | hangup
   const [rtmLoggedIn, setRtmLoggedIn] = useState(false);
 
   // Common states
-  const { userId, setUid } = useContext(UserContext);
   const [currentMainId, setLocalMainScreen] = useState(null);
   const [streams, setStreams] = useState([]);
-  const [userRole, setRole] = useState(); // Serverseitig
-  const [isWaitingRoom, setLocalWaitingRoom] = useState(true); // Serverseitig
-  const [referentRightsRequested, setReferentRightsRequested] = useState(false);
+  const [userRole, setRole] = useState();
+  const [isWaitingRoom, setLocalWaitingRoom] = useState(true);
 
-  const { channelId, eventId, token } = global;
-  const hasAdminRights = userRole === SUPERHOST;
+  const { appId, channelId, eventId, token } = global;
+  const hasAdminRights = adminId === userId;
   const isHost = userRole === SUPERHOST || userRole === HOST;
-
-  const forceReload = () =>
-    streams.map((stream) => {
-      stream.stop();
-      stream.play(`video-${stream.streamId}`);
-    });
-
-  const onMessage = (message) => {
-    const msg = JSON.parse(message);
-    if (!msg || !msg.subject || !msg.userId) {
-      return false;
-    }
-    switch (msg.subject) {
-      case HOST_INVITE:
-        setModalType(HOST);
-        setIsOpen(true);
-        setAdminId(msg.userId);
-        break;
-      /*  case HOST_INVITE_ACCEPTED:
-        toast(`host invitation accepted from: ${msg.userId}`, {
-          autoClose: 8000,
-          draggable: true,
-          closeOnClick: true,
-        });
-        break;
-      case HOST_INVITE_DECLINED:
-        toast(`host invitation declined from: ${msg.userId}`, {
-          autoClose: 8000,
-          draggable: true,
-          closeOnClick: true,
-        });
-        break; */
-      case HOST_REQUEST_ACCEPTED:
-        if (isWaitingRoom) setLocalWaitingRoom(false);
-        setRole(HOST);
-        setReferentRightsRequested(false);
-        forceReload();
-        rtc.publishAndStartStream({ uid: userId, role: HOST });
-        break;
-      case HOST_REQUEST_DECLINED:
-        setReferentRightsRequested(false);
-        break;
-      case MAIN_SCREEN_UPDATED:
-        setLocalMainScreen(msg.userId);
-        break;
-      case REMOVE_AS_HOST:
-        rtc.removeStream(msg.userId);
-        rtc.unpublishAll();
-        setIsPlaying(false);
-        break;
-      case CHANNEL_OPENED:
-        setLocalWaitingRoom((waitingroom) => !waitingroom);
-        break;
-      case ASK_STAGE_ACCESS:
-        getUserDetails({
-          ids: [msg.userId],
-          channelId,
-          eventId,
-          token,
-          callback: (newReferentDetails) =>
-            setReferentRequests((referents) => [...referents, newReferentDetails[0]]),
-        });
-        break;
-      default:
-        break;
-    }
-  };
 
   const rtmLogin = (uid) => {
     try {
       const rtmHandlers = {
-        onMessage,
-        setIsPlaying,
+        setLocalMainScreen,
+        setLocalWaitingRoom,
         setRtmLoggedIn,
+        setRole,
       };
       rtm.init(rtmHandlers);
       rtm.login(uid).then(() => {
@@ -153,7 +71,6 @@ const App = ({ rtc, rtm }) => {
 
   const startRtc = async ({ uid, role }) => {
     const rtcHandlers = {
-      setIsPlaying,
       setLocalMainScreen,
       setRole,
       setStreams,
@@ -166,6 +83,12 @@ const App = ({ rtc, rtm }) => {
       );
     rtc.init(rtcHandlers, () => rtc.join(uid, role));
     if (role === SUPERHOST) rtc.setIsSuperhost(true);
+
+    // Create screen share client
+    rtc.createClient(SCREEN_CLIENT);
+    rtc[SCREEN_CLIENT].init(appId, () =>
+      rtc[SCREEN_CLIENT].join(rtc.rtcToken, channelId, SCREEN_SHARE)
+    );
   };
 
   // Init user
@@ -188,7 +111,9 @@ const App = ({ rtc, rtm }) => {
         });
     };
 
-    getSuperhostId({ callback: setAdminId, token, channelId, eventId });
+    getSuperhostId({ callback: setAdminId, token, channelId, eventId }).then(({ superhost }) =>
+      setAdminId(superhost)
+    );
     // initUser({ token, callback: setSessionData, channelId, eventId });
 
     // Mocking to choose user role during development
@@ -228,27 +153,18 @@ const App = ({ rtc, rtm }) => {
     if (!userRole) setSessionData(mockUser(window.prompt()));
   }, []);
 
-  useEffect(() => {
-    if (!isHost && isWaitingRoom) streams.map((stream) => stream.stop());
-    if (!isWaitingRoom || (isWaitingRoom && isHost)) forceReload();
-  }, [isWaitingRoom]);
+  // useEffect(() => {
+  //   if (!isHost && isWaitingRoom) streams.map((stream) => stream.stop());
+  // }, [isWaitingRoom]);
 
   useEffect(() => {
-    forceReload();
-  }, [currentMainId]);
-
-  useEffect(() => {
-    if (!isPlaying) getIsWaitingRoom({ callback: setLocalWaitingRoom, channelId, eventId, token });
-  }, [isPlaying]);
-
-  useEffect(() => {
-    const currentHostIds = streams.map((stream) => stream.streamId);
-    getUserDetails({ ids: currentHostIds, channelId, eventId, token, callback: setHosts });
-  }, [streams]);
-
-  useEffect(() => {
-    if (userRole === AUDIENCE && currentMainId === userId) setLocalMainScreen(null);
-    if (userRole === AUDIENCE && !isWaitingRoom) forceReload();
+    const isAudience = userRole === AUDIENCE;
+    if (isAudience && currentMainId === userId) setLocalMainScreen(null);
+    if (isAudience) {
+      rtc.removeStream(userId);
+      rtc.unpublishAll();
+      getIsWaitingRoom({ callback: setLocalWaitingRoom, channelId, eventId, token });
+    }
   }, [userRole]);
 
   const toggleChannelOpen = () => {
@@ -258,9 +174,10 @@ const App = ({ rtc, rtm }) => {
     });
   };
 
-  const onRequestReferentRights = () => {
-    setReferentRightsRequested((rights) => !rights);
-    rtm.sendPeerMessage({ to: adminId, from: userId, subject: MESSAGES.ASK_STAGE_ACCESS });
+  const acceptHostInvitation = () => {
+    setRole(HOST);
+    rtc.publishAndStartStream({ uid: userId, role: HOST });
+    if (isWaitingRoom) setLocalWaitingRoom(false);
   };
 
   return (
@@ -279,47 +196,35 @@ const App = ({ rtc, rtm }) => {
             closeButton={false}
             draggable={false}
           /> */}
-          {isPlaying && <ChangeInput {...{ role: userRole, rtc }} />}
+          {isHost && <ChangeInput {...{ role: userRole, rtc }} />}
           <ControlMenu
             {...{
               adminId,
               currentMainId,
-              isPlaying,
               isWaitingRoom,
-              onRequestReferentRights,
-              referentRightsRequested,
-              rtc,
-              role: userRole,
-              setIsOpen,
-              setIsPlaying,
-              setModalType,
-              toggleChannelOpen,
-            }}
-          />
-          <Modal
-            {...{
-              adminId,
-              currentMainId,
-              isOpen: modalIsOpen,
-              isWaitingRoom,
-              modalType,
               rtc,
               rtm,
-              setIsOpen,
-              setIsPlaying,
-              setLocalWaitingRoom,
-              setRole,
+              toggleChannelOpen,
+              userRole,
+            }}
+          />
+          <RtmModal
+            {...{
+              icon: VideoIcon,
+              headline: 'Konferenz beitreten?',
+              text:
+                'Der Host dieser Konferenz hat dich dazu eingeladen der Konferenz beizutreten. Hierfür werden Mikrofon und deine Kamera aktiviert. Möchtest du beitreten?',
+              onAccept: acceptHostInvitation,
+              rtm,
             }}
           />
           {hasAdminRights && rtmLoggedIn && (
             <UserList
               {...{
                 currentMainId,
-                hosts,
-                referentRequests,
                 rtc,
                 rtm,
-                setReferentRequests,
+                streams,
               }}
             />
           )}

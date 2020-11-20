@@ -28,6 +28,7 @@ export default class Rtc {
   createClient(clientType) {
     const client = clientType || 'client';
     this[client] = AgoraRTC.createClient({ mode: 'live', codec: 'vp8' });
+    console.log({ client });
     return this[client];
   }
 
@@ -50,7 +51,8 @@ export default class Rtc {
       uid,
       (id) => {
         const isHost = role === SUPERHOST || role === HOST;
-        if (isHost) this.publishAndStartStream(id, role);
+        console.log({ isHost, role });
+        if (isHost) this.publishAndStartStream({ uid: id, role });
         console.log('JOINED CHANNEL with', id);
       },
       (error) => console.log('join error:', error)
@@ -58,15 +60,9 @@ export default class Rtc {
   }
 
   async removeStream(uid) {
-    getMainScreen({
-      eventId: this.eventId,
-      channelId: this.channelId,
-      token: this.userToken,
-      callback: (currentMainScreen) =>
-        currentMainScreen === uid && this.handlers.setLocalMainScreen(null),
-    });
     this.streams.map((stream, index) => {
       if (stream.streamId === uid) {
+        stream.stop();
         stream.close();
         const tempList = [...this.streams];
         tempList.splice(index, 1);
@@ -74,9 +70,17 @@ export default class Rtc {
         this.handlers.setStreams(tempList);
       }
     });
+    getMainScreen({
+      eventId: this.eventId,
+      channelId: this.channelId,
+      token: this.userToken,
+      callback: (currentMainScreen) =>
+        currentMainScreen === uid && this.handlers.setLocalMainScreen(null),
+    });
   }
 
   publishAndStartStream({ uid, role, clientType, cameraId }) {
+    const isScreenShare = role === SCREEN_SHARE;
     const client = clientType || 'client';
     const stream = this.createStream(uid, role, cameraId);
     // Toast für cant access media, you need to allow camera, mic TODO
@@ -84,8 +88,8 @@ export default class Rtc {
       () => {
         this.streams = [...this.streams, stream];
         this.handlers.setStreams(this.streams);
-        this.handlers.setIsPlaying(true);
-        stream.play(`video-${stream.streamId}`);
+        if (!isScreenShare) this.handlers.setRole(role);
+        stream.play(`video-${stream.streamId}`, { fit: isScreenShare ? 'contain' : 'cover' });
         this[client].publish(stream, (error) => console.log('stream publish Error:', error));
       },
       (error) => console.log('stream init Error:', error)
@@ -95,6 +99,7 @@ export default class Rtc {
   unpublishAll() {
     this.client.unpublish(this.localstream);
     if (this[SCREEN_SHARE]) this[SCREEN_CLIENT].unpublish(this[SCREEN_SHARE]);
+    this.handlers.setRole(AUDIENCE);
   }
 
   createStream(uid, attendeeMode, cameraId = '') {
@@ -174,7 +179,8 @@ export default class Rtc {
       this.streams = [...this.streams, stream];
       this.handlers.setStreams(this.streams);
       const streamId = stream.getId();
-      stream.play(`video-${streamId}`);
+      const isScreenShare = streamId === SCREEN_SHARE;
+      stream.play(`video-${streamId}`, { fit: isScreenShare ? 'contain' : 'cover' });
     });
 
     this.client.on('stream-removed', ({ stream }) => {
