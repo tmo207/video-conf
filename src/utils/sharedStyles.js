@@ -42,3 +42,20 @@ export const withBorder = css`
   ${BORDER_RADIUS}
   ${BORDER}
 `;
+
+export const modalStyle = {
+  overlay: {
+    zIndex: 20,
+  },
+  content: {
+    color: 'BLACK',
+    textAlign: 'center',
+    maxWidth: '90vw',
+    width: '300px',
+    height: 'fit-content',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    borderRadius: '20px',
+  },
+};

@@ -1,4 +1,4 @@
-export * from './ChangeCamera.js';
+export * from './ChangeInput.js';
 export * from './ControlMenu.js';
 export * from './Hosts.js';
 export * from './Modal.js';
