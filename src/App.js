@@ -112,43 +112,43 @@ const App = ({ rtc, rtm }) => {
     getSuperhostId({ callback: setAdminId, token, channelId, eventId }).then(({ superhost }) =>
       setAdminId(superhost)
     );
-    // initUser({ token, callback: setSessionData, channelId, eventId });
+    initUser({ token, callback: setSessionData, channelId, eventId });
 
     // Mocking to choose user role during development
     //
-    const mockUser = (role) => {
-      const roles = {
-        s: {
-          user: {
-            role: SUPERHOST,
-            id: '13',
-          },
-          waitingroom: true,
-          mainscreen: getSuperhostId({ token, channelId, eventId }),
-          rtcToken: null,
-        },
-        a: {
-          user: {
-            role: AUDIENCE,
-            id: '99',
-          },
-          waitingroom: true,
-          mainscreen: getSuperhostId({ token, channelId, eventId }),
-          rtcToken: null,
-        },
-        r: {
-          user: {
-            role: HOST,
-            id: '107',
-          },
-          waitingroom: true,
-          mainscreen: getSuperhostId({ token, channelId, eventId }),
-          rtcToken: null,
-        },
-      };
-      return roles[role];
-    };
-    if (!userRole) setSessionData(mockUser(window.prompt()));
+    // const mockUser = (role) => {
+    //   const roles = {
+    //     s: {
+    //       user: {
+    //         role: SUPERHOST,
+    //         id: '13',
+    //       },
+    //       waitingroom: true,
+    //       mainscreen: getSuperhostId({ token, channelId, eventId }),
+    //       rtcToken: null,
+    //     },
+    //     a: {
+    //       user: {
+    //         role: AUDIENCE,
+    //         id: '99',
+    //       },
+    //       waitingroom: true,
+    //       mainscreen: getSuperhostId({ token, channelId, eventId }),
+    //       rtcToken: null,
+    //     },
+    //     r: {
+    //       user: {
+    //         role: HOST,
+    //         id: '107',
+    //       },
+    //       waitingroom: true,
+    //       mainscreen: getSuperhostId({ token, channelId, eventId }),
+    //       rtcToken: null,
+    //     },
+    //   };
+    //   return roles[role];
+    // };
+    // if (!userRole) setSessionData(mockUser(window.prompt()));
   }, []);
 
   // useEffect(() => {
