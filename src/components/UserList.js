@@ -1,24 +1,13 @@
-import { useState, useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import styled from 'styled-components/macro';
 
-import { UserContext, SessionContext } from '../state';
+import { UserContext } from '../state';
 
-import {
-  BLACK,
-  CONTENT_MARGIN,
-  CloseIcon,
-  ControlItem,
-  GREEN,
-  GridItemSmall,
-  MESSAGES,
-  MenuIcon,
-  MinusIcon,
-  PlusIcon,
-  ROLES,
-  StageIcon,
-  getMainScreen,
-  getUserDetails,
-} from '../utils';
+import { MESSAGES, ROLES, SCREEN_SHARE, global } from '../utils/constants';
+import { makeCancelable } from '../utils/helpers';
+import { CloseIcon, MenuIcon, MinusIcon, PlusIcon, StageIcon } from '../utils/icons';
+import { getMainScreen, getUserDetails } from '../utils/requests';
+import { BLACK, CONTENT_MARGIN, ControlItem, GREEN, GridItemSmall } from '../utils/styles';
 
 const {
   HOST_INVITE,
@@ -120,22 +109,28 @@ const UserActionItem = styled.button.attrs((props) => ({
   }
 `;
 
-export const UserList = ({
-  currentMainId,
-  hosts,
-  referentRequests,
-  rtc,
-  rtm,
-  setReferentRequests,
-}) => {
-  const { channel_id: channelId, event_id: eventId, token } = useContext(SessionContext);
+export const UserList = ({ currentMainId, rtc, rtm, streams }) => {
   const { userId } = useContext(UserContext);
+  const { channelId, eventId, token } = global;
 
   // showUsersWithRole types = audience | host;
   const [showUsersWithRole, setShowUsersWithRole] = useState(AUDIENCE);
+  const [referentRequests, setReferentRequests] = useState([]);
   const [searchValue, setSearchValue] = useState('');
   const [usersInList, setUsersInList] = useState([]);
+  const [hosts, setHosts] = useState([]);
   const [show, setShow] = useState(false);
+
+  useEffect(() => rtm.addRequestsHandler(setReferentRequests), []);
+
+  useEffect(() => {
+    const currentHostIds = streams
+      .map((stream) => stream.streamId)
+      .filter((streamId) => streamId !== SCREEN_SHARE);
+    getUserDetails({ ids: currentHostIds, channelId, eventId, token }).then((response) =>
+      setHosts(response)
+    );
+  }, [streams]);
 
   const promoteUserToHost = (peerId) => {
     const isYourself = peerId === userId;
@@ -144,7 +139,7 @@ export const UserList = ({
         rtc.setMainScreen(userId);
         rtm.sendChannelMessage(userId, MAIN_SCREEN_UPDATED);
       }
-      rtc.publishAndStartStream(userId, SUPERHOST);
+      rtc.publishAndStartStream({ uid: userId, role: SUPERHOST });
     };
 
     if (isYourself) getMainScreen({ callback: promoteYourselfToHost, token, channelId, eventId });
@@ -171,16 +166,16 @@ export const UserList = ({
 
   const getMembers = () => {
     rtm.getMembers().then((members) => {
-      getUserDetails({ ids: members, channelId, eventId, token, callback: setUsersInList });
+      getUserDetails({ ids: members, channelId, eventId, token }).then((response) =>
+        setUsersInList(response)
+      );
     });
   };
 
   const toggleList = () => {
     rtm.subscribeChannelEvents(getMembers);
-    rtm.getMembers().then((members) => {
-      getUserDetails({ ids: members, channelId, eventId, token, callback: setUsersInList });
-      setShow((prevShow) => !prevShow);
-    });
+    getMembers();
+    setShow((prevShow) => !prevShow);
   };
 
   const onChange = (e) => {
@@ -244,6 +239,7 @@ export const UserList = ({
               <>
                 {hosts &&
                   hosts.map((host, index) => {
+                    console.log({ host });
                     const { name, id } = host;
                     const isCurrentMain = id === currentMainId;
                     const isYourself = id === userId;

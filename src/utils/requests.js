@@ -77,35 +77,30 @@ export const setIsWaitingRoom = async ({ waitingroom, channelId, eventId, token 
 export const getUserDetails = async ({ ids, channelId, eventId, token, callback }) => {
   const url = `${baseUrl}/api/users/${eventId}/${channelId}`;
   const body = JSON.stringify({ ids: [...ids] });
-  await fetch(url, {
+  const response = await fetch(url, {
     method: 'POST',
     headers: new Headers({
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     }),
     body,
-  }).then((response) =>
-    response.json().then((details) => {
-      if (callback) callback(details);
-      return details;
-    })
-  );
+  });
+  const details = await response.json();
+  if (callback) callback(details);
+  return details;
 };
 
-export const getSuperhostId = async ({ callback, token, channelId, eventId }) => {
+export const getSuperhostId = async ({ token, channelId, eventId }) => {
   const url = `${baseUrl}/api/superhost/${eventId}/${channelId}`;
-  await fetch(url, {
+  const response = await fetch(url, {
     method: 'GET',
     headers: new Headers({
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/x-www-form-urlencoded',
     }),
-  }).then((response) =>
-    response.json().then(({ superhost }) => {
-      if (callback) callback(superhost);
-      return superhost;
-    })
-  );
+  });
+  const superhostId = await response.json();
+  return superhostId;
 };
 
 export const getReferents = async ({ callback, token, channelId, eventId }) => {

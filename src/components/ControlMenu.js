@@ -1,9 +1,13 @@
+import { useContext, useEffect, useState } from 'react';
 import styled from 'styled-components/macro';
 import Switch from '@material-ui/core/Switch';
 
 import { ReferentMenuItems } from './ReferentMenuItems';
 
-import { ControlItem } from '../utils';
+import { UserContext } from '../state';
+
+import { MESSAGES, ROLES } from '../utils/constants';
+import { ControlItem } from '../utils/styles';
 
 const ControlMenuContainer = styled.div`
   z-index: 1000;
@@ -30,42 +34,38 @@ const RequestRightsText = styled.p`
   margin-right: 0.5rem;
 `;
 
-export const ControlMenu = ({
-  currentMainId,
-  isPlaying,
-  isWaitingRoom,
-  localstream,
-  onRequestReferentRights,
-  referentRightsRequested,
-  role,
-  rtc,
-  setIsOpen,
-  setModalType,
-  toggleChannelOpen,
-}) => {
+const { HOST, SUPERHOST } = ROLES;
+
+export const ControlMenu = ({ adminId, rtc, rtm, userRole, ...restProps }) => {
+  const { userId } = useContext(UserContext);
+  const [hasRequested, setHasRequested] = useState(false);
+
+  const isHost = userRole === SUPERHOST || userRole === HOST;
+
+  useEffect(() => rtm.addHasRequestedHandler(setHasRequested), []);
+
+  const onSendRequest = () => {
+    setHasRequested((rights) => !rights);
+    rtm.sendPeerMessage({ to: adminId, from: userId, subject: MESSAGES.ASK_STAGE_ACCESS });
+  };
+
   return (
     <ControlMenuContainer>
-      {isPlaying && (
+      {isHost && (
         <ReferentMenuItems
           {...{
-            currentMainId,
-            isWaitingRoom,
-            localstream,
-            role,
+            userRole,
             rtc,
-            setIsOpen,
-            setModalType,
-            toggleChannelOpen,
+            rtm,
+            ...restProps,
           }}
         />
       )}
-      {!isPlaying && (
-        <RequestReferentRights
-          onClick={() => !referentRightsRequested && onRequestReferentRights()}
-        >
-          <Switch checked={referentRightsRequested} color="primary" />
+      {!isHost && (
+        <RequestReferentRights onClick={() => !hasRequested && onSendRequest()}>
+          <Switch checked={hasRequested} color="primary" />
           <RequestRightsText>
-            {referentRightsRequested ? 'Teilnahme angefragt' : 'Teilnahme anfragen'}
+            {hasRequested ? 'Teilnahme angefragt' : 'Teilnahme anfragen'}
           </RequestRightsText>
         </RequestReferentRights>
       )}
