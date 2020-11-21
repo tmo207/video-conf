@@ -69,7 +69,7 @@ const App = ({ rtc, rtm }) => {
     }
   };
 
-  const startRtc = async ({ uid, role }) => {
+  const startRtc = ({ uid, role }) => {
     const rtcHandlers = {
       setLocalMainScreen,
       setRole,
@@ -98,17 +98,15 @@ const App = ({ rtc, rtm }) => {
       setUid(res.user.id);
       setLocalWaitingRoom(res.waitingroom);
       setLocalMainScreen(res.mainscreen);
-      rtc
-        .setRtcToken(null)
-        .then(() =>
-          startRtc({
-            uid: res.user.id,
-            role: res.user.role,
-          })
-        )
-        .then(() => {
-          rtm.setRtmToken(null).then(() => rtmLogin(res.user.id)); // TODO use real token
-        });
+      rtc.setRtcToken(null);
+
+      startRtc({
+        uid: res.user.id,
+        role: res.user.role,
+      });
+
+      rtm.setRtmToken(null);
+      rtmLogin(res.user.id); // TODO use real token
     };
 
     getSuperhostId({ callback: setAdminId, token, channelId, eventId }).then(({ superhost }) =>

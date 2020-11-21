@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import styled from 'styled-components';
 import Switch from '@material-ui/core/Switch';
 
@@ -41,6 +41,13 @@ export const ReferentMenuItems = ({
   const [isOpen, setIsOpen] = useState(false);
 
   const isMainScreen = userId === currentMainId;
+
+  useEffect(() => {
+    if (localstream) {
+      setHasAudio(localstream.hasAudio());
+      setHasVideo(localstream.hasVideo());
+    }
+  }, [localstream]);
 
   const onVideo = () => {
     if (hasVideo) {

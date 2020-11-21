@@ -31,7 +31,7 @@ export default class Rtm extends EventEmitter {
     this.client = AgoraRTM.createInstance(this.appId);
   }
 
-  async setRtmToken(token) {
+  setRtmToken(token) {
     this.rtmToken = token;
   }
 

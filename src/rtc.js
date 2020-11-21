@@ -17,7 +17,7 @@ export default class Rtc {
     this.isSuperhost = false;
   }
 
-  async setRtcToken(rtcToken) {
+  setRtcToken(rtcToken) {
     this.rtcToken = rtcToken;
   }
 
@@ -28,7 +28,6 @@ export default class Rtc {
   createClient(clientType) {
     const client = clientType || 'client';
     this[client] = AgoraRTC.createClient({ mode: 'live', codec: 'vp8' });
-    console.log({ client });
     return this[client];
   }
 
@@ -51,7 +50,6 @@ export default class Rtc {
       uid,
       (id) => {
         const isHost = role === SUPERHOST || role === HOST;
-        console.log({ isHost, role });
         if (isHost) this.publishAndStartStream({ uid: id, role });
         console.log('JOINED CHANNEL with', id);
       },
